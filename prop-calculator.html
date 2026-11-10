@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕯️</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
 <style>
 :root{
   --bg:#EDF0F4; --surface:#FFFFFF; --ink:#1A2230; --muted:#5B6576; --line:#D5DBE3;
@@ -163,9 +163,25 @@ tr.pick td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 .savebtn{font:inherit; font-weight:700; font-size:.92rem; background:var(--accent); color:#0A1426; border:0; border-radius:8px; padding:0 14px; min-height:44px; cursor:pointer}
 .savedmsg{font-size:.86rem; color:var(--gain); margin:8px 0 0; min-height:1em}
 </style>
+<link rel="stylesheet" href="tools.css">
 </head>
 <body>
+<div class="topbar">
+    <header class="bar">
+      <a href="index.html" class="logo">BXTrades <span>by Boris</span></a>
+      <nav class="links" aria-label="Main">
+        <a href="index.html#about">About</a>
+        <a href="index.html#series">Videos</a>
+        <a href="index.html#backtests">Backtests</a>
+        <a href="index.html#tools">Tools</a>
+        <a href="index.html#community">Community</a>
+      </nav>
+      <a class="nav-deal" href="index.html#deal">40% off evals</a>
+      <button class="menu-btn" aria-label="Open menu" onclick="document.body.classList.toggle('menu-open')">Menu</button>
+    </header>
+  </div>
 <div class="wrap">
+  <a class="back-link" href="index.html#tools">← Back to BXTrades tools</a>
   <nav class="nav" aria-label="Main">
     <a class="brand" href="index.html">BX<span>TRADES</span></a>
     <div class="links">
@@ -175,7 +191,7 @@ tr.pick td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
     </div>
   </nav>
   <header>
-    <p class="eyebrow">// Prop firm tools</p>
+    <p class="eyebrow">Free tool · by Boris</p>
     <h1>Prop firm risk calculator</h1>
     <p>Work out how many contracts to trade, and see how many losing trades your account can take before it fails.</p>
   </header>

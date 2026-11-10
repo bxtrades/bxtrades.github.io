@@ -1,0 +1,50 @@
+/* ===== Notebook theme for the tool pages (calculator + journal) =====
+   Loaded after each page's own styles, so it wins. Colours match style.css. */
+:root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+  --bg: #f3efe6; --surface: #fbf9f4; --ink: #1d1c1a; --muted: #6a645a; --line: #cfc7b6;
+  --soft: #ebe5d8; --amber: #b5741c; --loss: #b5392b; --gain: #1f7a4d; --accent: #1d1c1a; --focus: #c9a400;
+  color-scheme: light;
+}
+body { font-family: "IBM Plex Sans", system-ui, sans-serif; background: var(--bg); color: var(--ink); }
+h1, h2, h3 { font-family: "Source Serif 4", Georgia, serif; font-weight: 600; letter-spacing: -.015em; }
+h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.08; }
+.mono, .big, .count, .stat b, .headline .big, .headline .unit, td, th, .bar, .val, .input input, .n {
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
+.eyebrow { font-family: "IBM Plex Mono", monospace; color: var(--muted); letter-spacing: 0; text-transform: none; font-size: .8rem; }
+.panel { border-radius: 0; background: var(--surface); border: 1px solid var(--ink); }
+.btn { border-radius: 0; border: 1.5px solid var(--ink); box-shadow: 3px 3px 0 var(--ink); }
+.btn:hover { transform: translate(1px, 1px); box-shadow: 2px 2px 0 var(--ink); }
+.btn.primary { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.btn.ghost { border-color: var(--ink); color: var(--ink); }
+.seg button[aria-pressed="true"], .filter button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.savebtn { background: var(--ink); color: var(--bg); border-radius: 0; }
+.chip { border-radius: 0; border: 1px solid var(--line); }
+.linkbtn { color: var(--ink); }
+select, .input, input[type=date], input[type=number], input[type=text], textarea { background: var(--bg); border-radius: 0; }
+details.custom { border-radius: 0; }
+:focus-visible { outline: 2px solid var(--focus) !important; outline-offset: 2px; }
+
+/* Shared top bar (same as homepage) */
+.wrap > .nav { display: none; }            /* hide the old nav */
+.topbar { position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 2px solid var(--ink); }
+.topbar .bar {
+  max-width: 1120px; margin: 0 auto; padding: .9rem 18px;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+.topbar .logo { font-family: "Source Serif 4", Georgia, serif; font-weight: 700; font-size: 1.25rem; text-decoration: none; color: var(--ink); white-space: nowrap; }
+.topbar .logo span { font-weight: 400; font-style: italic; color: var(--muted); }
+.topbar .links { display: flex; gap: 1.4rem; margin-left: auto; }
+.topbar .links a { font-size: .92rem; text-decoration: none; color: var(--muted); padding: 0; border-radius: 0; font-weight: 400; }
+.topbar .links a:hover, .topbar .links a[aria-current="page"] { color: var(--ink); background: none; text-decoration: underline; text-underline-offset: 4px; }
+.topbar .nav-deal { font: 600 .82rem "IBM Plex Sans", sans-serif; text-decoration: none; color: var(--ink); background: #f6d64a; border: 1.5px solid var(--ink); padding: .35rem .7rem; white-space: nowrap; }
+.topbar .menu-btn { display: none; background: none; border: 1px solid var(--ink); color: var(--ink); font: 600 .85rem "IBM Plex Sans", sans-serif; padding: .35rem .7rem; cursor: pointer; }
+.back-link { display: inline-block; margin: 0 0 18px; font-size: .9rem; color: var(--muted); }
+@media (max-width: 760px) {
+  .topbar .bar { flex-wrap: wrap; }
+  .topbar .menu-btn { display: block; order: 3; }
+  .topbar .nav-deal { margin-left: auto; }
+  .topbar .links { display: none; order: 4; width: 100%; flex-direction: column; gap: 0; margin: .5rem 0 0; }
+  .topbar .links a { padding: .8rem 0; border-top: 1px solid var(--line); color: var(--ink); }
+  .menu-open .topbar .links { display: flex; }
+}

@@ -4,9 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BXTrades | Boris</title>
-  <meta name="description" content="Engineering student documenting the journey to becoming a funded ES & NQ futures day trader.">
+  <meta name="description" content="Engineering student learning to trade ES & NQ futures. Simple trading videos, real backtests, free prop firm tools and a daily game.">
   <meta property="og:title" content="BXTrades | Boris">
-  <meta property="og:description" content="Learning to trade ES & NQ futures, explained simply. Videos, backtests, free tools and a daily game.">
+  <meta property="og:description" content="Engineering student learning to trade ES & NQ futures. Simple trading videos, real backtests, free prop firm tools and a daily game.">
   <meta property="og:image" content="https://bxtrades.github.io/images/desk-setup.jpg">
   <meta property="og:url" content="https://bxtrades.github.io/">
   <meta name="twitter:card" content="summary_large_image">
@@ -16,22 +16,22 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-
-  <!-- ===== TOP BAR ===== -->
-  <header class="nav">
-    <a href="#" class="logo">BXTrades <span>by Boris</span></a>
-    <button class="menu-btn" aria-label="Open menu" onclick="document.body.classList.toggle('menu-open')">Menu</button>
-    <nav class="links">
-      <a href="#about">About</a>
-      <a href="#series">Videos</a>
-      <a href="#backtests">Backtests</a>
-      <a href="#community">Community</a>
-      <a href="#journal">Eval tracker</a>
-      <a href="#tools">Tools</a>
-      <a href="#setup-desk">Setup</a>
-    </nav>
-  </header>
+<body id="top">
+  <!-- ===== TOP BAR (same on every page) ===== -->
+  <div class="topbar">
+    <header class="bar">
+      <a href="#top" class="logo">BXTrades <span>by Boris</span></a>
+      <nav class="links" aria-label="Main">
+        <a href="#about">About</a>
+        <a href="#series">Videos</a>
+        <a href="#backtests">Backtests</a>
+        <a href="#tools">Tools</a>
+        <a href="#community">Community</a>
+      </nav>
+      <a class="nav-deal" href="#deal">40% off evals</a>
+      <button class="menu-btn" aria-label="Open menu" onclick="document.body.classList.toggle('menu-open')">Menu</button>
+    </header>
+  </div>
 
   <!-- ===== HERO ===== -->
   <section class="hero">
@@ -50,6 +50,17 @@
       <canvas id="candles"></canvas>
       <figcaption><span>Fig. 1: what I stare at most mornings</span><span>@bxtrades_</span></figcaption>
     </figure>
+  </section>
+
+  <!-- ===== START HERE ===== -->
+  <section class="start" aria-labelledby="start-title">
+    <h2 id="start-title">New here? Start with this.</h2>
+    <ol class="steps">
+      <li><span class="step-n">1</span><h3>Watch the basics</h3><p><a href="https://www.tiktok.com/@bxtrades_/video/7695536751363853600" target="_blank" rel="noopener">Candlesticks</a>, then <a href="https://www.tiktok.com/@bxtrades_/video/7696507411435113760" target="_blank" rel="noopener">Timeframes</a>, then <a href="https://www.tiktok.com/@bxtrades_/video/7696940688981773600" target="_blank" rel="noopener">Trends and ranges</a>. About a minute each.</p></li>
+      <li><span class="step-n">2</span><h3>Learn the words</h3><p>FVG, SMT, liquidity sweep... the <a href="glossary.html">glossary</a> explains every term in plain English.</p></li>
+      <li><span class="step-n">3</span><h3>Practise for free</h3><p>Paper trade first. Use the <a href="tracker.html">eval tracker</a> and <a href="prop-calculator.html">risk calculator</a> like it's a real account.</p></li>
+      <li><span class="step-n">4</span><h3>Join the Discord</h3><p>Play <a href="#community">Candle Clash</a> every day and ask questions when you're stuck.</p></li>
+    </ol>
   </section>
 
   <!-- ===== ABOUT ===== -->
@@ -77,6 +88,22 @@
         <li><span>Get funded</span><small>Trade a real prop firm account</small></li>
         <li><span>Scale up</span><small>Consistency first, size second</small></li>
       </ol>
+
+      <h3 class="roadmap-title" id="setup-desk">My setup</h3>
+      <div class="grid setup-grid">
+        <figure class="photo">
+          <img src="images/desk-setup.jpg" alt="Boris's desk: a laptop on a stand, a Philips monitor with a webcam on top, a microphone, and a Logitech keyboard and mouse" loading="lazy" width="1400" height="1050">
+          <figcaption>Fig. 2: the desk, TradingView open on both screens</figcaption>
+        </figure>
+        <dl class="facts">
+          <div><dt>Laptop</dt><dd>Dell XPS 14 on a stand</dd></div>
+          <div><dt>Monitor</dt><dd>Philips</dd></div>
+          <div><dt>Webcam</dt><dd>Trust</dd></div>
+          <div><dt>Mic</dt><dd>USB desk mic</dd></div>
+          <div><dt>Keyboard &amp; mouse</dt><dd>Logitech wireless</dd></div>
+          <div><dt>Charts</dt><dd>TradingView</dd></div>
+        </dl>
+      </div>
     </div>
   </section>
 
@@ -85,7 +112,11 @@
     <header><span class="num">ii.</span><h2>Trading Made Simple</h2><p>My TikTok series. One idea per video, explained like I'd explain it to a mate.</p></header>
     <div class="body">
       <ol class="episodes" id="videos"><!-- filled by script.js --></ol>
-      <a class="btn" href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">All videos on @bxtrades_</a>
+      <div class="row-actions">
+        <button class="btn" type="button" id="show-videos" hidden>Show all videos</button>
+        <a class="text-link" href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">@bxtrades_ on TikTok →</a>
+        <a class="text-link" href="glossary.html">Stuck on a word? Glossary →</a>
+      </div>
     </div>
   </section>
 
@@ -93,14 +124,41 @@
   <section id="backtests" class="section">
     <header><span class="num">iii.</span><h2>My backtests</h2><p>Pages straight out of my journal, annotations and all. Tap one to see it full size.</p></header>
     <div class="body">
+      <div class="bt-stats" id="bt-stats"><!-- worked out by script.js from your backtests --></div>
       <div class="backtests" id="backtest-list"><!-- filled by script.js --></div>
       <p class="small">Backtests are replayed on past data, not live trades. I'll keep adding the losing days too.</p>
     </div>
   </section>
 
+  <!-- ===== FREE TOOLS ===== -->
+  <section id="tools" class="section">
+    <header><span class="num">iv.</span><h2>Free tools</h2><p>Things I built for myself and the Discord. They work on your phone, and your data stays in your browser.</p></header>
+    <div class="body">
+      <ol class="episodes">
+        <li><a href="tracker.html"><span class="ep">01</span><h4>Eval tracker</h4><p>Set your own account size, target and drawdown, log trades, and watch your progress towards passing.</p><span class="watch">Open →</span></a></li>
+        <li><a href="prop-calculator.html"><span class="ep">02</span><h4>Prop firm risk calculator</h4><p>Pick a firm and account size, enter your stop, and see how many contracts to trade and how many losses you can take before the account fails.</p><span class="watch">Open →</span></a></li>
+        <li><a href="journal.html"><span class="ep">03</span><h4>Backtesting journal</h4><p>Log trades, tick off your EXPO checklist, and your win rate, average R and equity curve fill themselves in.</p><span class="watch">Open →</span></a></li>
+        <li><a href="glossary.html"><span class="ep">04</span><h4>Trading glossary</h4><p>Every term from my videos and annotations in plain English: FVGs, SMT, AMD, liquidity sweeps, R and more.</p><span class="watch">Open →</span></a></li>
+      </ol>
+
+      <div class="deal" id="deal">
+        <div>
+          <p class="eyebrow">Prop firm discount</p>
+          <h3>40% off TradersScale</h3>
+          <p>Use my code at checkout, or go through my link and it's applied for you.</p>
+        </div>
+        <div class="deal-code">
+          <button class="code" id="copy-code" type="button" aria-label="Copy code BXTRADES"><span class="mono">BXTRADES</span><small id="copy-msg">Tap to copy</small></button>
+          <a class="btn primary" href="https://www.traderscale.com/?a_aid=kqglqu5u1pjri" target="_blank" rel="sponsored noopener">Go to TradersScale</a>
+        </div>
+        <p class="disclosure">Affiliate link and code: I may earn a commission if you use them, at no extra cost to you. Most people fail prop firm evaluations, so only pay for one you can afford to lose.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== COMMUNITY ===== -->
   <section id="community" class="section">
-    <header><span class="num">iv.</span><h2>BXT's Community</h2><p>The Discord where we talk charts, I post when I go live, and we play a daily game.</p></header>
+    <header><span class="num">v.</span><h2>BXT's Community</h2><p>The Discord where we talk charts, I post when I go live, and we play a daily game.</p></header>
     <div class="body grid two">
       <div class="game">
         <p class="eyebrow">Daily game</p>
@@ -125,104 +183,17 @@
     </div>
   </section>
 
-  <!-- ===== JOURNAL ===== -->
-  <section id="journal" class="section">
-    <header><span class="num">v.</span><h2>Track your eval</h2><p>Set up your own prop firm or paper account and log your trades. It all saves in your browser, so only you see it.</p></header>
-    <div class="body">
-
-    <details class="setup" id="setup">
-      <summary>Your account &amp; rules</summary>
-      <div class="form-grid">
-        <label>Starting balance ($)<input type="number" id="acc-start" min="0" step="100"></label>
-        <label>Profit target ($)<input type="number" id="acc-target" min="0" step="100"></label>
-        <label>Max drawdown ($)<input type="number" id="acc-maxloss" min="0" step="100"></label>
-        <label class="wide">Your rules (one per line)<textarea id="acc-rules" rows="4" placeholder="e.g. Max 2 trades per day"></textarea></label>
-      </div>
-      <button class="btn primary small-btn" id="acc-save">Save settings</button>
-      <span class="mono small" id="acc-msg"></span>
-    </details>
-
-    <div class="add-trade">
-      <h3>Log a trade</h3>
-      <div class="form-grid">
-        <label>Date<input type="date" id="t-date"></label>
-        <label>Market<input type="text" id="t-market" placeholder="e.g. NQ" list="markets"></label>
-        <label>Side
-          <select id="t-side"><option>Long</option><option>Short</option></select>
-        </label>
-        <label>Result ($)<input type="number" id="t-result" step="1" placeholder="e.g. 250 or -150"></label>
-        <label class="wide">Note<input type="text" id="t-note" placeholder="What happened?"></label>
-      </div>
-      <datalist id="markets"><option>NQ</option><option>MNQ</option><option>ES</option><option>MES</option><option>NAS100</option><option>US500</option></datalist>
-      <button class="btn primary small-btn" id="t-add">Add trade</button>
-      <span class="mono small" id="t-msg"></span>
-    </div>
-
-    <div class="stats" id="stats"><!-- filled by script.js --></div>
-
-    <div class="chart-box">
-      <div class="chart-head"><span class="mono">ACCOUNT BALANCE</span><span class="mono small" id="target-label"></span></div>
-      <svg id="equity" viewBox="0 0 800 260" preserveAspectRatio="none" role="img" aria-label="Account balance over time"></svg>
-    </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead><tr><th>Date</th><th>Market</th><th>Side</th><th>Result</th><th>Note</th><th></th></tr></thead>
-        <tbody id="trades"><!-- filled by script.js --></tbody>
-      </table>
-    </div>
-
-    <div class="rules">
-      <h3>Your rules</h3>
-      <ul class="ticks" id="rules"><!-- filled by script.js --></ul>
-    </div>
-    <div class="tracker-actions">
-      <button class="btn small-btn" id="t-clear">Clear all trades</button>
-    </div>
-    </div>
-  </section>
-
-  <!-- ===== FREE TOOLS ===== -->
-  <section id="tools" class="section">
-    <header><span class="num">vi.</span><h2>Free tools</h2><p>Things I built for myself and the Discord. They work on your phone, and your data stays in your browser.</p></header>
-    <div class="body">
-      <ol class="episodes">
-        <li><a href="prop-calculator.html"><span class="ep">01</span><h4>Prop firm risk calculator</h4><p>Pick a firm and account size, enter your stop, and see how many contracts to trade and how many losses you can take before the account fails.</p><span class="watch">Open →</span></a></li>
-        <li><a href="journal.html"><span class="ep">02</span><h4>Backtesting journal</h4><p>Log trades, tick off your EXPO checklist, and your win rate, average R and equity curve fill themselves in.</p><span class="watch">Open →</span></a></li>
-      </ol>
-
-      <div class="deal" id="deal">
-        <div>
-          <p class="eyebrow">Prop firm discount</p>
-          <h3>40% off TradersScale</h3>
-          <p>Use my code at checkout, or go through my link and it's applied for you.</p>
-        </div>
-        <div class="deal-code">
-          <button class="code" id="copy-code" type="button" aria-label="Copy code BXTRADES"><span class="mono">BXTRADES</span><small id="copy-msg">Tap to copy</small></button>
-          <a class="btn primary" href="https://www.traderscale.com/?a_aid=kqglqu5u1pjri" target="_blank" rel="sponsored noopener">Go to TradersScale</a>
-        </div>
-        <p class="disclosure">Affiliate link and code: I may earn a commission if you use them, at no extra cost to you. Most people fail prop firm evaluations, so only pay for one you can afford to lose.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== SETUP ===== -->
-  <section id="setup-desk" class="section">
-    <header><span class="num">vii.</span><h2>My setup</h2><p>Where the trading (and the TikToks) happen. Nothing fancy, it does the job.</p></header>
-    <div class="body grid setup-grid">
-      <figure class="photo">
-        <img src="images/desk-setup.jpg" alt="Boris's desk: a laptop on a stand, a Philips monitor with a webcam on top, a microphone, and a Logitech keyboard and mouse" loading="lazy" width="1400" height="1050">
-        <figcaption>Fig. 2: the desk, TradingView open on both screens</figcaption>
-      </figure>
-      <dl class="facts">
-        <div><dt>Laptop</dt><dd>Dell XPS 14 on a stand</dd></div>
-        <div><dt>Monitor</dt><dd>Philips</dd></div>
-        <div><dt>Webcam</dt><dd>Trust</dd></div>
-        <div><dt>Mic</dt><dd>USB desk mic</dd></div>
-        <div><dt>Keyboard &amp; mouse</dt><dd>Logitech wireless</dd></div>
-        <div><dt>Charts</dt><dd>TradingView</dd></div>
-        <div><dt>Account</dt><dd>Paper trading</dd></div>
-      </dl>
+  <!-- ===== FAQ ===== -->
+  <section id="faq" class="section">
+    <header><span class="num">vi.</span><h2>FAQ</h2><p>The questions I get most in my TikTok comments.</p></header>
+    <div class="body faq">
+      <details><summary>Are you profitable yet?</summary><p>Not yet, and I won't pretend otherwise. I'm on a paper (simulated) account, practising for a 50k evaluation. Everything I post comes from that account or from backtests, and I post the losing days too.</p></details>
+      <details><summary>Do I need money to start?</summary><p>No. You can practise for free on a paper account. I use TradingView's paper trading. Only think about paying for an evaluation once you're consistent on paper.</p></details>
+      <details><summary>Which prop firm should I pick?</summary><p>The one whose rules you can actually live with. Compare the profit target, the max drawdown (and whether it trails), any daily loss limit, and the price. My <a href="prop-calculator.html">risk calculator</a> has common firms built in. I have a 40% off code for <a href="#deal">TradersScale</a>, but that's an affiliate code, so don't pick a firm just because of a discount.</p></details>
+      <details><summary>What are ES and NQ?</summary><p>Futures contracts on the US stock market. <strong>ES</strong> follows the S&amp;P 500 and <strong>NQ</strong> follows the Nasdaq-100. One point on NQ is worth $20 per contract and on ES $50. The micro versions, <strong>MNQ</strong> and <strong>MES</strong>, are a tenth of the size, which is why beginners often start with them.</p></details>
+      <details><summary>What do all the words in your annotations mean?</summary><p>FVG, SMT, AMD, liquidity sweep and the rest are all explained in plain English in the <a href="glossary.html">glossary</a>, with links to my videos where I've made one.</p></details>
+      <details><summary>How do I play Candle Clash?</summary><p>Join the <a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener">Discord</a>. Each day there's a reminder post: call whether NQ closes up or down, and the leaderboard tracks who reads the market best.</p></details>
+      <details><summary>Is any of this financial advice?</summary><p>No. Everything here is education and entertainment. I'm a student, not a financial adviser. Futures are risky and most people who try to trade them lose money.</p></details>
     </div>
   </section>
 
@@ -231,12 +202,14 @@
     <div class="footer-links">
       <a href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">TikTok</a>
       <a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener">Discord</a>
+      <a href="tracker.html">Eval tracker</a>
       <a href="prop-calculator.html">Prop calculator</a>
       <a href="journal.html">Backtest journal</a>
-      <a href="#deal">TradersScale 40% off</a>
-      <a href="#about">Back to top</a>
+      <a href="glossary.html">Glossary</a>
+      <a href="index.html#faq">FAQ</a>
+      <a href="index.html#deal">TradersScale 40% off</a>
     </div>
-    <p class="disclaimer"><strong>Disclaimer:</strong> All content on this site is for educational and entertainment purposes only and is not financial advice. I am not a financial adviser. Results shown are from a paper (simulated) trading account. Trading futures carries a high risk of loss and is not suitable for everyone. Past performance does not guarantee future results.</p>
+    <p class="disclaimer"><strong>Disclaimer:</strong> All content on this site is for educational and entertainment purposes only and is not financial advice. I am not a financial adviser. Results shown are from a paper (simulated) trading account or backtests. Trading futures carries a high risk of loss and is not suitable for everyone. Past performance does not guarantee future results.</p>
     <p class="mono small">© <span id="year"></span> BXTrades</p>
   </footer>
 

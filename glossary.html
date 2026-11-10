@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trading glossary | BXTrades</title>
+  <meta name="description" content="Plain-English trading glossary: FVGs, inversion FVGs, SMT divergence, AMD, liquidity sweeps, R multiples, prop firm drawdowns and more.">
+  <meta property="og:title" content="Trading glossary | BXTrades">
+  <meta property="og:description" content="Plain-English trading glossary: FVGs, inversion FVGs, SMT divergence, AMD, liquidity sweeps, R multiples, prop firm drawdowns and more.">
+  <meta property="og:image" content="https://bxtrades.github.io/images/desk-setup.jpg">
+  <meta property="og:url" content="https://bxtrades.github.io/glossary.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f3efe6'/><path d='M10 4v24M22 4v24' stroke='%231d1c1a' stroke-width='2'/><rect x='6' y='9' width='8' height='12' fill='%23b5392b'/><rect x='18' y='11' width='8' height='12' fill='%23f3efe6' stroke='%231f7a4d' stroke-width='2'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ===== TOP BAR (same on every page) ===== -->
+  <div class="topbar">
+    <header class="bar">
+      <a href="index.html" class="logo">BXTrades <span>by Boris</span></a>
+      <nav class="links" aria-label="Main">
+        <a href="index.html#about">About</a>
+        <a href="index.html#series">Videos</a>
+        <a href="index.html#backtests">Backtests</a>
+        <a href="index.html#tools">Tools</a>
+        <a href="index.html#community">Community</a>
+      </nav>
+      <a class="nav-deal" href="index.html#deal">40% off evals</a>
+      <button class="menu-btn" aria-label="Open menu" onclick="document.body.classList.toggle('menu-open')">Menu</button>
+    </header>
+  </div>
+
+  <main class="page">
+    <a class="back-link" href="index.html">← Back to BXTrades</a>
+    <p class="kicker">Learn · by Boris</p>
+    <h1 class="page-title">Trading glossary</h1>
+    <p class="lead">Every term from my videos and journal annotations, in plain English. Where I've made a video on it, there's a link.</p>
+    <p class="jump small"><a href="#candlestick">Candlestick</a> · <a href="#timeframe">Timeframe</a> · <a href="#trend-range">Trend vs range</a> · <a href="#support-resistance">Support and resistance</a> · <a href="#sessions">Trading sessions</a> · <a href="#paper-trading">Paper trading</a> · <a href="#liquidity">Liquidity</a> · <a href="#liquidity-sweep">Liquidity sweep</a> · <a href="#draw-on-liquidity">Draw on liquidity</a> · <a href="#bos">Break of structure</a> · <a href="#fvg">Fair value gap</a> · <a href="#ifvg">Inversion FVG</a> · <a href="#retest">Retest</a> · <a href="#smt">SMT divergence</a> · <a href="#amd">AMD</a> · <a href="#r">R and risk-to-reward</a> · <a href="#prop-firm">Prop firm and evaluation</a> · <a href="#drawdown">Max drawdown</a> · <a href="#contracts">ES, NQ, MES and MNQ</a></p>
+    <h2 class="gloss-group">The basics</h2>
+    <dl class="gloss">
+      <div id="candlestick"><dt>Candlestick</dt><dd>One bar on a chart showing four prices for a period of time: where it opened, where it closed, and the highest and lowest points (the wicks). Green or hollow means it closed higher than it opened; red or filled means lower. <a class="term-vid" href="https://www.tiktok.com/@bxtrades_/video/7695536751363853600" target="_blank" rel="noopener">▶ Watch my video</a></dd></div>
+      <div id="timeframe"><dt>Timeframe</dt><dd>How much time each candle covers: 1 minute, 5 minutes, 1 hour, 1 day. Higher timeframes show the big picture; lower timeframes show the detail used to time an entry. <a class="term-vid" href="https://www.tiktok.com/@bxtrades_/video/7696507411435113760" target="_blank" rel="noopener">▶ Watch my video</a></dd></div>
+      <div id="trend-range"><dt>Trend vs range</dt><dd>A trend is price making higher highs and higher lows (up) or lower highs and lower lows (down). A range is price bouncing sideways between a ceiling and a floor. <a class="term-vid" href="https://www.tiktok.com/@bxtrades_/video/7696940688981773600" target="_blank" rel="noopener">▶ Watch my video</a></dd></div>
+      <div id="support-resistance"><dt>Support and resistance</dt><dd>Price levels where the market has reacted before. Support is a floor where buyers stepped in; resistance is a ceiling where sellers did. <a class="term-vid" href="https://www.tiktok.com/@bxtrades_/video/7697252144562326816" target="_blank" rel="noopener">▶ Watch my video</a></dd></div>
+      <div id="sessions"><dt>Trading sessions</dt><dd>The main parts of the trading day: Asia, London and New York. The <em>London high</em> or <em>Asia low</em> just means the highest or lowest price reached during that session. <a class="term-vid" href="https://www.tiktok.com/@bxtrades_/video/7700027724538055958" target="_blank" rel="noopener">▶ Watch my video</a></dd></div>
+      <div id="paper-trading"><dt>Paper trading</dt><dd>Trading a simulated account with fake money but real prices. It's how you practise a strategy without risking anything.</dd></div>
+    </dl>
+    <h2 class="gloss-group">Price action ideas</h2>
+    <dl class="gloss">
+      <div id="liquidity"><dt>Liquidity</dt><dd>Clusters of waiting orders, mostly stop losses, that sit just above obvious highs and just below obvious lows. Big players need those orders to fill their own trades. <a class="term-vid" href="https://www.tiktok.com/@bxtrades_/video/7697676474819677472" target="_blank" rel="noopener">▶ Watch my video</a></dd></div>
+      <div id="liquidity-sweep"><dt>Liquidity sweep</dt><dd>When price pokes just past a high or low, triggers the stop losses sitting there, then quickly reverses. Also called a stop hunt or <em>sweeping out liquidity</em>.</dd></div>
+      <div id="draw-on-liquidity"><dt>Draw on liquidity</dt><dd>The level price looks likely to head for next, usually an untouched high or low with lots of stops resting beyond it.</dd></div>
+      <div id="bos"><dt>Break of structure (BOS)</dt><dd>When price breaks past the last significant high (in an uptrend) or low (in a downtrend), suggesting the trend is continuing. <a class="term-vid" href="https://www.tiktok.com/@bxtrades_/video/7698082653949414688" target="_blank" rel="noopener">▶ Watch my video</a></dd></div>
+      <div id="fvg"><dt>Fair value gap (FVG)</dt><dd>A three-candle pattern from a fast move, where the wicks of the first and third candles don't overlap. The gap left behind is an area price often comes back to. <a class="term-vid" href="https://www.tiktok.com/@bxtrades_/video/7699208707934145824" target="_blank" rel="noopener">▶ Watch my video</a></dd></div>
+      <div id="ifvg"><dt>Inversion FVG</dt><dd>A fair value gap that price closes straight through. It then flips its role: a bearish gap that gets closed above can act as support, and a bullish gap closed below can act as resistance. In my notes this is <em>inversed</em>.</dd></div>
+      <div id="retest"><dt>Retest</dt><dd>When price breaks a level, then comes back to touch it before carrying on. Many traders wait for the retest, and a rejection from it, before entering.</dd></div>
+      <div id="smt"><dt>SMT divergence</dt><dd>When two markets that normally move together, like ES and NQ, disagree at a key point. For example, NQ makes a lower low but ES doesn't. It can be a hint that the move is running out of steam.</dd></div>
+      <div id="amd"><dt>AMD</dt><dd>Accumulation, manipulation, distribution: a way of describing a session. Price builds a range (accumulation), fakes a move one way, often sweeping liquidity (manipulation), then makes the real move the other way (distribution).</dd></div>
+    </dl>
+    <h2 class="gloss-group">Risk and prop firms</h2>
+    <dl class="gloss">
+      <div id="r"><dt>R and risk-to-reward (RR)</dt><dd><strong>1R</strong> is the amount you risk on a trade. Making <strong>2.29R</strong> means you made 2.29 times what you risked. Risk-to-reward compares how far your target is to how far your stop is.</dd></div>
+      <div id="prop-firm"><dt>Prop firm and evaluation</dt><dd>A proprietary trading firm lets you trade its money if you pass an evaluation: hit a profit target without breaking its rules. You pay a fee for each attempt.</dd></div>
+      <div id="drawdown"><dt>Max drawdown</dt><dd>The most your account is allowed to lose before the evaluation fails. A <em>trailing</em> drawdown moves up as your account makes new highs, so it can catch you out.</dd></div>
+      <div id="contracts"><dt>ES, NQ, MES and MNQ</dt><dd>Futures on the S&amp;P 500 (ES) and Nasdaq-100 (NQ). NQ is $20 per point per contract, ES $50. The micros, MNQ and MES, are a tenth of that: $2 and $5.</dd></div>
+    </dl>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="footer-links">
+      <a href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">TikTok</a>
+      <a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener">Discord</a>
+      <a href="tracker.html">Eval tracker</a>
+      <a href="prop-calculator.html">Prop calculator</a>
+      <a href="journal.html">Backtest journal</a>
+      <a href="glossary.html">Glossary</a>
+      <a href="index.html#faq">FAQ</a>
+      <a href="index.html#deal">TradersScale 40% off</a>
+    </div>
+    <p class="disclaimer"><strong>Disclaimer:</strong> All content on this site is for educational and entertainment purposes only and is not financial advice. I am not a financial adviser. Results shown are from a paper (simulated) trading account or backtests. Trading futures carries a high risk of loss and is not suitable for everyone. Past performance does not guarantee future results.</p>
+    <p class="mono small">© <span id="year"></span> BXTrades</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

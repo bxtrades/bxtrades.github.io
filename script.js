@@ -1,7 +1,7 @@
 /* =========================================================
    EDIT THIS PART TO UPDATE YOUR SITE
-   Add new TikTok episodes to VIDEOS, and change the words in
-   the scrolling strip with TICKER. The eval tracker is filled
+   Add new TikTok episodes to VIDEOS and new backtests to BACKTESTS.
+   The newest video and backtest show first. The eval tracker is filled
    in by each visitor themselves, so there's nothing to edit.
    ========================================================= */
 
@@ -27,38 +27,57 @@ const BACKTESTS = [
     note: "5m bearish gap inversed, 3m inversed again, then entered on the 1m bullish retest. Draw on liquidity, targeting the London high." }
 ];
 
-// Words that scroll along the top strip
-const TICKER = ["NQ", "ES", "PAPER ACCOUNT: $50K", "TRADING MADE SIMPLE", "CANDLE CLASH DAILY", "DISCIPLINE > PREDICTION", "@BXTRADES_"];
-
-
 /* =========================================================
    YOU DON'T NEED TO EDIT BELOW HERE
    ========================================================= */
 
 const money = n => (n < 0 ? "-$" : "$") + Math.abs(n).toLocaleString();
 
-// --- Ticker strip (doubled so the loop is seamless) ---
-const tickerEl = document.getElementById("ticker");
-if (tickerEl) tickerEl.innerHTML =
-  [...TICKER, ...TICKER].map((t, i) => `<span class="${i % 3 === 0 ? "gold" : ""}">${t}</span>`).join("");
-
-// --- Videos ---
-document.getElementById("videos").innerHTML = VIDEOS.map((v, i) => `
-  <li><a href="${v.link}" target="_blank" rel="noopener">
-    <span class="ep">${String(i + 1).padStart(2, "0")}</span>
+// --- Videos (newest first, only 3 shown until "Show all") ---
+const videoList = document.getElementById("videos");
+if (videoList) {
+  videoList.innerHTML = VIDEOS.map((v, i) => ({ v, n: i + 1 })).reverse().map(({ v, n }, k) => `
+  <li${k >= 3 ? ' class="extra" hidden' : ""}><a href="${v.link}" target="_blank" rel="noopener">
+    <span class="ep">${String(n).padStart(2, "0")}</span>
     <h4>${v.title}</h4>
     <p>${v.desc}</p>
     <span class="watch">Watch →</span>
   </a></li>`).join("");
+  const more = document.getElementById("show-videos");
+  if (more && VIDEOS.length > 3) {
+    more.hidden = false;
+    more.textContent = `Show all ${VIDEOS.length} videos`;
+    more.addEventListener("click", () => {
+      const open = more.dataset.open === "1";
+      videoList.querySelectorAll(".extra").forEach(li => li.hidden = open);
+      more.dataset.open = open ? "" : "1";
+      more.textContent = open ? `Show all ${VIDEOS.length} videos` : "Show fewer";
+    });
+  }
+}
 
 // --- Backtests ---
-document.getElementById("backtest-list").innerHTML = BACKTESTS.map((b, i) => `
+const btList = document.getElementById("backtest-list");
+if (btList) {
+  // Stats strip, worked out from BACKTESTS
+  const isWin = b => /win/i.test(b.result);
+  const rs = BACKTESTS.map(b => parseFloat((b.result.match(/(-?\d+(?:\.\d+)?)\s*R/i) || [])[1])).filter(isFinite);
+  const wins = BACKTESTS.filter(isWin).length;
+  const avgR = rs.length ? (rs.reduce((a, b) => a + b, 0) / rs.length).toFixed(2) + "R" : "–";
+  document.getElementById("bt-stats").innerHTML = [
+    ["Backtests logged", BACKTESTS.length],
+    ["Win rate", BACKTESTS.length ? Math.round(wins / BACKTESTS.length * 100) + "%" : "–"],
+    ["Average R", avgR + (rs.length && rs.length < BACKTESTS.length ? ` <small>(${rs.length} of ${BACKTESTS.length} recorded)</small>` : "")],
+    ["Latest", BACKTESTS.length ? BACKTESTS[0].date.replace(/^\w+ /, "") : "–"]
+  ].map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join("");
+
+btList.innerHTML = BACKTESTS.map((b, i) => `
   <button class="bt" type="button" data-i="${i}">
     <img src="${b.img}" alt="Annotated backtest, ${b.market}, ${b.date}" loading="lazy">
     <span class="bt-meta"><span class="mono">${b.date} · ${b.market} · ${b.side}</span><span class="bt-res ${/win/i.test(b.result) ? "green" : "red"}">${b.result}</span></span>
     <span class="bt-note">${b.note}</span>
   </button>`).join("");
-document.getElementById("backtest-list").addEventListener("click", e => {
+btList.addEventListener("click", e => {
   const card = e.target.closest(".bt"); if (!card) return;
   const b = BACKTESTS[card.dataset.i], lb = document.getElementById("lightbox");
   document.getElementById("lb-img").src = b.img;
@@ -67,15 +86,18 @@ document.getElementById("backtest-list").addEventListener("click", e => {
   lb.showModal();
 });
 document.getElementById("lightbox").addEventListener("click", e => { if (e.target.id === "lightbox") e.target.close(); });
+}
 
 // --- Copy discount code ---
-document.getElementById("copy-code").addEventListener("click", async () => {
+const copyBtn = document.getElementById("copy-code");
+if (copyBtn) copyBtn.addEventListener("click", async () => {
   const msg = document.getElementById("copy-msg");
   try { await navigator.clipboard.writeText("BXTRADES"); msg.textContent = "Copied ✓"; }
   catch (e) { msg.textContent = "Code: BXTRADES"; }
   setTimeout(() => { msg.textContent = "Tap to copy"; }, 2500);
 });
 
+if (document.getElementById("t-add")) {
 // =========================================================
 // EVAL TRACKER: each visitor's own account, trades and rules.
 // Saved in their browser only (localStorage).
@@ -206,6 +228,7 @@ function renderTracker() {
 
 fillSetup();
 renderTracker();
+}
 
 // --- Candle Clash vote buttons ---
 function vote(side) {
@@ -219,6 +242,7 @@ function vote(side) {
 // --- Animated candlesticks in the hero background ---
 (function candles() {
   const c = document.getElementById("candles");
+  if (!c) return;
   const ctx = c.getContext("2d");
   let bars = [], price = 100;
 
@@ -264,5 +288,6 @@ function vote(side) {
 })();
 
 // --- Footer year + close mobile menu after tapping a link ---
-document.getElementById("year").textContent = new Date().getFullYear();
-document.querySelectorAll(".links a").forEach(a => a.addEventListener("click", () => document.body.classList.remove("menu-open")));
+const yearEl = document.getElementById("year");
+if (yearEl) yearEl.textContent = new Date().getFullYear();
+document.querySelectorAll(".topbar .links a").forEach(a => a.addEventListener("click", () => document.body.classList.remove("menu-open")));

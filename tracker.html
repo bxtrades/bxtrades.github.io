@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval tracker | BXTrades</title>
+  <meta name="description" content="Free prop firm eval tracker. Set your account, target and drawdown, log trades and track your progress. Saved in your browser only.">
+  <meta property="og:title" content="Eval tracker | BXTrades">
+  <meta property="og:description" content="Free prop firm eval tracker. Set your account, target and drawdown, log trades and track your progress. Saved in your browser only.">
+  <meta property="og:image" content="https://bxtrades.github.io/images/desk-setup.jpg">
+  <meta property="og:url" content="https://bxtrades.github.io/tracker.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f3efe6'/><path d='M10 4v24M22 4v24' stroke='%231d1c1a' stroke-width='2'/><rect x='6' y='9' width='8' height='12' fill='%23b5392b'/><rect x='18' y='11' width='8' height='12' fill='%23f3efe6' stroke='%231f7a4d' stroke-width='2'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ===== TOP BAR (same on every page) ===== -->
+  <div class="topbar">
+    <header class="bar">
+      <a href="index.html" class="logo">BXTrades <span>by Boris</span></a>
+      <nav class="links" aria-label="Main">
+        <a href="index.html#about">About</a>
+        <a href="index.html#series">Videos</a>
+        <a href="index.html#backtests">Backtests</a>
+        <a href="index.html#tools">Tools</a>
+        <a href="index.html#community">Community</a>
+      </nav>
+      <a class="nav-deal" href="index.html#deal">40% off evals</a>
+      <button class="menu-btn" aria-label="Open menu" onclick="document.body.classList.toggle('menu-open')">Menu</button>
+    </header>
+  </div>
+
+  <main class="page">
+    <a class="back-link" href="index.html#tools">← Back to BXTrades tools</a>
+    <p class="kicker">Free tool · by Boris</p>
+    <h1 class="page-title">Eval tracker</h1>
+    <p class="lead">Set up your own prop firm or paper account, log your trades, and watch your progress towards the target. Everything saves in this browser, so only you can see it.</p>
+
+    <details class="setup" id="setup">
+      <summary>Your account &amp; rules</summary>
+      <div class="form-grid">
+        <label>Starting balance ($)<input type="number" id="acc-start" min="0" step="100"></label>
+        <label>Profit target ($)<input type="number" id="acc-target" min="0" step="100"></label>
+        <label>Max drawdown ($)<input type="number" id="acc-maxloss" min="0" step="100"></label>
+        <label class="wide">Your rules (one per line)<textarea id="acc-rules" rows="4" placeholder="e.g. Max 2 trades per day"></textarea></label>
+      </div>
+      <button class="btn primary small-btn" id="acc-save">Save settings</button>
+      <span class="mono small" id="acc-msg"></span>
+    </details>
+
+    <div class="add-trade">
+      <h3>Log a trade</h3>
+      <div class="form-grid">
+        <label>Date<input type="date" id="t-date"></label>
+        <label>Market<input type="text" id="t-market" placeholder="e.g. NQ" list="markets"></label>
+        <label>Side
+          <select id="t-side"><option>Long</option><option>Short</option></select>
+        </label>
+        <label>Result ($)<input type="number" id="t-result" step="1" placeholder="e.g. 250 or -150"></label>
+        <label class="wide">Note<input type="text" id="t-note" placeholder="What happened?"></label>
+      </div>
+      <datalist id="markets"><option>NQ</option><option>MNQ</option><option>ES</option><option>MES</option><option>NAS100</option><option>US500</option></datalist>
+      <button class="btn primary small-btn" id="t-add">Add trade</button>
+      <span class="mono small" id="t-msg"></span>
+    </div>
+
+    <div class="stats" id="stats"><!-- filled by script.js --></div>
+
+    <div class="chart-box">
+      <div class="chart-head"><span class="mono">ACCOUNT BALANCE</span><span class="mono small" id="target-label"></span></div>
+      <svg id="equity" viewBox="0 0 800 260" preserveAspectRatio="none" role="img" aria-label="Account balance over time"></svg>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Market</th><th>Side</th><th>Result</th><th>Note</th><th></th></tr></thead>
+        <tbody id="trades"><!-- filled by script.js --></tbody>
+      </table>
+    </div>
+
+    <div class="rules">
+      <h3>Your rules</h3>
+      <ul class="ticks" id="rules"><!-- filled by script.js --></ul>
+    </div>
+    <div class="tracker-actions">
+      <button class="btn small-btn" id="t-clear">Clear all trades</button>
+    </div>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="footer-links">
+      <a href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">TikTok</a>
+      <a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener">Discord</a>
+      <a href="tracker.html">Eval tracker</a>
+      <a href="prop-calculator.html">Prop calculator</a>
+      <a href="journal.html">Backtest journal</a>
+      <a href="glossary.html">Glossary</a>
+      <a href="index.html#faq">FAQ</a>
+      <a href="index.html#deal">TradersScale 40% off</a>
+    </div>
+    <p class="disclaimer"><strong>Disclaimer:</strong> All content on this site is for educational and entertainment purposes only and is not financial advice. I am not a financial adviser. Results shown are from a paper (simulated) trading account or backtests. Trading futures carries a high risk of loss and is not suitable for everyone. Past performance does not guarantee future results.</p>
+    <p class="mono small">© <span id="year"></span> BXTrades</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
