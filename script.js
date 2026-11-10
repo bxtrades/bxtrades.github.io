@@ -28,9 +28,8 @@ const TRADES = [
 
 // Your "Trading Made Simple" videos. Paste each TikTok link into "link".
 const VIDEOS = [
-  { title: "Equilibrium",       desc: "What the middle of a range tells you, and why price keeps coming back to it.", link: "https://www.tiktok.com/@bxtrades_" },
-  { title: "Liquidity",         desc: "Where the stop losses sit, and why price loves to hunt them first.",             link: "https://www.tiktok.com/@bxtrades_" },
-  { title: "Market Structure",  desc: "Higher highs, lower lows: reading the trend in 60 seconds.",                     link: "https://www.tiktok.com/@bxtrades_" }
+  { title: "Candlesticks",                  desc: "How to read a candle: open, close, wicks, and what each one tells you about buyers and sellers.", link: "https://www.tiktok.com/@bxtrades_/video/7695536751363853600" },
+  { title: "How and why the market moves",  desc: "What actually pushes price up and down, explained in plain English.",                            link: "https://www.tiktok.com/@bxtrades_/video/7695926986182561057" }
 ];
 
 // Your personal trading rules
