@@ -169,3 +169,26 @@ footer { border-top: 1px solid var(--line); padding: 3rem 5%; text-align: center
   .hero { padding: 3rem 16px; min-height: 75vh; }
   .hero::after { background: linear-gradient(180deg, transparent, var(--bg) 90%); }
 }
+
+/* ===== EVAL TRACKER (visitor's own data) ===== */
+.setup, .add-trade {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;
+}
+.setup summary { cursor: pointer; font-weight: 600; }
+.setup[open] summary { margin-bottom: 1rem; }
+.form-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: .75rem 0 1rem; }
+.form-grid label { display: flex; flex-direction: column; gap: .35rem; font-size: .85rem; color: var(--muted); }
+.form-grid .wide { grid-column: 1 / -1; }
+.form-grid input, .form-grid select, .form-grid textarea {
+  font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line);
+  border-radius: 6px; padding: .65rem .75rem; min-height: 44px; width: 100%;
+}
+.form-grid input:focus, .form-grid select:focus, .form-grid textarea:focus { outline: none; border-color: var(--green); }
+.small-btn { padding: .6rem 1.2rem; cursor: pointer; font-family: inherit; background: transparent; color: var(--text); }
+.btn.primary.small-btn { background: var(--green); color: #04110a; }
+.del-btn { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; font-size: .8rem; }
+.del-btn:hover { color: var(--red); }
+.empty-row td { color: var(--muted); text-align: center; padding: 2rem 1rem; }
+.tracker-actions { margin-top: 1rem; }
+@media (max-width: 700px) { .form-grid { grid-template-columns: 1fr 1fr; } }

@@ -142,6 +142,16 @@ h2{font-weight:750; letter-spacing:-0.015em}
 .panel{border-radius:10px; background:var(--surface)}
 select,.input,input[type=date],input[type=number],input[type=text],textarea{background:var(--bg)}
 tr.pick td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
+details.custom{background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:12px 14px; margin-bottom:16px}
+details.custom summary{cursor:pointer; font-weight:600; font-size:.95rem}
+details.custom[open] summary{margin-bottom:12px}
+details.custom .fields{grid-template-columns:1fr}
+details.custom textarea{background:var(--surface)}
+details.custom textarea,details.custom input{box-sizing:border-box; max-width:100%; min-width:0}
+details.custom .fields > *{min-width:0}
+details.custom input[type=text]{background:var(--surface)}
+.legendrow{display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+.linkbtn{font:inherit; font-size:.85rem; background:none; border:0; color:var(--accent); cursor:pointer; padding:0; text-decoration:underline}
 </style>
 </head>
 <body>
@@ -158,16 +168,36 @@ tr.pick td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   <header class="top">
     <p class="eyebrow">// Backtesting journal</p>
     <h1>Backtesting journal</h1>
-    <p class="lead">Log each trade and tick off your setup. Your stats build themselves, so you can see what’s actually working.</p>
+    <p class="lead">Set up your own checklist, log each trade and tick off your setup. Your stats build themselves, so you can see what’s actually working.</p>
   </header>
 
   <div class="layout">
     <section class="panel" aria-label="Add a trade" style="border-top:1px solid var(--line)">
       <h2>Add a trade</h2>
+      <details class="custom" id="custom">
+        <summary>⚙ Customise your journal</summary>
+        <div class="fields">
+          <label class="f">Your setup checklist (one step per line)
+            <textarea id="cSteps" rows="6" placeholder="e.g. Higher timeframe bias is clear"></textarea>
+          </label>
+          <label class="f">Yes / no question to track
+            <input type="text" id="cQuestion" placeholder="e.g. Did you follow your plan?">
+          </label>
+          <label class="f">Instruments you trade (one per line)
+            <textarea id="cInst" rows="4" placeholder="e.g. NQ"></textarea>
+          </label>
+        </div>
+        <div class="formfoot">
+          <button class="btn primary small" id="cSave">Save</button>
+          <button class="btn ghost small" id="cReset">Reset to defaults</button>
+          <span class="msg" id="cMsg" role="status"></span>
+        </div>
+        <p class="hint">Changing your checklist won't change trades you've already saved. Each trade keeps the checklist it was logged with.</p>
+      </details>
       <div class="fields">
         <label class="f">Date<input type="date" id="date"></label>
         <label class="f">Instrument
-          <select id="inst"><option>NQ</option><option>MNQ</option><option>ES</option><option>MES</option><option>NAS100</option><option>US500</option></select>
+          <select id="inst"></select>
         </label>
         <div class="f full"><span style="font-size:.88rem;font-weight:600">Direction</span>
           <div class="seg" id="dir" role="group" aria-label="Direction"><button data-v="Long">Long</button><button data-v="Short">Short</button></div>
@@ -176,11 +206,11 @@ tr.pick td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
           <select id="mode"><option value="backtest">Backtest</option><option value="paper">Paper</option><option value="live">Live / eval</option></select>
         </label>
         <label class="f">Result in R<input type="number" id="r" step="0.1" inputmode="decimal" placeholder="e.g. 2 or -1"></label>
-        <label class="f full">Daily and 4H bias agreed?
-          <select id="aligned"><option value="">Not recorded</option><option value="yes">Yes, they agreed</option><option value="no">No, they disagreed</option></select>
+        <label class="f full"><span id="qLabel">Did you follow your plan?</span>
+          <select id="aligned"><option value="">Not recorded</option><option value="yes">Yes</option><option value="no">No</option></select>
         </label>
         <fieldset class="full">
-          <legend>EXPO checklist</legend>
+          <legend class="legendrow"><span>Setup checklist</span></legend>
           <div class="checks" id="checks"></div>
         </fieldset>
         <label class="f full">Notes<textarea id="notes" placeholder="What did you see? What would you do differently?"></textarea></label>
@@ -220,7 +250,18 @@ tr.pick td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 <script>
 (function(){
   var KEY = "bxt-journal-v1";
-  var STEPS = ["Higher timeframe bias","AMD phase","Liquidity sweep of equal highs or lows","SMT divergence (NQ vs ES)","Premium or discount check","FVG inversion","1-minute FVG retest entry"];
+  var SKEY = "bxt-journal-settings-v1";
+  var DEFAULTS = {
+    steps:["Higher timeframe bias is clear","Price is at a key level","Entry signal confirmed","Stop loss and target set before entry","Risk is within my plan"],
+    question:"Did you follow your plan?",
+    instruments:["NQ","MNQ","ES","MES","NAS100","US500"]
+  };
+  var cfg;
+  try{ cfg = JSON.parse(localStorage.getItem(SKEY) || "null"); }catch(e){ cfg = null; }
+  if(!cfg || !Array.isArray(cfg.steps) || !Array.isArray(cfg.instruments)) cfg = JSON.parse(JSON.stringify(DEFAULTS));
+  if(typeof cfg.question !== "string" || !cfg.question) cfg.question = DEFAULTS.question;
+  var STEPS = cfg.steps;
+  function saveCfg(){ try{ localStorage.setItem(SKEY, JSON.stringify(cfg)); }catch(e){} }
   var trades = [], filter = "all", dir = "Long";
   try{ trades = JSON.parse(localStorage.getItem(KEY) || "[]"); if(!Array.isArray(trades)) trades = []; }catch(e){ trades = []; }
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(trades)); }catch(e){} }
@@ -229,10 +270,36 @@ tr.pick td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   function fmtR(x){ return (x>0?"+":x<0?"−":"") + Math.abs(Math.round(x*100)/100) + "R"; }
   function pct(a,b){ return b ? Math.round(a/b*100) + "%" : "–"; }
 
-  // Checklist
-  $("checks").innerHTML = STEPS.map(function(s,i){
-    return '<label><input type="checkbox" data-i="'+i+'"><span class="n">'+(i+1)+'</span>'+esc(s)+'</label>';
-  }).join("");
+  // Checklist, question and instruments from the visitor's own settings
+  function applyCfg(){
+    STEPS = cfg.steps;
+    $("checks").innerHTML = STEPS.length ? STEPS.map(function(s,i){
+      return '<label><input type="checkbox" data-i="'+i+'"><span class="n">'+(i+1)+'</span>'+esc(s)+'</label>';
+    }).join("") : '<p class="hint" style="margin:0">No checklist yet. Open “Customise your journal” above to add your setup steps.</p>';
+    $("qLabel").textContent = cfg.question;
+    var cur = $("inst").value;
+    $("inst").innerHTML = cfg.instruments.map(function(x){ return '<option>'+esc(x)+'</option>'; }).join("");
+    if(cfg.instruments.indexOf(cur) >= 0) $("inst").value = cur;
+    $("cSteps").value = cfg.steps.join("\n");
+    $("cQuestion").value = cfg.question;
+    $("cInst").value = cfg.instruments.join("\n");
+  }
+  function lines(v){ return v.split("\n").map(function(x){ return x.trim(); }).filter(Boolean); }
+  $("cSave").addEventListener("click", function(){
+    var inst = lines($("cInst").value);
+    if(!inst.length){ $("cMsg").style.color="var(--loss)"; $("cMsg").textContent="Add at least one instrument."; return; }
+    cfg = { steps: lines($("cSteps").value), question: $("cQuestion").value.trim() || DEFAULTS.question, instruments: inst };
+    saveCfg(); applyCfg(); render();
+    $("cMsg").style.color="var(--gain)"; $("cMsg").textContent="Saved.";
+    setTimeout(function(){ $("cMsg").textContent=""; }, 2500);
+  });
+  $("cReset").addEventListener("click", function(){
+    if(!confirm("Reset your checklist, question and instruments to the defaults?")) return;
+    cfg = JSON.parse(JSON.stringify(DEFAULTS)); saveCfg(); applyCfg(); render();
+  });
+  var firstVisit = true; try{ firstVisit = !localStorage.getItem(SKEY) && !trades.length; }catch(e){}
+  applyCfg();
+  if(firstVisit) $("custom").open = true;
 
   // Defaults
   $("date").value = new Date().toISOString().slice(0,10);
@@ -246,7 +313,7 @@ tr.pick td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
     if(rv === "" || !isFinite(parseFloat(rv))){ $("msg").style.color="var(--loss)"; $("msg").textContent="Enter the result in R to save."; $("r").focus(); return; }
     var steps = Array.prototype.map.call(document.querySelectorAll("#checks input"),function(c){ return c.checked; });
     trades.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), date: $("date").value || new Date().toISOString().slice(0,10),
-      inst: $("inst").value, dir: dir, mode: $("mode").value, r: parseFloat(rv), aligned: $("aligned").value, steps: steps, notes: $("notes").value.trim() });
+      inst: $("inst").value, dir: dir, mode: $("mode").value, r: parseFloat(rv), aligned: $("aligned").value, q: cfg.question, steps: steps, stepNames: STEPS.slice(), notes: $("notes").value.trim() });
     save();
     $("r").value=""; $("notes").value=""; $("aligned").value="";
     document.querySelectorAll("#checks input").forEach(function(c){ c.checked=false; });
@@ -276,16 +343,16 @@ tr.pick td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
       function avgR(l){ return l.length ? l.reduce(function(s,t){return s+t.r;},0)/l.length : null; }
       var insight = "";
       if(ay.length>=3 && an.length>=3){
-        insight = "When daily and 4H bias agreed you won <strong>"+wr(ay)+"%</strong> ("+fmtR(avgR(ay))+" average). When they disagreed you won <strong>"+wr(an)+"%</strong> ("+fmtR(avgR(an))+" average).";
+        insight = "“"+esc(cfg.question)+"” When you answered yes you won <strong>"+wr(ay)+"%</strong> ("+fmtR(avgR(ay))+" average). When you answered no you won <strong>"+wr(an)+"%</strong> ("+fmtR(avgR(an))+" average).";
       } else if(ay.length || an.length){
-        insight = "Record bias agreement on at least 3 trades each way to compare how aligned and non-aligned trades perform.";
+        insight = "Answer “"+esc(cfg.question)+"” with yes on at least 3 trades and no on at least 3 to compare how they perform.";
       }
       // checklist completeness
-      var full = list.filter(function(t){ return t.steps && t.steps.every(Boolean); });
-      var part = list.filter(function(t){ return t.steps && !t.steps.every(Boolean); });
+      var full = list.filter(function(t){ return t.steps && t.steps.length && t.steps.every(Boolean); });
+      var part = list.filter(function(t){ return t.steps && t.steps.length && !t.steps.every(Boolean); });
       var check = "";
       if(full.length>=3 && part.length>=3){
-        check = "With all 7 steps ticked you won <strong>"+wr(full)+"%</strong>. With steps missing you won <strong>"+wr(part)+"%</strong>.";
+        check = "With every checklist step ticked you won <strong>"+wr(full)+"%</strong>. With steps missing you won <strong>"+wr(part)+"%</strong>.";
       }
       // curve
       var W=600,H=150,pad=8, min=Math.min.apply(null,eq), max=Math.max.apply(null,eq); if(max===min){max+=1;min-=1;}
@@ -323,11 +390,11 @@ tr.pick td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
     var rows = sorted(trades.filter(function(t){ return filter==="all" || t.mode===filter; })).reverse();
     if(!rows.length){ $("log").innerHTML = '<p class="empty">Your trades will be listed here.</p>'; return; }
     var modeName = {backtest:"Backtest", paper:"Paper", live:"Live / eval"};
-    $("log").innerHTML = '<div class="tablewrap"><table><thead><tr><th>Date</th><th>Trade</th><th>Type</th><th>Checklist</th><th>Bias agreed</th><th class="r">Result</th><th></th></tr></thead><tbody>'+
+    $("log").innerHTML = '<div class="tablewrap"><table><thead><tr><th>Date</th><th>Trade</th><th>Type</th><th>Checklist</th><th>Yes / no</th><th class="r">Result</th><th></th></tr></thead><tbody>'+
       rows.map(function(t){
         var ticked = (t.steps||[]).filter(Boolean).length;
         return '<tr><td>'+esc(t.date)+'</td><td>'+esc(t.inst)+' '+esc(t.dir)+(t.notes?'<span class="note">'+esc(t.notes)+'</span>':'')+'</td><td>'+(modeName[t.mode]||esc(t.mode))+'</td>'+
-          '<td>'+ticked+' of '+STEPS.length+'</td><td>'+(t.aligned==="yes"?"Yes":t.aligned==="no"?"No":"–")+'</td>'+
+          '<td>'+ticked+' of '+(t.steps||[]).length+'</td><td>'+(t.aligned==="yes"?"Yes":t.aligned==="no"?"No":"–")+'</td>'+
           '<td class="r '+(t.r>0?'pos':t.r<0?'neg':'')+'">'+fmtR(t.r)+'</td><td><button class="del" data-id="'+esc(t.id)+'">Delete</button></td></tr>';
       }).join("")+'</tbody></table></div>';
   }
@@ -346,10 +413,12 @@ tr.pick td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
   var stamp = function(){ return new Date().toISOString().slice(0,10); };
   $("exportJson").addEventListener("click",function(){ download("bxtrades-journal-backup-"+stamp()+".json", JSON.stringify(trades,null,2), "application/json"); });
   $("exportCsv").addEventListener("click",function(){
-    var head=["date","instrument","direction","type","result_R","bias_agreed","steps_ticked"].concat(STEPS).concat(["notes"]);
+    var head=["date","instrument","direction","type","result_R","question","answer","steps_ticked","steps_total","steps_missed","notes"];
     var q=function(v){ v=String(v==null?"":v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
     var lines=[head.map(q).join(",")].concat(sorted(trades).map(function(t){
-      var st=t.steps||[]; return [t.date,t.inst,t.dir,t.mode,t.r,t.aligned,st.filter(Boolean).length].concat(STEPS.map(function(_,i){return st[i]?"yes":"no";})).concat([t.notes]).map(q).join(",");
+      var st=t.steps||[], names=t.stepNames||[];
+      var missed=st.map(function(v,i){ return v ? null : (names[i] || ("Step "+(i+1))); }).filter(Boolean).join("; ");
+      return [t.date,t.inst,t.dir,t.mode,t.r,t.q||"",t.aligned,st.filter(Boolean).length,st.length,missed,t.notes].map(q).join(",");
     }));
     download("bxtrades-journal-"+stamp()+".csv", lines.join("\n"), "text/csv");
   });

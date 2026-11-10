@@ -20,7 +20,7 @@
       <a href="#about">About</a>
       <a href="#series">Trading Made Simple</a>
       <a href="#community">Community</a>
-      <a href="#journal">Journal</a>
+      <a href="#journal">Eval tracker</a>
       <a href="#tools">Tools</a>
     </nav>
   </header>
@@ -48,8 +48,8 @@
     <h2>Who I am</h2>
     <div class="grid two">
       <div>
-        <p>I'm Boris, an engineering student in Bristol, UK. I treat trading the way I treat engineering: <strong>clear rules, tested processes, and data over feelings.</strong></p>
-        <p>Right now I'm practising for <strong>50k prop firm futures evaluations</strong> on a paper account, following my mentor's advice to prove consistency before putting real money on the line.</p>
+        <p>I'm Boris, an engineering student. I treat trading the way I treat engineering: <strong>clear rules, tested processes, and data over feelings.</strong></p>
+        <p>Right now I'm practising for <strong>50k prop firm futures evaluations</strong> on a paper account, proving I can be consistent before putting real money on the line.</p>
       </div>
       <div class="cards">
         <div class="card"><span class="mono green">ES / NQ</span><p>Markets I focus on</p></div>
@@ -111,9 +111,37 @@
 
   <!-- ===== JOURNAL ===== -->
   <section id="journal" class="section">
-    <p class="tag">04 // TRADING JOURNAL</p>
-    <h2>Eval progress</h2>
-    <p class="lead">My paper trading account, run as if it were a 50k prop firm evaluation. Every trade is logged, good or bad.</p>
+    <p class="tag">04 // EVAL TRACKER</p>
+    <h2>Track your eval</h2>
+    <p class="lead">Set up your own prop firm or paper account, log your trades, and watch your progress to the target. Everything saves in your browser, so only you can see it.</p>
+
+    <details class="setup" id="setup">
+      <summary>⚙ Your account &amp; rules</summary>
+      <div class="form-grid">
+        <label>Starting balance ($)<input type="number" id="acc-start" min="0" step="100"></label>
+        <label>Profit target ($)<input type="number" id="acc-target" min="0" step="100"></label>
+        <label>Max drawdown ($)<input type="number" id="acc-maxloss" min="0" step="100"></label>
+        <label class="wide">Your rules (one per line)<textarea id="acc-rules" rows="4" placeholder="e.g. Max 2 trades per day"></textarea></label>
+      </div>
+      <button class="btn primary small-btn" id="acc-save">Save settings</button>
+      <span class="mono small" id="acc-msg"></span>
+    </details>
+
+    <div class="add-trade">
+      <h3>Log a trade</h3>
+      <div class="form-grid">
+        <label>Date<input type="date" id="t-date"></label>
+        <label>Market<input type="text" id="t-market" placeholder="e.g. NQ" list="markets"></label>
+        <label>Side
+          <select id="t-side"><option>Long</option><option>Short</option></select>
+        </label>
+        <label>Result ($)<input type="number" id="t-result" step="1" placeholder="e.g. 250 or -150"></label>
+        <label class="wide">Note<input type="text" id="t-note" placeholder="What happened?"></label>
+      </div>
+      <datalist id="markets"><option>NQ</option><option>MNQ</option><option>ES</option><option>MES</option><option>NAS100</option><option>US500</option></datalist>
+      <button class="btn primary small-btn" id="t-add">Add trade</button>
+      <span class="mono small" id="t-msg"></span>
+    </div>
 
     <div class="stats" id="stats"><!-- filled by script.js --></div>
 
@@ -124,14 +152,17 @@
 
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Date</th><th>Market</th><th>Side</th><th>Result</th><th>Note</th></tr></thead>
+        <thead><tr><th>Date</th><th>Market</th><th>Side</th><th>Result</th><th>Note</th><th></th></tr></thead>
         <tbody id="trades"><!-- filled by script.js --></tbody>
       </table>
     </div>
 
     <div class="rules">
-      <h3>My rules</h3>
+      <h3>Your rules</h3>
       <ul class="ticks" id="rules"><!-- filled by script.js --></ul>
+    </div>
+    <div class="tracker-actions">
+      <button class="btn small-btn" id="t-clear">Clear all trades</button>
     </div>
   </section>
 

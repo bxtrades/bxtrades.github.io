@@ -1,30 +1,9 @@
 /* =========================================================
    EDIT THIS PART TO UPDATE YOUR SITE
-   You only need to change the lists below. The rest of the
-   file draws everything automatically.
+   Add new TikTok episodes to VIDEOS, and change the words in
+   the scrolling strip with TICKER. The eval tracker is filled
+   in by each visitor themselves, so there's nothing to edit.
    ========================================================= */
-
-// Your paper account starting balance and eval profit target
-const ACCOUNT = {
-  start: 50000,
-  target: 3000,      // profit needed to "pass" (change to your firm's rule)
-  maxLoss: 2000      // trailing / max drawdown limit
-};
-
-// Set to false once the trades below are your real logged trades
-const SHOWING_EXAMPLE_TRADES = true;
-
-// Add one line per trade, newest at the bottom.
-// result = profit or loss in dollars (use a minus sign for losses)
-const TRADES = [
-  { date: "2026-10-01", market: "NQ", side: "Long",  result:  420, note: "Equilibrium retest at open" },
-  { date: "2026-10-02", market: "NQ", side: "Short", result: -250, note: "Entered early, no confirmation" },
-  { date: "2026-10-06", market: "ES", side: "Long",  result:  310, note: "Followed the plan" },
-  { date: "2026-10-08", market: "NQ", side: "Short", result:  180, note: "Took partials at 1R" },
-  { date: "2026-10-13", market: "NQ", side: "Long",  result: -300, note: "Revenge trade, broke a rule" },
-  { date: "2026-10-15", market: "ES", side: "Short", result:  520, note: "Liquidity sweep, clean entry" },
-  { date: "2026-10-20", market: "NQ", side: "Long",  result:  260, note: "One and done" }
-];
 
 // Your "Trading Made Simple" videos. Paste each TikTok link into "link".
 const VIDEOS = [
@@ -37,15 +16,6 @@ const VIDEOS = [
   { title: "Break of structure",            desc: "When price breaks a key high or low, and how it signals the trend is continuing or changing.",    link: "https://www.tiktok.com/@bxtrades_/video/7698082653949414688" },
   { title: "Fair value gaps",               desc: "The gaps a fast move leaves behind, and why price often comes back to fill them.",                link: "https://www.tiktok.com/@bxtrades_/video/7699208707934145824" },
   { title: "Trading sessions",              desc: "Asia, London, New York: when each session runs and why the time of day changes how price moves.", link: "https://www.tiktok.com/@bxtrades_/video/7700027724538055958" }
-];
-
-// Your personal trading rules
-const RULES = [
-  "Max 2 trades per day",
-  "Risk the same amount on every trade",
-  "Stop for the day after 2 losses",
-  "No trading during major news releases",
-  "Every trade gets logged, no exceptions"
 ];
 
 // Words that scroll along the top strip
@@ -71,63 +41,136 @@ document.getElementById("videos").innerHTML = VIDEOS.map((v, i) => `
     <span class="watch green">▶ Watch</span>
   </a>`).join("");
 
-// --- Rules ---
-document.getElementById("rules").innerHTML = RULES.map(r => `<li>${r}</li>`).join("");
+// =========================================================
+// EVAL TRACKER: each visitor's own account, trades and rules.
+// Saved in their browser only (localStorage).
+// =========================================================
+const TKEY = "bxt-eval-tracker-v1";
+const DEFAULT_TRACKER = {
+  account: { start: 50000, target: 3000, maxLoss: 2000 },
+  rules: [],
+  trades: []
+};
+let T, firstVisit = true;
+try { const raw = localStorage.getItem(TKEY); firstVisit = !raw; T = JSON.parse(raw) || null; } catch (e) { T = null; }
+if (!T || !T.account || !Array.isArray(T.trades)) T = JSON.parse(JSON.stringify(DEFAULT_TRACKER));
+if (!Array.isArray(T.rules)) T.rules = [];
+const saveT = () => { try { localStorage.setItem(TKEY, JSON.stringify(T)); } catch (e) {} };
 
-// --- Journal stats ---
-const pnl = TRADES.reduce((sum, t) => sum + t.result, 0);
-const wins = TRADES.filter(t => t.result > 0).length;
-const winRate = TRADES.length ? Math.round((wins / TRADES.length) * 100) : 0;
-const progress = Math.max(0, Math.min(100, Math.round((pnl / ACCOUNT.target) * 100)));
+const $ = id => document.getElementById(id);
+const esc = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const flash = (id, text, ok = true) => {
+  const el = $(id); el.textContent = text; el.style.color = ok ? "var(--green)" : "var(--red)";
+  setTimeout(() => { el.textContent = ""; }, 2500);
+};
 
-document.getElementById("stats").innerHTML = [
-  ["BALANCE", money(ACCOUNT.start + pnl), ""],
-  ["TOTAL P&L", money(pnl), pnl >= 0 ? "green" : "red"],
-  ["WIN RATE", winRate + "%", ""],
-  ["TO TARGET", progress + "%", "green"]
-].map(([label, value, cls]) => `
-  <div class="stat"><div class="label">${label}</div><div class="value ${cls}">${value}</div></div>`).join("");
+// Fill the settings form
+function fillSetup() {
+  $("acc-start").value = T.account.start;
+  $("acc-target").value = T.account.target;
+  $("acc-maxloss").value = T.account.maxLoss;
+  $("acc-rules").value = T.rules.join("\n");
+}
+$("acc-save").addEventListener("click", () => {
+  const start = parseFloat($("acc-start").value), target = parseFloat($("acc-target").value), maxLoss = parseFloat($("acc-maxloss").value);
+  if (!(start > 0) || !(target > 0) || !(maxLoss > 0)) { flash("acc-msg", "Enter numbers above 0 for all three.", false); return; }
+  T.account = { start, target, maxLoss };
+  T.rules = $("acc-rules").value.split("\n").map(r => r.trim()).filter(Boolean);
+  saveT(); renderTracker(); flash("acc-msg", "Saved.");
+});
+// First visit: open the settings so people set up their own account
+if (firstVisit) $("setup").open = true;
 
-document.getElementById("target-label").textContent =
-  `TARGET ${money(ACCOUNT.start + ACCOUNT.target)}` + (SHOWING_EXAMPLE_TRADES ? " · EXAMPLE DATA" : "");
+// Add a trade
+$("t-date").value = new Date().toISOString().slice(0, 10);
+$("t-add").addEventListener("click", () => {
+  const result = parseFloat($("t-result").value);
+  if (!isFinite(result)) { flash("t-msg", "Enter the result in dollars.", false); $("t-result").focus(); return; }
+  T.trades.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    date: $("t-date").value || new Date().toISOString().slice(0, 10),
+    market: $("t-market").value.trim() || "–",
+    side: $("t-side").value,
+    result,
+    note: $("t-note").value.trim()
+  });
+  saveT();
+  $("t-result").value = ""; $("t-note").value = "";
+  renderTracker(); flash("t-msg", "Trade added.");
+});
+// Delete one trade
+$("trades").addEventListener("click", e => {
+  const b = e.target.closest(".del-btn"); if (!b) return;
+  if (!confirm("Delete this trade?")) return;
+  T.trades = T.trades.filter(t => t.id !== b.dataset.id); saveT(); renderTracker();
+});
+// Clear everything
+$("t-clear").addEventListener("click", () => {
+  if (!T.trades.length) return;
+  if (!confirm("Delete ALL your trades? This can't be undone.")) return;
+  T.trades = []; saveT(); renderTracker();
+});
 
-// --- Trades table (newest first) ---
-document.getElementById("trades").innerHTML = [...TRADES].reverse().map(t => `
-  <tr>
-    <td class="mono">${t.date}</td>
-    <td>${t.market}</td>
-    <td>${t.side}</td>
-    <td class="res ${t.result >= 0 ? "green" : "red"}">${t.result >= 0 ? "+" : ""}${money(t.result)}</td>
-    <td>${t.note}</td>
-  </tr>`).join("");
+function renderTracker() {
+  const A = T.account;
+  const trades = [...T.trades].sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
 
-// --- Equity curve chart ---
-(function drawEquity() {
-  const svg = document.getElementById("equity");
+  // Rules
+  $("rules").innerHTML = T.rules.length
+    ? T.rules.map(r => `<li>${esc(r)}</li>`).join("")
+    : `<li class="small" style="list-style:none">No rules yet. Open "⚙ Your account &amp; rules" above to add your own.</li>`;
+
+  // Stats
+  const pnl = trades.reduce((sum, t) => sum + t.result, 0);
+  const wins = trades.filter(t => t.result > 0).length;
+  const winRate = trades.length ? Math.round((wins / trades.length) * 100) + "%" : "–";
+  const progress = Math.max(0, Math.min(100, Math.round((pnl / A.target) * 100)));
+  $("stats").innerHTML = [
+    ["BALANCE", money(A.start + pnl), ""],
+    ["TOTAL P&L", money(pnl), pnl >= 0 ? "green" : "red"],
+    ["WIN RATE", winRate, ""],
+    ["TO TARGET", progress + "%", "green"]
+  ].map(([label, value, cls]) => `
+    <div class="stat"><div class="label">${label}</div><div class="value ${cls}">${value}</div></div>`).join("");
+  $("target-label").textContent = `TARGET ${money(A.start + A.target)} · FAIL LEVEL ${money(A.start - A.maxLoss)}`;
+
+  // Table (newest first)
+  $("trades").innerHTML = trades.length ? [...trades].reverse().map(t => `
+    <tr>
+      <td class="mono">${esc(t.date)}</td>
+      <td>${esc(t.market)}</td>
+      <td>${esc(t.side)}</td>
+      <td class="res ${t.result >= 0 ? "green" : "red"}">${t.result >= 0 ? "+" : ""}${money(t.result)}</td>
+      <td>${esc(t.note)}</td>
+      <td><button class="del-btn" data-id="${esc(t.id)}">Delete</button></td>
+    </tr>`).join("")
+    : `<tr class="empty-row"><td colspan="6">No trades yet. Log your first trade above and your stats and chart will build themselves.</td></tr>`;
+
+  // Equity curve
+  const svg = $("equity");
   const W = 800, H = 260, pad = 20;
-  const points = [ACCOUNT.start];
-  TRADES.forEach(t => points.push(points[points.length - 1] + t.result));
-
-  const goal = ACCOUNT.start + ACCOUNT.target;
-  const floor = ACCOUNT.start - ACCOUNT.maxLoss;
+  const points = [A.start];
+  trades.forEach(t => points.push(points[points.length - 1] + t.result));
+  const goal = A.start + A.target, floor = A.start - A.maxLoss;
   const hi = Math.max(goal, ...points), lo = Math.min(floor, ...points);
   const x = i => pad + (i / Math.max(1, points.length - 1)) * (W - pad * 2);
-  const y = v => H - pad - ((v - lo) / (hi - lo)) * (H - pad * 2);
-
+  const y = v => H - pad - ((v - lo) / (hi - lo || 1)) * (H - pad * 2);
   const line = points.map((v, i) => `${i ? "L" : "M"}${x(i)},${y(v)}`).join(" ");
   const area = `${line} L${x(points.length - 1)},${H - pad} L${x(0)},${H - pad} Z`;
-
   svg.innerHTML = `
     <defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#22c55e" stop-opacity=".35"/><stop offset="1" stop-color="#22c55e" stop-opacity="0"/>
     </linearGradient></defs>
     <line x1="${pad}" x2="${W - pad}" y1="${y(goal)}" y2="${y(goal)}" stroke="#22c55e" stroke-dasharray="6 6" opacity=".6"/>
     <line x1="${pad}" x2="${W - pad}" y1="${y(floor)}" y2="${y(floor)}" stroke="#ef4444" stroke-dasharray="6 6" opacity=".6"/>
-    <line x1="${pad}" x2="${W - pad}" y1="${y(ACCOUNT.start)}" y2="${y(ACCOUNT.start)}" stroke="#8b98a5" opacity=".25"/>
-    <path d="${area}" fill="url(#fill)"/>
-    <path d="${line}" fill="none" stroke="#22c55e" stroke-width="3" vector-effect="non-scaling-stroke"/>
+    <line x1="${pad}" x2="${W - pad}" y1="${y(A.start)}" y2="${y(A.start)}" stroke="#8b98a5" opacity=".25"/>
+    ${points.length > 1 ? `<path d="${area}" fill="url(#fill)"/>
+    <path d="${line}" fill="none" stroke="#22c55e" stroke-width="3" vector-effect="non-scaling-stroke"/>` : ""}
     ${points.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="#0b0e11" stroke="#22c55e" stroke-width="2" vector-effect="non-scaling-stroke"/>`).join("")}`;
-})();
+}
+
+fillSetup();
+renderTracker();
 
 // --- Candle Clash vote buttons ---
 function vote(side) {
