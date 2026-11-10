@@ -1,11 +1,13 @@
 /* ===== COLOURS: change these to restyle the whole site ===== */
 :root {
-  --bg: #0b0e11;
-  --panel: #131820;
-  --line: #222a35;
-  --text: #e6edf3;
-  --muted: #8b98a5;
-  --green: #22c55e;
+  --bg: #0a1426;        /* deep navy */
+  --panel: #10203b;     /* navy cards */
+  --line: #1e3256;
+  --text: #eef2f8;
+  --muted: #94a3bf;
+  --gold: #d4af37;      /* main accent */
+  --gold-light: #e8c766;
+  --green: #22c55e;     /* gains / up moves */
   --red: #ef4444;
   --mono: "JetBrains Mono", monospace;
 }
@@ -25,6 +27,7 @@ p + p { margin-top: 1rem; }
 .mono { font-family: var(--mono); }
 .small { font-size: .8rem; color: var(--muted); }
 .green { color: var(--green); }
+.gold { color: var(--gold); }
 .red { color: var(--red); }
 
 /* ===== NAV ===== */
@@ -32,15 +35,15 @@ p + p { margin-top: 1rem; }
   position: sticky; top: 0; z-index: 10;
   display: flex; align-items: center; justify-content: space-between;
   padding: 1rem 5%;
-  background: rgba(11, 14, 17, .85);
+  background: rgba(10, 20, 38, .88);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }
 .logo { font-family: var(--mono); font-weight: 600; font-size: 1.2rem; letter-spacing: 1px; }
-.logo span { color: var(--green); }
+.logo span { color: var(--gold); }
 .links { display: flex; gap: 2rem; }
 .links a { color: var(--muted); font-size: .9rem; transition: color .2s; }
-.links a:hover { color: var(--green); }
+.links a:hover { color: var(--gold); }
 .menu-btn { display: none; background: none; border: 0; color: var(--text); font-size: 1.5rem; cursor: pointer; }
 
 /* ===== TICKER ===== */
@@ -64,7 +67,7 @@ p + p { margin-top: 1rem; }
 .sub { color: var(--muted); font-size: 1.15rem; max-width: 560px; }
 .buttons { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2rem; }
 
-.tag { font-family: var(--mono); color: var(--green); font-size: .85rem; letter-spacing: 2px; }
+.tag { font-family: var(--mono); color: var(--gold); font-size: .85rem; letter-spacing: 2px; }
 
 /* ===== BUTTONS ===== */
 .btn {
@@ -72,9 +75,9 @@ p + p { margin-top: 1rem; }
   border: 1px solid var(--line); font-weight: 600; font-size: .95rem;
   transition: transform .15s, border-color .2s, background .2s;
 }
-.btn:hover { border-color: var(--green); transform: translateY(-2px); }
-.btn.primary { background: var(--green); color: #04110a; border-color: var(--green); }
-.btn.primary:hover { background: #34d670; }
+.btn:hover { border-color: var(--gold); transform: translateY(-2px); }
+.btn.primary { background: var(--gold); color: #0a1426; border-color: var(--gold); }
+.btn.primary:hover { background: var(--gold-light); border-color: var(--gold-light); }
 .btn.full { width: 100%; text-align: center; margin-top: 1.5rem; }
 
 /* ===== SECTIONS ===== */
@@ -101,16 +104,16 @@ p + p { margin-top: 1rem; }
 .roadmap li { border-top: 3px solid var(--line); padding-top: 1rem; }
 .roadmap li span { display: block; font-weight: 600; }
 .roadmap li small { color: var(--muted); }
-.roadmap li.done { border-color: var(--green); }
-.roadmap li.now { border-color: var(--green); }
-.roadmap li.now small { color: var(--green); font-family: var(--mono); }
-.roadmap li.now span::before { content: "● "; color: var(--green); animation: blink 1.2s infinite; }
+.roadmap li.done { border-color: var(--gold); }
+.roadmap li.now { border-color: var(--gold); }
+.roadmap li.now small { color: var(--gold); font-family: var(--mono); }
+.roadmap li.now span::before { content: "● "; color: var(--gold); animation: blink 1.2s infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 
 /* ===== VIDEOS ===== */
 .video { display: flex; flex-direction: column; gap: .5rem; transition: border-color .2s, transform .15s; }
-.video:hover { border-color: var(--green); transform: translateY(-3px); }
-.video .ep { font-family: var(--mono); color: var(--green); font-size: .8rem; }
+.video:hover { border-color: var(--gold); transform: translateY(-3px); }
+.video .ep { font-family: var(--mono); color: var(--gold); font-size: .8rem; }
 .video h4 { font-size: 1.1rem; }
 .video p { color: var(--muted); font-size: .9rem; flex: 1; }
 .video .watch { font-family: var(--mono); font-size: .8rem; }
@@ -125,10 +128,10 @@ p + p { margin-top: 1rem; }
 .vote .down { color: var(--red); border-color: var(--red); }
 .vote .up:hover, .vote .up.picked { background: rgba(34, 197, 94, .15); }
 .vote .down:hover, .vote .down.picked { background: rgba(239, 68, 68, .15); }
-.discord-box { border-color: #5865f2; }
+.discord-box { border-color: var(--gold); }
 .ticks { list-style: none; margin-top: 1rem; }
 .ticks li { padding: .4rem 0 .4rem 1.6rem; position: relative; color: var(--muted); }
-.ticks li::before { content: "✓"; position: absolute; left: 0; color: var(--green); font-weight: 600; }
+.ticks li::before { content: "✓"; position: absolute; left: 0; color: var(--gold); font-weight: 600; }
 
 /* ===== JOURNAL ===== */
 .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
@@ -148,7 +151,7 @@ td.res { font-family: var(--mono); font-weight: 600; }
 /* ===== FOOTER ===== */
 footer { border-top: 1px solid var(--line); padding: 3rem 5%; text-align: center; }
 .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem 2rem; margin-bottom: 1.5rem; }
-.footer-links a:hover { color: var(--green); }
+.footer-links a:hover { color: var(--gold); }
 .disclaimer { color: var(--muted); font-size: .8rem; max-width: 760px; margin: 0 auto 1rem; }
 
 /* ===== PHONES & TABLETS ===== */
@@ -184,9 +187,9 @@ footer { border-top: 1px solid var(--line); padding: 3rem 5%; text-align: center
   font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line);
   border-radius: 6px; padding: .65rem .75rem; min-height: 44px; width: 100%;
 }
-.form-grid input:focus, .form-grid select:focus, .form-grid textarea:focus { outline: none; border-color: var(--green); }
+.form-grid input:focus, .form-grid select:focus, .form-grid textarea:focus { outline: none; border-color: var(--gold); }
 .small-btn { padding: .6rem 1.2rem; cursor: pointer; font-family: inherit; background: transparent; color: var(--text); }
-.btn.primary.small-btn { background: var(--green); color: #04110a; }
+.btn.primary.small-btn { background: var(--gold); color: #0a1426; }
 .del-btn { background: none; border: 0; color: var(--muted); text-decoration: underline; cursor: pointer; font: inherit; font-size: .8rem; }
 .del-btn:hover { color: var(--red); }
 .empty-row td { color: var(--muted); text-align: center; padding: 2rem 1rem; }

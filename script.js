@@ -30,7 +30,7 @@ const money = n => (n < 0 ? "-$" : "$") + Math.abs(n).toLocaleString();
 
 // --- Ticker strip (doubled so the loop is seamless) ---
 document.getElementById("ticker").innerHTML =
-  [...TICKER, ...TICKER].map((t, i) => `<span class="${i % 3 === 0 ? "green" : ""}">${t}</span>`).join("");
+  [...TICKER, ...TICKER].map((t, i) => `<span class="${i % 3 === 0 ? "gold" : ""}">${t}</span>`).join("");
 
 // --- Videos ---
 document.getElementById("videos").innerHTML = VIDEOS.map((v, i) => `
@@ -38,7 +38,7 @@ document.getElementById("videos").innerHTML = VIDEOS.map((v, i) => `
     <span class="ep">EP ${String(i + 1).padStart(2, "0")}</span>
     <h4>${v.title}</h4>
     <p>${v.desc}</p>
-    <span class="watch green">▶ Watch</span>
+    <span class="watch gold">▶ Watch</span>
   </a>`).join("");
 
 // =========================================================
@@ -60,7 +60,7 @@ const saveT = () => { try { localStorage.setItem(TKEY, JSON.stringify(T)); } cat
 const $ = id => document.getElementById(id);
 const esc = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const flash = (id, text, ok = true) => {
-  const el = $(id); el.textContent = text; el.style.color = ok ? "var(--green)" : "var(--red)";
+  const el = $(id); el.textContent = text; el.style.color = ok ? "var(--gold)" : "var(--red)";
   setTimeout(() => { el.textContent = ""; }, 2500);
 };
 
@@ -129,7 +129,7 @@ function renderTracker() {
     ["BALANCE", money(A.start + pnl), ""],
     ["TOTAL P&L", money(pnl), pnl >= 0 ? "green" : "red"],
     ["WIN RATE", winRate, ""],
-    ["TO TARGET", progress + "%", "green"]
+    ["TO TARGET", progress + "%", "gold"]
   ].map(([label, value, cls]) => `
     <div class="stat"><div class="label">${label}</div><div class="value ${cls}">${value}</div></div>`).join("");
   $("target-label").textContent = `TARGET ${money(A.start + A.target)} · FAIL LEVEL ${money(A.start - A.maxLoss)}`;
@@ -159,14 +159,14 @@ function renderTracker() {
   const area = `${line} L${x(points.length - 1)},${H - pad} L${x(0)},${H - pad} Z`;
   svg.innerHTML = `
     <defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#22c55e" stop-opacity=".35"/><stop offset="1" stop-color="#22c55e" stop-opacity="0"/>
+      <stop offset="0" stop-color="#d4af37" stop-opacity=".3"/><stop offset="1" stop-color="#d4af37" stop-opacity="0"/>
     </linearGradient></defs>
     <line x1="${pad}" x2="${W - pad}" y1="${y(goal)}" y2="${y(goal)}" stroke="#22c55e" stroke-dasharray="6 6" opacity=".6"/>
     <line x1="${pad}" x2="${W - pad}" y1="${y(floor)}" y2="${y(floor)}" stroke="#ef4444" stroke-dasharray="6 6" opacity=".6"/>
     <line x1="${pad}" x2="${W - pad}" y1="${y(A.start)}" y2="${y(A.start)}" stroke="#8b98a5" opacity=".25"/>
     ${points.length > 1 ? `<path d="${area}" fill="url(#fill)"/>
-    <path d="${line}" fill="none" stroke="#22c55e" stroke-width="3" vector-effect="non-scaling-stroke"/>` : ""}
-    ${points.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="#0b0e11" stroke="#22c55e" stroke-width="2" vector-effect="non-scaling-stroke"/>`).join("")}`;
+    <path d="${line}" fill="none" stroke="#d4af37" stroke-width="3" vector-effect="non-scaling-stroke"/>` : ""}
+    ${points.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="#0a1426" stroke="#d4af37" stroke-width="2" vector-effect="non-scaling-stroke"/>`).join("")}`;
 }
 
 fillSetup();
