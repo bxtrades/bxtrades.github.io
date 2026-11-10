@@ -18,6 +18,13 @@ const VIDEOS = [
   { title: "Trading sessions",              desc: "Asia, London, New York: when each session runs and why the time of day changes how price moves.", link: "https://www.tiktok.com/@bxtrades_/video/7700027724538055958" }
 ];
 
+// Your backtests. Add a new one by copying a line and changing it.
+// Put the image in the "images" folder on GitHub first.
+const BACKTESTS = [
+  { date: "Wed 29 April 2026", market: "NAS100", side: "Long", result: "Win", img: "images/backtest-2026-04-29.jpg",
+    note: "5m bearish gap inversed, 3m inversed again, then entered on the 1m bullish retest. Draw on liquidity, targeting the London high." }
+];
+
 // Words that scroll along the top strip
 const TICKER = ["NQ", "ES", "PAPER ACCOUNT: $50K", "TRADING MADE SIMPLE", "CANDLE CLASH DAILY", "DISCIPLINE > PREDICTION", "@BXTRADES_"];
 
@@ -41,6 +48,31 @@ document.getElementById("videos").innerHTML = VIDEOS.map((v, i) => `
     <p>${v.desc}</p>
     <span class="watch">Watch →</span>
   </a></li>`).join("");
+
+// --- Backtests ---
+document.getElementById("backtest-list").innerHTML = BACKTESTS.map((b, i) => `
+  <button class="bt" type="button" data-i="${i}">
+    <img src="${b.img}" alt="Annotated backtest, ${b.market}, ${b.date}" loading="lazy">
+    <span class="bt-meta"><span class="mono">${b.date} · ${b.market} · ${b.side}</span><span class="bt-res ${/win/i.test(b.result) ? "green" : "red"}">${b.result}</span></span>
+    <span class="bt-note">${b.note}</span>
+  </button>`).join("");
+document.getElementById("backtest-list").addEventListener("click", e => {
+  const card = e.target.closest(".bt"); if (!card) return;
+  const b = BACKTESTS[card.dataset.i], lb = document.getElementById("lightbox");
+  document.getElementById("lb-img").src = b.img;
+  document.getElementById("lb-img").alt = `Annotated backtest, ${b.market}, ${b.date}`;
+  document.getElementById("lb-cap").textContent = `${b.date} · ${b.market} · ${b.side} · ${b.result}. ${b.note}`;
+  lb.showModal();
+});
+document.getElementById("lightbox").addEventListener("click", e => { if (e.target.id === "lightbox") e.target.close(); });
+
+// --- Copy discount code ---
+document.getElementById("copy-code").addEventListener("click", async () => {
+  const msg = document.getElementById("copy-msg");
+  try { await navigator.clipboard.writeText("BXTRADES"); msg.textContent = "Copied ✓"; }
+  catch (e) { msg.textContent = "Code: BXTRADES"; }
+  setTimeout(() => { msg.textContent = "Tap to copy"; }, 2500);
+});
 
 // =========================================================
 // EVAL TRACKER: each visitor's own account, trades and rules.
