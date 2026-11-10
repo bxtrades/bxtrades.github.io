@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BXTrades | Boris</title>
+  <meta name="description" content="Engineering student documenting the journey to becoming a funded ES & NQ futures day trader.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===== TOP BAR ===== -->
+  <header class="nav">
+    <a href="#" class="logo">BX<span>TRADES</span></a>
+    <button class="menu-btn" aria-label="Open menu" onclick="document.body.classList.toggle('menu-open')">☰</button>
+    <nav class="links">
+      <a href="#about">About</a>
+      <a href="#series">Trading Made Simple</a>
+      <a href="#community">Community</a>
+      <a href="#journal">Journal</a>
+    </nav>
+  </header>
+
+  <!-- ===== TICKER STRIP ===== -->
+  <div class="ticker"><div class="ticker-track" id="ticker"></div></div>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <canvas id="candles" aria-hidden="true"></canvas>
+    <div class="hero-content">
+      <p class="tag">// ES &amp; NQ FUTURES</p>
+      <h1>Documenting my journey to becoming a <span class="green">funded day trader.</span></h1>
+      <p class="sub">Engineering student by day. Futures trader in training. I break trading down so it's simple, and I share every step: the wins, the losses and the lessons.</p>
+      <div class="buttons">
+        <a class="btn primary" href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">Watch on TikTok</a>
+        <a class="btn" href="#community">Join the Discord</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT ===== -->
+  <section id="about" class="section">
+    <p class="tag">01 // ABOUT</p>
+    <h2>Who I am</h2>
+    <div class="grid two">
+      <div>
+        <p>I'm Boris, an engineering student in Bristol, UK. I treat trading the way I treat engineering: <strong>clear rules, tested processes, and data over feelings.</strong></p>
+        <p>Right now I'm practising for <strong>50k prop firm futures evaluations</strong> on a paper account, following my mentor's advice to prove consistency before putting real money on the line.</p>
+      </div>
+      <div class="cards">
+        <div class="card"><span class="mono green">ES / NQ</span><p>Markets I focus on</p></div>
+        <div class="card"><span class="mono green">$50K</span><p>Eval-size paper account</p></div>
+        <div class="card"><span class="mono green">LIVE</span><p>I stream my sessions on TikTok</p></div>
+        <div class="card"><span class="mono green">ENGINEER</span><p>Process-driven mindset</p></div>
+      </div>
+    </div>
+
+    <h3 class="roadmap-title">The roadmap</h3>
+    <ol class="roadmap">
+      <li class="done"><span>Learn the basics</span><small>Market structure, liquidity, equilibrium</small></li>
+      <li class="now"><span>Paper trade like a funded account</span><small>You are here</small></li>
+      <li><span>Pass a 50k evaluation</span><small>Hit the target, respect the rules</small></li>
+      <li><span>Get funded</span><small>Trade a real prop firm account</small></li>
+      <li><span>Scale up</span><small>Consistency first, size second</small></li>
+    </ol>
+  </section>
+
+  <!-- ===== TRADING MADE SIMPLE ===== -->
+  <section id="series" class="section">
+    <p class="tag">02 // TIKTOK SERIES</p>
+    <h2>Trading Made Simple</h2>
+    <p class="lead">Short videos that break one trading idea down into plain English. No jargon dumps.</p>
+    <div class="grid three" id="videos"><!-- filled by script.js --></div>
+    <a class="btn" href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">See all videos @bxtrades_</a>
+  </section>
+
+  <!-- ===== COMMUNITY ===== -->
+  <section id="community" class="section">
+    <p class="tag">03 // COMMUNITY</p>
+    <h2>BXT's Community</h2>
+    <div class="grid two">
+      <div>
+        <p class="lead">A Discord for traders learning together: chart breakdowns, live session alerts and a daily game.</p>
+        <div class="game">
+          <h3>🕯️ Candle Clash</h3>
+          <p>Every day, guess whether <strong>NQ</strong> closes <span class="green">up</span> or <span class="red">down</span>. Climb the leaderboard and test your read on the market.</p>
+          <div class="vote">
+            <button class="up" onclick="vote('up')">▲ UP</button>
+            <button class="down" onclick="vote('down')">▼ DOWN</button>
+          </div>
+          <p class="mono small" id="vote-msg">Pick a side, then make it count in the Discord.</p>
+        </div>
+      </div>
+      <div class="discord-box">
+        <p class="mono green">// JOIN THE SERVER</p>
+        <h3>Trade with us</h3>
+        <ul class="ticks">
+          <li>Daily Candle Clash with a reminder post</li>
+          <li>Notifications when I go live</li>
+          <li>Ask questions, share charts</li>
+        </ul>
+        <!-- REPLACE the link below with your Discord invite link -->
+        <a class="btn primary full" href="https://discord.gg/YOUR-INVITE-CODE" target="_blank" rel="noopener">Join BXT's Community</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== JOURNAL ===== -->
+  <section id="journal" class="section">
+    <p class="tag">04 // TRADING JOURNAL</p>
+    <h2>Eval progress</h2>
+    <p class="lead">My paper trading account, run as if it were a 50k prop firm evaluation. Every trade is logged, good or bad.</p>
+
+    <div class="stats" id="stats"><!-- filled by script.js --></div>
+
+    <div class="chart-box">
+      <div class="chart-head"><span class="mono">ACCOUNT BALANCE</span><span class="mono small" id="target-label"></span></div>
+      <svg id="equity" viewBox="0 0 800 260" preserveAspectRatio="none" role="img" aria-label="Account balance over time"></svg>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Market</th><th>Side</th><th>Result</th><th>Note</th></tr></thead>
+        <tbody id="trades"><!-- filled by script.js --></tbody>
+      </table>
+    </div>
+
+    <div class="rules">
+      <h3>My rules</h3>
+      <ul class="ticks" id="rules"><!-- filled by script.js --></ul>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="footer-links">
+      <a href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">TikTok</a>
+      <a href="https://discord.gg/YOUR-INVITE-CODE" target="_blank" rel="noopener">Discord</a>
+      <a href="#about">Back to top</a>
+    </div>
+    <p class="disclaimer"><strong>Disclaimer:</strong> All content on this site is for educational and entertainment purposes only and is not financial advice. I am not a financial adviser. Results shown are from a paper (simulated) trading account. Trading futures carries a high risk of loss and is not suitable for everyone. Past performance does not guarantee future results.</p>
+    <p class="mono small">© <span id="year"></span> BXTrades</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
