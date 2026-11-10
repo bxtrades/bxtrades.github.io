@@ -224,7 +224,7 @@ footer { max-width: 1120px; margin: 0 auto; padding: 2.5rem 24px 3rem; border-to
   transition: transform .1s, box-shadow .1s;
 }
 .bt:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--ink); }
-.bt img { width: 100%; display: block; border: 1px solid var(--rule); }
+.bt img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; object-position: top; display: block; border: 1px solid var(--rule); }
 .bt-meta { display: flex; justify-content: space-between; gap: 1rem; font-size: .8rem; }
 .bt-res { font-weight: 600; font-size: .85rem; }
 .bt-note { font-size: .92rem; color: #3b3832; }
