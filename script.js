@@ -29,7 +29,10 @@ const TRADES = [
 // Your "Trading Made Simple" videos. Paste each TikTok link into "link".
 const VIDEOS = [
   { title: "Candlesticks",                  desc: "How to read a candle: open, close, wicks, and what each one tells you about buyers and sellers.", link: "https://www.tiktok.com/@bxtrades_/video/7695536751363853600" },
-  { title: "How and why the market moves",  desc: "What actually pushes price up and down, explained in plain English.",                            link: "https://www.tiktok.com/@bxtrades_/video/7695926986182561057" }
+  { title: "How and why the market moves",  desc: "What actually pushes price up and down, explained in plain English.",                            link: "https://www.tiktok.com/@bxtrades_/video/7695926986182561057" },
+  { title: "Timeframes",                    desc: "Daily, 4H, 1-minute: how zooming in and out changes what you see, and which one to trust.",       link: "https://www.tiktok.com/@bxtrades_/video/7696507411435113760" },
+  { title: "Trends and ranges",             desc: "Is price trending or stuck in a range? How to tell the difference, and why it matters.",          link: "https://www.tiktok.com/@bxtrades_/video/7696940688981773600" },
+  { title: "Support and resistance",        desc: "The floors and ceilings on a chart, and why price keeps reacting at the same levels.",            link: "https://www.tiktok.com/@bxtrades_/video/7697252144562326816" }
 ];
 
 // Your personal trading rules
