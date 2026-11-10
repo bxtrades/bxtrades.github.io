@@ -29,17 +29,18 @@ const TICKER = ["NQ", "ES", "PAPER ACCOUNT: $50K", "TRADING MADE SIMPLE", "CANDL
 const money = n => (n < 0 ? "-$" : "$") + Math.abs(n).toLocaleString();
 
 // --- Ticker strip (doubled so the loop is seamless) ---
-document.getElementById("ticker").innerHTML =
+const tickerEl = document.getElementById("ticker");
+if (tickerEl) tickerEl.innerHTML =
   [...TICKER, ...TICKER].map((t, i) => `<span class="${i % 3 === 0 ? "gold" : ""}">${t}</span>`).join("");
 
 // --- Videos ---
 document.getElementById("videos").innerHTML = VIDEOS.map((v, i) => `
-  <a class="video" href="${v.link}" target="_blank" rel="noopener">
-    <span class="ep">EP ${String(i + 1).padStart(2, "0")}</span>
+  <li><a href="${v.link}" target="_blank" rel="noopener">
+    <span class="ep">${String(i + 1).padStart(2, "0")}</span>
     <h4>${v.title}</h4>
     <p>${v.desc}</p>
-    <span class="watch gold">▶ Watch</span>
-  </a>`).join("");
+    <span class="watch">Watch →</span>
+  </a></li>`).join("");
 
 // =========================================================
 // EVAL TRACKER: each visitor's own account, trades and rules.
@@ -60,7 +61,7 @@ const saveT = () => { try { localStorage.setItem(TKEY, JSON.stringify(T)); } cat
 const $ = id => document.getElementById(id);
 const esc = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const flash = (id, text, ok = true) => {
-  const el = $(id); el.textContent = text; el.style.color = ok ? "var(--gold)" : "var(--red)";
+  const el = $(id); el.textContent = text; el.style.color = ok ? "var(--green)" : "var(--red)";
   setTimeout(() => { el.textContent = ""; }, 2500);
 };
 
@@ -118,7 +119,7 @@ function renderTracker() {
   // Rules
   $("rules").innerHTML = T.rules.length
     ? T.rules.map(r => `<li>${esc(r)}</li>`).join("")
-    : `<li class="small" style="list-style:none">No rules yet. Open "⚙ Your account &amp; rules" above to add your own.</li>`;
+    : `<li class="small" style="list-style:none">No rules yet. Open "Your account &amp; rules" above to add your own.</li>`;
 
   // Stats
   const pnl = trades.reduce((sum, t) => sum + t.result, 0);
@@ -159,14 +160,14 @@ function renderTracker() {
   const area = `${line} L${x(points.length - 1)},${H - pad} L${x(0)},${H - pad} Z`;
   svg.innerHTML = `
     <defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#d4af37" stop-opacity=".3"/><stop offset="1" stop-color="#d4af37" stop-opacity="0"/>
+      <stop offset="0" stop-color="#1d1c1a" stop-opacity=".08"/><stop offset="1" stop-color="#1d1c1a" stop-opacity="0"/>
     </linearGradient></defs>
-    <line x1="${pad}" x2="${W - pad}" y1="${y(goal)}" y2="${y(goal)}" stroke="#22c55e" stroke-dasharray="6 6" opacity=".6"/>
-    <line x1="${pad}" x2="${W - pad}" y1="${y(floor)}" y2="${y(floor)}" stroke="#ef4444" stroke-dasharray="6 6" opacity=".6"/>
-    <line x1="${pad}" x2="${W - pad}" y1="${y(A.start)}" y2="${y(A.start)}" stroke="#8b98a5" opacity=".25"/>
+    <line x1="${pad}" x2="${W - pad}" y1="${y(goal)}" y2="${y(goal)}" stroke="#1f7a4d" stroke-dasharray="6 6" opacity=".6"/>
+    <line x1="${pad}" x2="${W - pad}" y1="${y(floor)}" y2="${y(floor)}" stroke="#b5392b" stroke-dasharray="6 6" opacity=".6"/>
+    <line x1="${pad}" x2="${W - pad}" y1="${y(A.start)}" y2="${y(A.start)}" stroke="#6a645a" opacity=".35"/>
     ${points.length > 1 ? `<path d="${area}" fill="url(#fill)"/>
-    <path d="${line}" fill="none" stroke="#d4af37" stroke-width="3" vector-effect="non-scaling-stroke"/>` : ""}
-    ${points.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="#0a1426" stroke="#d4af37" stroke-width="2" vector-effect="non-scaling-stroke"/>`).join("")}`;
+    <path d="${line}" fill="none" stroke="#1d1c1a" stroke-width="2" vector-effect="non-scaling-stroke"/>` : ""}
+    ${points.map((v, i) => `<circle cx="${x(i)}" cy="${y(v)}" r="4" fill="#fbf9f4" stroke="#1d1c1a" stroke-width="2" vector-effect="non-scaling-stroke"/>`).join("")}`;
 }
 
 fillSetup();
@@ -177,8 +178,8 @@ function vote(side) {
   document.querySelectorAll(".vote button").forEach(b => b.classList.remove("picked"));
   document.querySelector(".vote ." + side).classList.add("picked");
   document.getElementById("vote-msg").innerHTML = side === "up"
-    ? '<span class="green">▲ Bullish.</span> Lock it in on the Discord before the open.'
-    : '<span class="red">▼ Bearish.</span> Lock it in on the Discord before the open.';
+    ? '<span class="green">▲ Bullish.</span> Now post it in the Discord before the open.'
+    : '<span class="red">▼ Bearish.</span> Now post it in the Discord before the open.';
 }
 
 // --- Animated candlesticks in the hero background ---
@@ -199,24 +200,27 @@ function vote(side) {
   function resize() {
     c.width = c.offsetWidth * devicePixelRatio;
     c.height = c.offsetHeight * devicePixelRatio;
-    const count = Math.ceil(c.offsetWidth / 18) + 1;
+    const count = Math.ceil(c.offsetWidth / 14) + 1;
     while (bars.length < count) bars.push(newBar());
     draw();
   }
 
   function draw() {
-    const w = c.width, h = c.height, step = 18 * devicePixelRatio;
+    const w = c.width, h = c.height, step = 14 * devicePixelRatio;
     const shown = bars.slice(-Math.ceil(w / step));
     const hi = Math.max(...shown.map(b => b.high)), lo = Math.min(...shown.map(b => b.low));
     const y = v => h * 0.1 + (1 - (v - lo) / (hi - lo || 1)) * h * 0.8;
     ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = "rgba(106,100,90,.18)"; ctx.lineWidth = devicePixelRatio;
+    for (let g = 1; g < 5; g++) { ctx.beginPath(); ctx.moveTo(0, h * g / 5); ctx.lineTo(w, h * g / 5); ctx.stroke(); }
     shown.forEach((b, i) => {
-      const cx = i * step + step / 2;
-      ctx.strokeStyle = ctx.fillStyle = b.close >= b.open ? "#22c55e" : "#ef4444";
-      ctx.lineWidth = devicePixelRatio;
+      const cx = i * step + step / 2, up = b.close >= b.open;
+      ctx.strokeStyle = ctx.fillStyle = up ? "#1f7a4d" : "#b5392b";
+      ctx.lineWidth = 1.25 * devicePixelRatio;
       ctx.beginPath(); ctx.moveTo(cx, y(b.high)); ctx.lineTo(cx, y(b.low)); ctx.stroke();
-      const top = y(Math.max(b.open, b.close)), bottom = y(Math.min(b.open, b.close));
-      ctx.fillRect(cx - step * 0.3, top, step * 0.6, Math.max(1, bottom - top));
+      const top = y(Math.max(b.open, b.close)), bottom = y(Math.min(b.open, b.close)), bw = step * 0.56;
+      if (up) { ctx.fillStyle = "#fbf9f4"; ctx.fillRect(cx - bw / 2, top, bw, Math.max(1, bottom - top)); ctx.strokeRect(cx - bw / 2, top, bw, Math.max(1, bottom - top)); }
+      else ctx.fillRect(cx - bw / 2, top, bw, Math.max(1, bottom - top));
     });
   }
 
