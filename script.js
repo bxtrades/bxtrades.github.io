@@ -32,7 +32,11 @@ const VIDEOS = [
   { title: "How and why the market moves",  desc: "What actually pushes price up and down, explained in plain English.",                            link: "https://www.tiktok.com/@bxtrades_/video/7695926986182561057" },
   { title: "Timeframes",                    desc: "Daily, 4H, 1-minute: how zooming in and out changes what you see, and which one to trust.",       link: "https://www.tiktok.com/@bxtrades_/video/7696507411435113760" },
   { title: "Trends and ranges",             desc: "Is price trending or stuck in a range? How to tell the difference, and why it matters.",          link: "https://www.tiktok.com/@bxtrades_/video/7696940688981773600" },
-  { title: "Support and resistance",        desc: "The floors and ceilings on a chart, and why price keeps reacting at the same levels.",            link: "https://www.tiktok.com/@bxtrades_/video/7697252144562326816" }
+  { title: "Support and resistance",        desc: "The floors and ceilings on a chart, and why price keeps reacting at the same levels.",            link: "https://www.tiktok.com/@bxtrades_/video/7697252144562326816" },
+  { title: "Liquidity",                     desc: "Where the stop losses sit, and why price loves to hunt them before making its real move.",        link: "https://www.tiktok.com/@bxtrades_/video/7697676474819677472" },
+  { title: "Break of structure",            desc: "When price breaks a key high or low, and how it signals the trend is continuing or changing.",    link: "https://www.tiktok.com/@bxtrades_/video/7698082653949414688" },
+  { title: "Fair value gaps",               desc: "The gaps a fast move leaves behind, and why price often comes back to fill them.",                link: "https://www.tiktok.com/@bxtrades_/video/7699208707934145824" },
+  { title: "Trading sessions",              desc: "Asia, London, New York: when each session runs and why the time of day changes how price moves.", link: "https://www.tiktok.com/@bxtrades_/video/7700027724538055958" }
 ];
 
 // Your personal trading rules
