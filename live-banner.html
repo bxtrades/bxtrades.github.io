@@ -8,7 +8,8 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
 <style>
   /* ===== EDIT HERE: colours and size =====
-     You can also change size from the link, e.g. live-banner.html?height=110&font=34&seconds=8 */
+     You can also change size from the link, e.g. live-banner.html?height=110&seconds=8
+     The text sizes itself to fill the bar. Add &font=40 to cap how big it gets. */
   :root{
     --paper:#f3efe6;
     --paper-2:#fbf9f4;
@@ -17,7 +18,7 @@
     --hi:#f6d64a;          /* highlighter yellow */
     --green:#1f7a4d;
     --red:#b5392b;
-    --height:84px;         /* banner height */
+    --height:110px;        /* banner height. Taller bar = bigger text */
     --font:27px;           /* text size */
     --margin:16px;         /* gap around the bar */
     --chart-opacity:.13;   /* how visible the candles behind the text are (0 to 1) */
@@ -34,11 +35,11 @@
   /* fixed name tag on the left */
   .tag{
     flex:none; display:flex; flex-direction:column; justify-content:center; gap:2px;
-    padding:0 calc(var(--font) * .8); background:var(--ink); color:var(--paper); z-index:2;
+    padding:0 calc(var(--height) * .26); background:var(--ink); color:var(--paper); z-index:2;
   }
-  .tag .name{font-family:"Source Serif 4",Georgia,serif; font-weight:700; font-size:calc(var(--font) * .95); line-height:1}
+  .tag .name{font-family:"Source Serif 4",Georgia,serif; font-weight:700; font-size:calc(var(--height) * .29); line-height:1}
   .tag .name i{font-weight:400; color:#c9c2b3}
-  .tag .live{font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:calc(var(--font) * .42); letter-spacing:.14em; display:flex; align-items:center; gap:6px}
+  .tag .live{font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:calc(var(--height) * .13); letter-spacing:.14em; display:flex; align-items:center; gap:6px}
   .tag .dot{width:.7em; height:.7em; border-radius:50%; background:#e2463a; animation:pulse 1.6s infinite}
   @keyframes pulse{50%{opacity:.25}}
 
@@ -52,8 +53,8 @@
   @keyframes drift{to{transform:translate3d(-50%,0,0)}}
 
   .slide{
-    position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center; gap:.55em; padding:0 1.2em;
-    font-size:var(--font); font-weight:500; white-space:nowrap;
+    position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center; gap:.45em; padding:0 .5em;
+    font-size:var(--font); font-weight:500; line-height:1.15; white-space:nowrap;
     opacity:0; transform:translateY(55%); transition:opacity .55s ease, transform .55s cubic-bezier(.2,.8,.2,1);
   }
   .slide.show{opacity:1; transform:none}
@@ -92,12 +93,9 @@
      <b>...</b> = yellow highlighter.  <span class="pill">FREE</span> = small badge.
      <span class="code">BXTRADES</span> = discount code box.  <span class="ad">AD</span> = advert label. */
   var SLIDES = [
-    {icon:"chat",     text:'<span class="pill yellow">FREE</span> Join <b>BXT’s Community</b> on Discord'},
     {icon:"question", text:'19 year old trader. <b>Ask me anything</b>'},
     {icon:"web",      text:'Free tools &amp; my backtests at <b>bxtrades.com</b>'},
-    {icon:"candle",   text:'Play <b>Candle Clash</b>: is NQ closing up or down today?'},
-    {icon:"gift",     text:'<b>40% off</b> TradersScale evals with code <span class="code">BXTRADES</span> <span class="ad">AD</span>'},
-    {icon:"info",     text:'<span class="soft">Education only.</span> <b>Not financial advice.</b>'}
+    {icon:"chat",     text:'<span class="pill yellow">FREE</span> Join <b>BXT’s Community</b> on Discord'}
   ];
 
   /* Seconds each slide stays on screen. Or add ?seconds=8 to the link. */
@@ -119,7 +117,6 @@
   var q = new URLSearchParams(location.search), root = document.documentElement.style;
   if (q.get("seconds")) SECONDS = parseFloat(q.get("seconds")) || SECONDS;
   if (q.get("height")) root.setProperty("--height", parseFloat(q.get("height")) + "px");
-  if (q.get("font"))   root.setProperty("--font", parseFloat(q.get("font")) + "px");
 
   var stage = document.getElementById("stage"), progress = document.getElementById("progress");
   var els = SLIDES.map(function(s){
@@ -151,6 +148,22 @@
     document.getElementById("move").innerHTML = svg + svg;
   })();
 
+  /* Make each slide's text as big as fits: fills about 92% of the width,
+     but never taller than the bar allows. ?font= sets a maximum if you want it smaller. */
+  var MAX_FONT = q.get("font") ? parseFloat(q.get("font")) : Infinity;
+  function fit(){
+    var h = stage.clientHeight, w = stage.clientWidth;
+    els.forEach(function(el){
+      el.style.fontSize = "20px";
+      var a = el.firstElementChild.getBoundingClientRect(), b = el.lastElementChild.getBoundingClientRect();
+      var natural = b.right - a.left;                     // width of icon + text at 20px
+      var byWidth = 20 * (w * 0.92) / natural;
+      var byHeight = h * 0.62;
+      el.style.fontSize = Math.min(byWidth, byHeight, MAX_FONT) + "px";
+    });
+  }
+  window.addEventListener("resize", fit);
+
   var i = -1;
   function next(){
     var prev = els[i];
@@ -161,7 +174,7 @@
     progress.classList.remove("run"); progress.style.animationDuration = SECONDS + "s"; void progress.offsetWidth; progress.classList.add("run");
   }
   (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(function(){
-    next(); setInterval(next, SECONDS * 1000);
+    fit(); next(); setInterval(next, SECONDS * 1000);
   });
 </script>
 </body>
