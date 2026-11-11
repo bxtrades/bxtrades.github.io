@@ -3,131 +3,149 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>bxtrades Discord banner</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<meta name="robots" content="noindex">
+<title>BXTrades LIVE banner</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
 <style>
-  /* ===== EDIT HERE: colours and size ===== */
+  /* ===== EDIT HERE: colours and size =====
+     You can also change size from the link, e.g. live-banner.html?height=110&font=34&seconds=8 */
   :root{
-    --navy:#0D1B2E;
-    --navy-2:#132640;
-    --gold:#E8C25A;
-    --gold-2:#F6DC8E;
-    --text:#F1F4F8;
-    --muted:#A7B3C4;
-    --height:80px;     /* banner height */
-    --font:27px;       /* text size */
-    --margin:14px;     /* gap around the floating bar */
-    --chart-opacity:.16; /* how visible the background chart is (0 to 1) */
-    --chart-speed:25s;   /* time for the chart to loop. Higher = slower */
+    --paper:#f3efe6;
+    --paper-2:#fbf9f4;
+    --ink:#1d1c1a;
+    --muted:#6a645a;
+    --hi:#f6d64a;          /* highlighter yellow */
+    --green:#1f7a4d;
+    --red:#b5392b;
+    --height:84px;         /* banner height */
+    --font:27px;           /* text size */
+    --margin:16px;         /* gap around the bar */
+    --chart-opacity:.13;   /* how visible the candles behind the text are (0 to 1) */
+    --chart-speed:40s;     /* time for the chart to loop. Higher = slower */
   }
   html,body{margin:0; padding:0; background:transparent; overflow:hidden}
-  body{display:flex; align-items:flex-end; justify-content:center; height:100vh; padding:var(--margin); box-sizing:border-box}
+  body{display:flex; align-items:flex-end; justify-content:center; height:100vh; padding:var(--margin); padding-right:calc(var(--margin) + 6px); box-sizing:border-box}
 
   .bar{
-    position:relative; width:100%; height:var(--height); border-radius:0;
-    background:linear-gradient(180deg,var(--navy-2),var(--navy));
-    box-shadow:0 10px 30px rgba(3,10,22,.55), inset 0 1px 0 rgba(255,255,255,.06);
-    overflow:hidden; font-family:"Inter",system-ui,Arial,sans-serif; color:var(--text);
+    position:relative; width:100%; height:var(--height); display:flex;
+    background:var(--paper); border:2.5px solid var(--ink); box-shadow:6px 6px 0 var(--ink);
+    font-family:"IBM Plex Sans",system-ui,Arial,sans-serif; color:var(--ink); overflow:hidden;
   }
-  .bar::before{
-    content:""; position:absolute; inset:0; border-radius:inherit; padding:2px; pointer-events:none;
-    background:linear-gradient(90deg,rgba(232,194,90,.15),var(--gold),rgba(232,194,90,.15));
-    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite:xor; mask-composite:exclude; z-index:3;
+  /* fixed name tag on the left */
+  .tag{
+    flex:none; display:flex; flex-direction:column; justify-content:center; gap:2px;
+    padding:0 calc(var(--font) * .8); background:var(--ink); color:var(--paper); z-index:2;
   }
-  .shine{position:absolute; top:0; bottom:0; width:28%; left:-28%; z-index:2; pointer-events:none;
-    background:linear-gradient(100deg,transparent,rgba(246,220,142,.12),transparent)}
-  .shine.go{animation:shine 1.4s ease-out}
-  @keyframes shine{to{transform:translateX(470%)}}
+  .tag .name{font-family:"Source Serif 4",Georgia,serif; font-weight:700; font-size:calc(var(--font) * .95); line-height:1}
+  .tag .name i{font-weight:400; color:#c9c2b3}
+  .tag .live{font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:calc(var(--font) * .42); letter-spacing:.14em; display:flex; align-items:center; gap:6px}
+  .tag .dot{width:.7em; height:.7em; border-radius:50%; background:#e2463a; animation:pulse 1.6s infinite}
+  @keyframes pulse{50%{opacity:.25}}
 
-  /* faint moving chart behind the text */
-  .chart{position:absolute; inset:0; z-index:0; pointer-events:none; opacity:var(--chart-opacity,.16);
-    -webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);
-            mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
-  .chart .move{display:flex; height:100%; will-change:transform; animation:drift var(--chart-speed,90s) linear infinite}
+  .stage{position:relative; flex:1; min-width:0}
+  /* faint candles drifting behind the text */
+  .chart{position:absolute; inset:0; z-index:0; pointer-events:none; opacity:var(--chart-opacity);
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);
+            mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
+  .chart .move{display:flex; height:100%; will-change:transform; animation:drift var(--chart-speed) linear infinite}
   .chart svg{flex:none; height:100%; display:block}
   @keyframes drift{to{transform:translate3d(-50%,0,0)}}
-  .slide{z-index:1;
-    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; gap:16px; padding:0 40px;
-    font-size:var(--font); font-weight:500; white-space:nowrap;
-    opacity:0; transform:translateY(60%); filter:blur(4px);
-    transition:opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1), filter .7s ease;
-  }
-  .slide.show{opacity:1; transform:none; filter:none}
-  .slide.out{opacity:0; transform:translateY(-60%); filter:blur(4px)}
-  .slide b{color:var(--gold); font-weight:800}
-  .slide .soft{color:var(--muted)}
-  .ico{flex:none; width:calc(var(--font) * 1.45); height:calc(var(--font) * 1.45); border-radius:50%;
-    display:inline-flex; align-items:center; justify-content:center; background:rgba(232,194,90,.13); color:var(--gold)}
-  .ico svg{width:56%; height:56%}
-  .pill{font-family:"JetBrains Mono",monospace; font-weight:700; font-size:.6em; letter-spacing:.1em;
-    color:var(--navy); background:linear-gradient(180deg,var(--gold-2),var(--gold)); padding:5px 11px; border-radius:999px}
 
+  .slide{
+    position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center; gap:.55em; padding:0 1.2em;
+    font-size:var(--font); font-weight:500; white-space:nowrap;
+    opacity:0; transform:translateY(55%); transition:opacity .55s ease, transform .55s cubic-bezier(.2,.8,.2,1);
+  }
+  .slide.show{opacity:1; transform:none}
+  .slide.out{opacity:0; transform:translateY(-55%)}
+  .slide b{font-weight:700; background:linear-gradient(transparent 55%, var(--hi) 55%, var(--hi) 92%, transparent 92%); padding:0 .08em}
+  .slide .soft{color:var(--muted)}
+  .slide .mono{font-family:"IBM Plex Mono",monospace; font-weight:600}
+  .ico{flex:none; width:1.45em; height:1.45em; border:2px solid var(--ink); border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:var(--paper-2)}
+  .ico svg{width:58%; height:58%}
+  .pill{font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:.58em; letter-spacing:.08em; border:2px solid var(--ink); padding:.2em .55em; background:var(--paper-2)}
+  .pill.yellow{background:var(--hi)}
+  .code{font-family:"IBM Plex Mono",monospace; font-weight:600; letter-spacing:.06em; border:2px dashed var(--ink); background:var(--hi); padding:.05em .4em}
+  .ad{font-family:"IBM Plex Mono",monospace; font-size:.5em; font-weight:600; color:var(--muted); border:1.5px solid var(--muted); padding:.1em .35em}
+
+  /* progress line along the bottom */
+  .progress{position:absolute; left:0; bottom:0; height:4px; width:0; background:var(--ink); z-index:2}
+  .progress.run{animation:fill linear forwards}
+  @keyframes fill{to{width:100%}}
 </style>
 </head>
 <body>
-  <div class="bar" id="bar">
-    <div class="chart"><div class="move" id="move"></div></div>
-    <div class="shine" id="shine"></div>
+  <div class="bar">
+    <div class="tag">
+      <span class="name">BXTrades <i>by Boris</i></span>
+      <span class="live"><span class="dot"></span>LIVE NOW</span>
+    </div>
+    <div class="stage" id="stage">
+      <div class="chart"><div class="move" id="move"></div></div>
+      <div class="progress" id="progress"></div>
+    </div>
   </div>
 
 <script>
   /* ===== EDIT HERE: the slides =====
-     icon: chat, question, candle, bell, chart, people, gift, arrow
-     <b>...</b> makes words gold. <span class="pill">FREE</span> makes a gold badge. */
+     icon: chat, question, candle, bell, chart, people, gift, arrow, web, info
+     <b>...</b> = yellow highlighter.  <span class="pill">FREE</span> = small badge.
+     <span class="code">BXTRADES</span> = discount code box.  <span class="ad">AD</span> = advert label. */
   var SLIDES = [
-    {icon:"chat",     text:'<span class="pill">FREE</span> Join <b>BXT’s Community</b> on Discord'},
-    {icon:"question", text:'19 year old trader. <b>Ask me anything</b>'}
+    {icon:"chat",     text:'<span class="pill yellow">FREE</span> Join <b>BXT’s Community</b> on Discord'},
+    {icon:"question", text:'19 year old trader. <b>Ask me anything</b>'},
+    {icon:"web",      text:'Free tools &amp; my backtests at <b>bxtrades.com</b>'},
+    {icon:"candle",   text:'Play <b>Candle Clash</b>: is NQ closing up or down today?'},
+    {icon:"gift",     text:'<b>40% off</b> TradersScale evals with code <span class="code">BXTRADES</span> <span class="ad">AD</span>'},
+    {icon:"info",     text:'<span class="soft">Education only.</span> <b>Not financial advice.</b>'}
   ];
 
   /* Seconds each slide stays on screen. Or add ?seconds=8 to the link. */
   var SECONDS = 6;
 
   var ICONS = {
-    question:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .8c0 1.8-2.5 2.2-2.5 4"/><path d="M12 17h.01"/></svg>',
-    chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/><path d="M9 11h.01M12 11h.01M15 11h.01"/></svg>',
-    people:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.8"/><path d="M16 14.2a5 5 0 0 1 5.5 5.8"/></svg>',
-    candle:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v3M8 17v4M16 6v3M16 18v3"/><rect x="5.5" y="6" width="5" height="11" rx="1"/><rect x="13.5" y="9" width="5" height="9" rx="1"/></svg>',
-    bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/></svg>',
-    chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M7 15l4-4 3 3 5-6"/></svg>',
-    gift:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="8" width="17" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12M12 8c-1.5-3-5-3-5-1s3 1 5 1zm0 0c1.5-3 5-3 5-1s-3 1-5 1z"/></svg>',
-    arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+    question:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .8c0 1.8-2.5 2.2-2.5 4"/><path d="M12 17.5h.01"/></svg>',
+    chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>',
+    people:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><circle cx="17" cy="9" r="2.8"/><path d="M16 14.2a5 5 0 0 1 5.5 5.8"/></svg>',
+    candle:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M8 3v3M8 17v4M16 6v3M16 18v3"/><rect x="5.5" y="6" width="5" height="11" fill="currentColor"/><rect x="13.5" y="9" width="5" height="9"/></svg>',
+    bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 21h4"/></svg>',
+    chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M7 15l4-4 3 3 5-6"/></svg>',
+    gift:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="8" width="17" height="4"/><path d="M5 12v8h14v-8M12 8v12M12 8c-1.5-3-5-3-5-1s3 1 5 1zm0 0c1.5-3 5-3 5-1s-3 1-5 1z"/></svg>',
+    arrow:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+    web:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 2.5 14.4 0 17M12 3.5c-2.5 2.6-2.5 14.4 0 17"/></svg>',
+    info:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 11v6M12 7.5h.01"/></svg>'
   };
 
-  var q = new URLSearchParams(location.search);
+  var q = new URLSearchParams(location.search), root = document.documentElement.style;
   if (q.get("seconds")) SECONDS = parseFloat(q.get("seconds")) || SECONDS;
+  if (q.get("height")) root.setProperty("--height", parseFloat(q.get("height")) + "px");
+  if (q.get("font"))   root.setProperty("--font", parseFloat(q.get("font")) + "px");
 
-  var bar = document.getElementById("bar"), shine = document.getElementById("shine");
+  var stage = document.getElementById("stage"), progress = document.getElementById("progress");
   var els = SLIDES.map(function(s){
     var d = document.createElement("div"); d.className = "slide";
     d.innerHTML = '<span class="ico">' + (ICONS[s.icon] || ICONS.chat) + '</span><span>' + s.text + '</span>';
-    bar.appendChild(d); return d;
+    stage.appendChild(d); return d;
   });
 
-  /* Build a looping candle chart (white up candles, hollow down candles) */
+  /* Looping candle chart: hollow green up candles, filled red down candles (like the website) */
   (function(){
-    var N = 72, step = 16, W = N * step, H = 100, seed = 7;
+    var N = 72, step = 16, W = N * step, H = 100, seed = 11;
     function rnd(){ seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
-    /* trend waves that repeat perfectly, plus random noise so it looks like real price */
     var pr = [];
-    for (var k = 0; k < N; k++){
-      var t = 2 * Math.PI * k / N;
-      pr.push(22 * Math.sin(t * 3) + 9 * Math.sin(t * 7 + 1) + (rnd() - 0.5) * 14);
-    }
-    pr.push(pr[0]);   // ends where it starts, so the loop is seamless
+    for (var k = 0; k < N; k++){ var t = 2 * Math.PI * k / N; pr.push(22 * Math.sin(t * 3) + 9 * Math.sin(t * 7 + 1) + (rnd() - 0.5) * 14); }
+    pr.push(pr[0]);
     var bars = [], lo0 = Infinity, hi0 = -Infinity;
     for (var k = 0; k < N; k++){
-      var o = pr[k], c = pr[k+1];
-      var hi = Math.max(o, c) + rnd() * 3.5 + 0.8, lo = Math.min(o, c) - rnd() * 3.5 - 0.8;
+      var o = pr[k], c = pr[k+1], hi = Math.max(o, c) + rnd() * 3.5 + 0.8, lo = Math.min(o, c) - rnd() * 3.5 - 0.8;
       bars.push([o, c, hi, lo]); lo0 = Math.min(lo0, lo); hi0 = Math.max(hi0, hi);
     }
-    var sc = function(v){ return H - 8 - (v - lo0) / (hi0 - lo0) * (H - 16); };   // fit the chart to the bar height
-    var g = "";
+    var sc = function(v){ return H - 8 - (v - lo0) / (hi0 - lo0) * (H - 16); }, g = "";
     bars.forEach(function(b, k){
-      var x = k * step + 3, yo = sc(b[0]), yc = sc(b[1]);
+      var x = k * step + 3, yo = sc(b[0]), yc = sc(b[1]), up = b[1] >= b[0], col = up ? "#1f7a4d" : "#b5392b";
       var top = Math.min(yo, yc), bh = Math.max(2, Math.abs(yo - yc));
-      g += '<line x1="' + (x + 5) + '" x2="' + (x + 5) + '" y1="' + sc(b[2]).toFixed(1) + '" y2="' + sc(b[3]).toFixed(1) + '" stroke="#F1F4F8" stroke-width="1"/>';
-      g += '<rect x="' + x + '" y="' + top.toFixed(1) + '" width="10" height="' + bh.toFixed(1) + '" rx="1" fill="' + (b[1] >= b[0] ? '#F1F4F8' : 'none') + '" stroke="#F1F4F8" stroke-width="1"/>';
+      g += '<line x1="' + (x + 5) + '" x2="' + (x + 5) + '" y1="' + sc(b[2]).toFixed(1) + '" y2="' + sc(b[3]).toFixed(1) + '" stroke="' + col + '" stroke-width="1.4"/>';
+      g += '<rect x="' + x + '" y="' + top.toFixed(1) + '" width="10" height="' + bh.toFixed(1) + '" fill="' + (up ? '#f3efe6' : col) + '" stroke="' + col + '" stroke-width="1.4"/>';
     });
     var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" style="width:' + (W * 1.25) + 'px">' + g + '</svg>';
     document.getElementById("move").innerHTML = svg + svg;
@@ -138,11 +156,9 @@
     var prev = els[i];
     i = (i + 1) % els.length;
     var cur = els[i];
-    if (prev) { prev.classList.remove("show"); prev.classList.add("out"); setTimeout(function(){ prev.classList.remove("out"); }, 750); }
-    cur.classList.remove("out");
-    void cur.offsetWidth;
-    cur.classList.add("show");
-    shine.classList.remove("go"); void shine.offsetWidth; shine.classList.add("go");
+    if (prev) { prev.classList.remove("show"); prev.classList.add("out"); setTimeout(function(){ prev.classList.remove("out"); }, 600); }
+    cur.classList.remove("out"); void cur.offsetWidth; cur.classList.add("show");
+    progress.classList.remove("run"); progress.style.animationDuration = SECONDS + "s"; void progress.offsetWidth; progress.classList.add("run");
   }
   (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(function(){
     next(); setInterval(next, SECONDS * 1000);

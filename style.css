@@ -370,3 +370,7 @@ footer { max-width: 1120px; margin: 0 auto; padding: 2.5rem 24px 3rem; border-to
   .tl-hours span:nth-child(even) { display: none; }
 }
 .notfound .episodes { margin-top: 1.5rem; }
+
+/* ===== NOT FINANCIAL ADVICE line ===== */
+.nfa { margin-top: 1.6rem; font-size: .85rem; color: var(--muted); max-width: 34rem; padding-left: .8rem; border-left: 3px solid var(--rule); }
+.nfa span { font-weight: 600; color: var(--ink); }
