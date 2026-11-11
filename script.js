@@ -521,3 +521,38 @@ if (heroDc) fetch("https://discord.com/api/v9/invites/6UCdDEGptX?with_counts=tru
 const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
 document.querySelectorAll(".topbar .links a").forEach(a => a.addEventListener("click", () => document.body.classList.remove("menu-open")));
+
+// --- "Last updated" date in the footer (taken from when GitHub last published this page) ---
+const updEl = document.getElementById("updated");
+if (updEl) {
+  const d = new Date(document.lastModified);
+  if (!isNaN(d)) updEl.textContent = "Last updated " + d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
+}
+
+// --- Works offline + installs like an app ---
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+}
+// "Install as an app" button: Android/Chrome shows a real install prompt, iPhone gets instructions.
+(function installButton() {
+  const box = document.getElementById("install");
+  if (!box) return;
+  const btn = document.getElementById("install-btn"), msg = document.getElementById("install-msg");
+  const standalone = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+  if (standalone) return; // already installed
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  let deferred = null;
+  window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); deferred = e; box.hidden = false; });
+  if (isIOS) box.hidden = false;
+  btn.addEventListener("click", async () => {
+    if (deferred) {
+      deferred.prompt();
+      const { outcome } = await deferred.userChoice;
+      deferred = null;
+      if (outcome === "accepted") box.hidden = true;
+    } else if (isIOS) {
+      msg.textContent = "On iPhone: tap the Share button in Safari, then “Add to Home Screen”.";
+    }
+  });
+  window.addEventListener("appinstalled", () => { box.hidden = true; });
+})();

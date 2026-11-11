@@ -5,11 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Market session clock | BXTrades</title>
   <meta name="description" content="Free market session clock: see which trading sessions (Asia, London, New York) are open now and the countdown to the New York open, in your own time zone.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BXTrades">
   <meta property="og:title" content="Market session clock | BXTrades">
   <meta property="og:description" content="Free market session clock: see which trading sessions (Asia, London, New York) are open now and the countdown to the New York open, in your own time zone.">
-  <meta property="og:image" content="https://bxtrades.com/images/desk-setup.jpg">
+  <meta property="og:image" content="https://bxtrades.com/images/og-sessions.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Market session clock from BXTrades">
   <meta property="og:url" content="https://bxtrades.com/sessions.html">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://bxtrades.com/images/og-sessions.jpg">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f3efe6'/><path d='M10 4v24M22 4v24' stroke='%231d1c1a' stroke-width='2'/><rect x='6' y='9' width='8' height='12' fill='%23b5392b'/><rect x='18' y='11' width='8' height='12' fill='%23f3efe6' stroke='%231f7a4d' stroke-width='2'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,6 +60,8 @@
       <div><span>CME futures (ES/NQ)</span><b id="globex">–</b></div>
     </div>
 
+    <div class="news-alert" id="news-alert" hidden role="status"></div>
+
     <div class="countdown" id="countdown"><span class="small">Next up</span><b>–</b></div>
 
     <div class="sessions" id="sessions"><!-- filled below --></div>
@@ -82,6 +90,7 @@
       <a href="glossary.html">Glossary</a>
       <a href="index.html#faq">FAQ</a>
       <a href="index.html#deal">TradersScale 40% off</a>
+      <a href="privacy.html">Privacy</a>
     </div>
     <p class="not-broker"><strong>Not a broker.</strong> BXTrades is my personal education page. I'm not a broker or investment firm, I never manage anyone's money, and I'll never DM you asking you to invest.</p>
     <p class="contact">Brand deals, collabs or questions: <a href="mailto:bxtrades1@gmail.com">bxtrades1@gmail.com</a></p>
@@ -196,6 +205,43 @@
     drawTimeline(now);
   }
   tick(); setInterval(tick, 1000);
+
+  // ---- High-impact news warning ----
+  // Dates from the official calendars (BLS for CPI and jobs, federalreserve.gov for FOMC).
+  // All times are New York time. Add next year's dates here each December.
+  // 2027 FOMC dates are "tentative" until the Fed confirms each one.
+  const NEWS = [];
+  const add = (name, what, time, dates) => dates.split(" ").forEach(d => NEWS.push({ name, what, time, date: d }));
+  add("CPI", "inflation numbers", [8, 30],
+    "2026-11-10 2026-12-10 2027-01-13 2027-02-11 2027-03-10 2027-04-13 2027-05-12 2027-06-10 2027-07-14 2027-08-11 2027-09-14 2027-10-14 2027-11-10 2027-12-10");
+  add("NFP", "the US jobs report", [8, 30],
+    "2026-11-06 2026-12-04 2027-01-08 2027-02-05 2027-03-05 2027-04-02 2027-05-07 2027-06-04 2027-07-02 2027-08-06 2027-09-03 2027-10-08 2027-11-05 2027-12-03");
+  add("FOMC", "the Fed's interest rate decision", [14, 0],
+    "2026-12-09 2027-01-27 2027-03-17 2027-04-28 2027-06-09 2027-07-28 2027-09-15 2027-10-27 2027-12-08");
+  NEWS.forEach(n => { const [y, m, d] = n.date.split("-").map(Number); n.at = zoned(y, m, d, n.time[0], n.time[1], "America/New_York"); });
+  NEWS.sort((a, b) => a.at - b.at);
+
+  function newsTick() {
+    const now = new Date(), box = document.getElementById("news-alert");
+    const dayKey = d => { const p = parts(d, userTZ); return p.y + "-" + p.m + "-" + p.d; };
+    const live = NEWS.find(n => now >= n.at - 5 * 6e4 && now < n.at.getTime() + 15 * 6e4);
+    const today = NEWS.filter(n => dayKey(n.at) === dayKey(now) && n.at.getTime() + 15 * 6e4 > now);
+    const soon = NEWS.find(n => n.at > now);
+    const when = d => fmt(d) + " your time";
+    let html = "", cls = "";
+    if (live) {
+      cls = "bad";
+      html = `<b>⚠ ${live.name} ${now < live.at ? "in " + dur(live.at - now) : "just came out"}.</b> Price can jump in seconds and stops can slip. Most traders stay flat for a few minutes either side.`;
+    } else if (today.length) {
+      cls = "bad";
+      html = `<b>⚠ High-impact news today: ${today.map(n => `${n.name} (${n.what}) at ${when(n.at)}`).join(" and ")}.</b> Expect fast, messy moves around it. If you're on an eval, check whether your firm lets you trade news.`;
+    } else if (soon) {
+      cls = soon.at - now < 2 * 864e5 ? "warn" : "";
+      html = `<b>Next big news: ${soon.name}</b> (${soon.what}), ${new Intl.DateTimeFormat(undefined, { weekday: "long", day: "numeric", month: "short" }).format(soon.at)} at ${when(soon.at)}.`;
+    }
+    box.hidden = !html; box.className = "news-alert " + cls; box.innerHTML = html;
+  }
+  newsTick(); setInterval(newsTick, 1000);
   </script>
   <script src="script.js"></script>
 </body>

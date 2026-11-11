@@ -249,6 +249,14 @@ footer { max-width: 1120px; margin: 0 auto; padding: 2.5rem 24px 3rem; border-to
 .code .mono { font-size: 1.25rem; font-weight: 600; letter-spacing: .08em; }
 .code small { font-size: .72rem; }
 .deal .btn { display: flex; align-items: center; }
+.install {
+  margin-top: 2rem; border: 1.5px dashed var(--rule); background: var(--card); padding: 1.2rem 1.4rem;
+  display: flex; flex-wrap: wrap; gap: .8rem 1.4rem; align-items: center;
+}
+.install[hidden] { display: none; }
+.install > p:first-child { flex: 1 1 320px; margin: 0; }
+.install #install-msg { flex-basis: 100%; margin: 0; }
+.install #install-msg:empty { display: none; }
 .disclosure { grid-column: 1 / -1; font-size: .8rem; color: var(--muted); border-top: 1px dashed var(--rule); padding-top: .9rem; }
 
 .backtests { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 1rem; }
@@ -474,3 +482,19 @@ footer { max-width: 1120px; margin: 0 auto; padding: 2.5rem 24px 3rem; border-to
 .social-proof { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; margin-top: 1.3rem; font: 500 .9rem var(--mono); }
 .social-proof b { font-size: 1.05rem; }
 @media (max-width: 760px) { .tv-chart { height: 240px; } .tv-news { height: 520px; } }
+
+/* ===== Privacy page: comfortable reading width ===== */
+.privacy { max-width: 760px; }
+.privacy h2 { font-family: var(--serif); font-weight: 600; font-size: 1.45rem; margin: 2.2rem 0 .6rem; padding-top: 1.2rem; border-top: 1px solid var(--rule); }
+.privacy p, .privacy li { color: var(--body-ink); line-height: 1.65; }
+.privacy p { margin: 0 0 .9rem; }
+.privacy ul { margin: 0 0 1rem; padding-left: 1.2rem; }
+.privacy li { margin-bottom: .45rem; }
+.privacy a { color: var(--ink); text-underline-offset: 3px; }
+
+/* ===== Session clock: high-impact news warning ===== */
+.news-alert { border: 2px solid var(--ink); padding: .9rem 1.1rem; margin-bottom: 1rem; line-height: 1.5; }
+.news-alert[hidden] { display: none; }
+.news-alert.warn { background: rgba(227,194,58,.22); }
+.news-alert.bad { background: rgba(181,57,43,.13); border-color: var(--red); }
+.news-alert.bad b { color: var(--red); }

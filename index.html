@@ -5,11 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BXTrades | Boris</title>
   <meta name="description" content="Engineering student learning to trade ES & NQ futures. Simple trading videos, real backtests, free prop firm tools and a daily game.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BXTrades">
   <meta property="og:title" content="BXTrades | Boris">
   <meta property="og:description" content="Engineering student learning to trade ES & NQ futures. Simple trading videos, real backtests, free prop firm tools and a daily game.">
-  <meta property="og:image" content="https://bxtrades.com/images/desk-setup.jpg">
+  <meta property="og:image" content="https://bxtrades.com/images/og-home.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="BXTrades by Boris: learning to trade futures, and writing it all down">
   <meta property="og:url" content="https://bxtrades.com/">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://bxtrades.com/images/og-home.jpg">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f3efe6'/><path d='M10 4v24M22 4v24' stroke='%231d1c1a' stroke-width='2'/><rect x='6' y='9' width='8' height='12' fill='%23b5392b'/><rect x='18' y='11' width='8' height='12' fill='%23f3efe6' stroke='%231f7a4d' stroke-width='2'/></svg>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,6 +28,15 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="BXTrades">
   <script>try{var t=localStorage.getItem("bxt-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+  <link rel="canonical" href="https://bxtrades.com/">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@graph":[
+    {"@type":"WebSite","@id":"https://bxtrades.com/#site","url":"https://bxtrades.com/","name":"BXTrades","publisher":{"@id":"https://bxtrades.com/#boris"}},
+    {"@type":"Person","@id":"https://bxtrades.com/#boris","name":"Boris","alternateName":"BXTrades","url":"https://bxtrades.com/",
+     "description":"Engineering student learning to trade ES and NQ futures and explaining it in plain English.",
+     "sameAs":["https://www.tiktok.com/@bxtrades_"]}
+  ]}
+  </script>
   <script data-goatcounter="https://bxtrades.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </head>
 <body id="top">
@@ -154,11 +169,17 @@
     <div class="body">
       <ol class="episodes">
         <li><a href="tracker.html"><span class="ep">01</span><h4>Eval tracker</h4><p>Set your own account size, target and drawdown, log trades, and watch your progress towards passing.</p><span class="watch">Open →</span></a></li>
-        <li><a href="prop-calculator.html"><span class="ep">02</span><h4>Prop firm risk calculator</h4><p>Pick a firm and account size, enter your stop, and see how many contracts to trade and how many losses you can take before the account fails.</p><span class="watch">Open →</span></a></li>
+        <li><a href="prop-calculator.html"><span class="ep">02</span><h4>Prop firm risk calculator</h4><p>Pick a firm and account size, enter your stop, and see how many contracts to trade and how many losses you can take before the account fails. Plus a points-to-dollars converter.</p><span class="watch">Open →</span></a></li>
         <li><a href="journal.html"><span class="ep">03</span><h4>Backtesting journal</h4><p>Log trades, tick off your EXPO checklist, and your win rate, average R and equity curve fill themselves in.</p><span class="watch">Open →</span></a></li>
-        <li><a href="sessions.html"><span class="ep">04</span><h4>Market session clock</h4><p>Which sessions are open right now and the countdown to the New York open, shown in your own time zone.</p><span class="watch">Open →</span></a></li>
+        <li><a href="sessions.html"><span class="ep">04</span><h4>Market session clock</h4><p>Which sessions are open right now, the countdown to the New York open, and a warning on big news days like CPI and FOMC.</p><span class="watch">Open →</span></a></li>
         <li><a href="glossary.html"><span class="ep">05</span><h4>Trading glossary</h4><p>Every term from my videos and annotations in plain English: FVGs, SMT, AMD, liquidity sweeps, R and more.</p><span class="watch">Open →</span></a></li>
       </ol>
+
+      <div class="install" id="install" hidden>
+        <p><strong>Use the tools like an app.</strong> Add BXTrades to your home screen and the tracker, calculator and journal open in one tap, even with no signal.</p>
+        <button class="btn small-btn" id="install-btn" type="button">Install as an app</button>
+        <p class="small" id="install-msg" role="status"></p>
+      </div>
 
       <div class="deal" id="deal">
         <div>
@@ -233,11 +254,12 @@
       <a href="glossary.html">Glossary</a>
       <a href="index.html#faq">FAQ</a>
       <a href="index.html#deal">TradersScale 40% off</a>
+      <a href="privacy.html">Privacy</a>
     </div>
     <p class="not-broker"><strong>Not a broker.</strong> BXTrades is my personal education page. I'm not a broker or investment firm, I never manage anyone's money, and I'll never DM you asking you to invest.</p>
     <p class="contact">Brand deals, collabs or questions: <a href="mailto:bxtrades1@gmail.com">bxtrades1@gmail.com</a></p>
     <p class="disclaimer"><strong>Disclaimer:</strong> All content on this site is for educational and entertainment purposes only and is not financial advice. I am not a financial adviser. Results shown are from a paper (simulated) trading account or backtests. Trading futures carries a high risk of loss and is not suitable for everyone. Past performance does not guarantee future results.</p>
-    <p class="mono small">© <span id="year"></span> BXTrades</p>
+    <p class="mono small">© <span id="year"></span> BXTrades · <span id="updated"></span></p>
   </footer>
 
   <dialog id="lightbox" aria-label="Backtest full size">
