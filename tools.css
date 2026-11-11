@@ -48,3 +48,29 @@ details.custom { border-radius: 0; }
   .topbar .links a { padding: .8rem 0; border-top: 1px solid var(--line); color: var(--ink); }
   .menu-open .topbar .links { display: flex; }
 }
+
+/* Dark mode for tool pages */
+:root[data-theme="dark"] {
+  --bg: #161719; --surface: #1c1d20; --ink: #ece6d8; --muted: #9d978a; --line: #34332f;
+  --soft: #26272a; --amber: #e3a84a; --loss: #e2675a; --gain: #4fbf8a; --accent: #ece6d8; --focus: #e3c23a;
+  color-scheme: dark;
+}
+:root[data-theme="dark"] .topbar .nav-deal { color: #161719; background: #e3c23a; }
+.theme-btn { background: none; border: 1.5px solid var(--ink); color: var(--ink); width: 2rem; height: 2rem; display: inline-grid; place-items: center; cursor: pointer; font-size: .95rem; line-height: 1; flex: none; }
+.theme-btn:hover { background: var(--ink); color: var(--bg); }
+
+/* Shared footer (same as the rest of the site) */
+.site-footer { max-width: 1080px; margin: 2.5rem auto 0; padding: 2rem 18px 2.5rem; border-top: 2px solid var(--ink); font-size: .95rem; }
+.site-footer .footer-links { display: flex; flex-wrap: wrap; gap: .6rem 1.6rem; margin-bottom: 1.2rem; }
+.site-footer .footer-links a { color: var(--ink); font-weight: 600; text-underline-offset: 4px; }
+.site-footer p { color: var(--muted); font-size: .85rem; max-width: 760px; margin: 0 0 .8rem; }
+.site-footer .not-broker strong, .site-footer .contact a { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; } }
+.tool-notes { margin-top: 28px; }
+.tool-notes .small-note { font-size: .85rem; color: var(--muted); margin: 0 0 .5rem; }
+
+[hidden] { display: none !important; }
+@media (max-width: 480px) {
+  .topbar .logo span { display: none; }
+  .topbar .nav-deal { font-size: .75rem; padding: .3rem .5rem; }
+}

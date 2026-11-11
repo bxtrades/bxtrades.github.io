@@ -15,6 +15,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+  <meta name="theme-color" content="#f3efe6">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="BXTrades">
+  <script>try{var t=localStorage.getItem("bxt-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 </head>
 <body>
   <!-- ===== TOP BAR (same on every page) ===== -->
@@ -29,6 +36,7 @@
         <a href="index.html#community">Community</a>
       </nav>
       <a class="nav-deal" href="index.html#deal">40% off evals</a>
+      <button class="theme-btn" type="button" aria-label="Switch dark mode" title="Dark / light mode" onclick="(function(){var r=document.documentElement,d=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',d);try{localStorage.setItem('bxt-theme',d)}catch(e){}document.querySelectorAll('meta[name=theme-color]').forEach(function(m){m.content=d==='dark'?'#161719':'#f3efe6'});window.dispatchEvent(new Event('themechange'))})()"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg></button>
       <button class="menu-btn" aria-label="Open menu" onclick="document.body.classList.toggle('menu-open')">Menu</button>
     </header>
   </div>
@@ -45,6 +53,7 @@
         <label>Starting balance ($)<input type="number" id="acc-start" min="0" step="100"></label>
         <label>Profit target ($)<input type="number" id="acc-target" min="0" step="100"></label>
         <label>Max drawdown ($)<input type="number" id="acc-maxloss" min="0" step="100"></label>
+        <label>Daily loss limit ($)<input type="number" id="acc-daily" min="0" step="50" placeholder="Leave blank if none"></label>
         <label class="wide">Your rules (one per line)<textarea id="acc-rules" rows="4" placeholder="e.g. Max 2 trades per day"></textarea></label>
       </div>
       <button class="btn primary small-btn" id="acc-save">Save settings</button>
@@ -67,6 +76,7 @@
       <span class="mono small" id="t-msg"></span>
     </div>
 
+    <div class="alert" id="daily-alert" hidden></div>
     <div class="stats" id="stats"><!-- filled by script.js --></div>
 
     <div class="chart-box">
@@ -86,7 +96,14 @@
       <ul class="ticks" id="rules"><!-- filled by script.js --></ul>
     </div>
     <div class="tracker-actions">
-      <button class="btn small-btn" id="t-clear">Clear all trades</button>
+      <div class="backup-row">
+        <button class="btn small-btn" id="t-export" type="button">Download backup</button>
+        <button class="btn small-btn" id="t-import-btn" type="button">Restore from backup</button>
+        <input type="file" id="t-import" accept=".json,application/json" hidden>
+        <button class="btn small-btn" id="t-clear">Clear all trades</button>
+        <span class="mono small" id="backup-msg"></span>
+      </div>
+      <p class="small" style="margin-top:.8rem">Your trades only live in this browser. Download a backup now and then so you don't lose them if you clear your history or switch phones.</p>
     </div>
   </main>
 
