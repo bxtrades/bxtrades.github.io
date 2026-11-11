@@ -227,7 +227,7 @@ footer { max-width: 1120px; margin: 0 auto; padding: 2.5rem 24px 3rem; border-to
   transition: transform .1s, box-shadow .1s;
 }
 .bt:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--ink); }
-.bt img { width: 100%; aspect-ratio: 3 / 2; object-fit: cover; object-position: top; display: block; border: 1px solid var(--rule); }
+.bt img { width: 100%; aspect-ratio: 3 / 2; object-fit: contain; background: #f6f3ec; display: block; border: 1px solid var(--rule); }
 .bt-meta { display: flex; justify-content: space-between; gap: 1rem; font-size: .8rem; }
 .bt-res { font-weight: 600; font-size: .85rem; }
 .bt-note { font-size: .92rem; color: #3b3832; }
@@ -332,3 +332,39 @@ footer { max-width: 1120px; margin: 0 auto; padding: 2.5rem 24px 3rem; border-to
   .steps li { border-right: 0; border-bottom: 1px solid var(--rule); }
   .steps li:last-child { border-bottom: 0; }
 }
+
+/* ===== SESSION CLOCK ===== */
+.clock-now { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--ink); background: #fbf9f4; margin: 1.5rem 0; }
+.clock-now div { padding: 1rem 1.2rem; border-right: 1px solid var(--rule); display: flex; flex-direction: column; }
+.clock-now div:last-child { border-right: 0; }
+.clock-now > div > span { font-size: .78rem; color: var(--muted); }
+.clock-now b span { font-size: 1.1rem; }
+.clock-now b { font: 600 1.6rem var(--mono); }
+.countdown { border: 2px solid var(--ink); background: var(--hi); padding: 1.2rem 1.4rem; margin-bottom: 1.5rem; display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem 1.2rem; }
+.countdown b { font: 600 clamp(1.8rem, 5vw, 2.6rem) var(--mono); }
+.countdown .small { color: var(--ink); }
+.sessions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.sess { border: 1px solid var(--ink); border-top: 6px solid var(--c); background: #fbf9f4; padding: 1.1rem 1.2rem; }
+.sess.is-open { box-shadow: 4px 4px 0 var(--ink); }
+.sess h3 { font-family: var(--serif); font-size: 1.25rem; font-weight: 600; }
+.sess-status { display: flex; align-items: baseline; gap: .7rem; margin: .4rem 0 .5rem; font-family: var(--mono); }
+.sess-status b { font-size: 1.05rem; }
+.sess-status span { font-size: .85rem; color: var(--muted); }
+.sess .muted { color: var(--muted); }
+.sess p + p { margin-top: .4rem; }
+.timeline { position: relative; border: 1px solid var(--ink); background: #fbf9f4; padding: .6rem 0; }
+.tl-row { position: relative; height: 26px; margin: .3rem 0; }
+.tl-row i { position: absolute; top: 3px; height: 20px; opacity: .85; }
+.tl-label { position: absolute; left: 6px; top: 3px; font-size: .75rem; z-index: 1; background: #fbf9f4cc; padding: 0 .3rem; }
+.tl-now { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--red); z-index: 2; }
+.tl-hours { position: relative; height: 1.4rem; margin-top: .3rem; }
+.tl-hours span { position: absolute; transform: translateX(-50%); font-family: var(--mono); font-size: .7rem; }
+.tl-hours span:first-child { transform: none; }
+.tl-hours span:last-child { transform: translateX(-100%); }
+@media (max-width: 760px) {
+  .sessions, .clock-now { grid-template-columns: 1fr; }
+  .clock-now div { border-right: 0; border-bottom: 1px solid var(--rule); }
+  .clock-now div:last-child { border-bottom: 0; }
+  .tl-hours span:nth-child(even) { display: none; }
+}
+.notfound .episodes { margin-top: 1.5rem; }

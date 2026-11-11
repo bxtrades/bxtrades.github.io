@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market session clock | BXTrades</title>
+  <meta name="description" content="Free market session clock: see which trading sessions (Asia, London, New York) are open now and the countdown to the New York open, in your own time zone.">
+  <meta property="og:title" content="Market session clock | BXTrades">
+  <meta property="og:description" content="Free market session clock: see which trading sessions (Asia, London, New York) are open now and the countdown to the New York open, in your own time zone.">
+  <meta property="og:image" content="https://bxtrades.com/images/desk-setup.jpg">
+  <meta property="og:url" content="https://bxtrades.com/sessions.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f3efe6'/><path d='M10 4v24M22 4v24' stroke='%231d1c1a' stroke-width='2'/><rect x='6' y='9' width='8' height='12' fill='%23b5392b'/><rect x='18' y='11' width='8' height='12' fill='%23f3efe6' stroke='%231f7a4d' stroke-width='2'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ===== TOP BAR (same on every page) ===== -->
+  <div class="topbar">
+    <header class="bar">
+      <a href="index.html" class="logo">BXTrades <span>by Boris</span></a>
+      <nav class="links" aria-label="Main">
+        <a href="index.html#about">About</a>
+        <a href="index.html#series">Videos</a>
+        <a href="index.html#backtests">Backtests</a>
+        <a href="index.html#tools">Tools</a>
+        <a href="index.html#community">Community</a>
+      </nav>
+      <a class="nav-deal" href="index.html#deal">40% off evals</a>
+      <button class="menu-btn" aria-label="Open menu" onclick="document.body.classList.toggle('menu-open')">Menu</button>
+    </header>
+  </div>
+
+  <main class="page">
+    <a class="back-link" href="index.html#tools">← Back to BXTrades tools</a>
+    <p class="kicker">Free tool · by Boris</p>
+    <h1 class="page-title">Market session clock</h1>
+    <p class="lead">Which trading sessions are open right now, and how long until the next one starts. All times are shown in <strong>your</strong> time zone (<span id="tz-name"></span>), and daylight saving is handled for you.</p>
+
+    <div class="clock-now">
+      <div><span>Your time</span><b id="now-local">--:--</b></div>
+      <div><span>New York</span><b id="now-ny">--:--</b></div>
+      <div><span>CME futures (ES/NQ)</span><b id="globex">–</b></div>
+    </div>
+
+    <div class="countdown" id="countdown"><span class="small">Next up</span><b>–</b></div>
+
+    <div class="sessions" id="sessions"><!-- filled below --></div>
+
+    <h2 class="gloss-group">Today in your time</h2>
+    <div class="timeline" id="timeline" aria-hidden="true"><div class="tl-now" id="tl-now"></div></div>
+    <div class="tl-hours small" id="tl-hours"></div>
+
+    <p class="small" style="margin-top:2rem">Session hours: Tokyo 09:00–18:00 (Tokyo time), London 08:00–16:30 (London time), New York stock market 09:30–16:00 (New York time). CME Globex futures trade Sunday 18:00 to Friday 17:00 New York time, with a daily break 17:00–18:00. Bank holidays and early closes aren't included, so check the CME calendar around holidays.</p>
+  </main>
+
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="footer-links">
+      <a href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">TikTok</a>
+      <a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener">Discord</a>
+      <a href="tracker.html">Eval tracker</a>
+      <a href="prop-calculator.html">Prop calculator</a>
+      <a href="journal.html">Backtest journal</a>
+      <a href="sessions.html">Session clock</a>
+      <a href="glossary.html">Glossary</a>
+      <a href="index.html#faq">FAQ</a>
+      <a href="index.html#deal">TradersScale 40% off</a>
+    </div>
+    <p class="contact">Brand deals, collabs or questions: <a href="mailto:bxtrades1@gmail.com">bxtrades1@gmail.com</a></p>
+    <p class="disclaimer"><strong>Disclaimer:</strong> All content on this site is for educational and entertainment purposes only and is not financial advice. I am not a financial adviser. Results shown are from a paper (simulated) trading account or backtests. Trading futures carries a high risk of loss and is not suitable for everyone. Past performance does not guarantee future results.</p>
+    <p class="mono small">© <span id="year"></span> BXTrades</p>
+  </footer>
+
+  <script>
+  // ---- Session clock ----
+  const SESSIONS = [
+    { name: "Asia (Tokyo)", short: "Asia", tz: "Asia/Tokyo",       open: [9, 0],  close: [18, 0],  colour: "#8a6fb3", note: "Usually quiet on ES/NQ. Its high and low become targets later." },
+    { name: "London", short: "London", tz: "Europe/London",    open: [8, 0],  close: [16, 30], colour: "#2f6fa8", note: "Volume picks up. Often sweeps the Asia high or low." },
+    { name: "New York", short: "New York", tz: "America/New_York", open: [9, 30], close: [16, 0],  colour: "#1f7a4d", note: "The cash open. The biggest moves on ES and NQ usually happen here." }
+  ];
+  const userTZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "your local time";
+  document.getElementById("tz-name").textContent = userTZ.replace(/_/g, " ");
+
+  // Wall-clock parts of a moment in a given zone
+  function parts(date, tz) {
+    const p = {};
+    new Intl.DateTimeFormat("en-GB", { timeZone: tz, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", weekday: "short" })
+      .formatToParts(date).forEach(x => p[x.type] = x.value);
+    return { y: +p.year, m: +p.month, d: +p.day, h: +p.hour % 24, mi: +p.minute, s: +p.second, wd: p.weekday };
+  }
+  // The moment when it is y-m-d h:mi in zone tz
+  function zoned(y, m, d, h, mi, tz) {
+    let guess = Date.UTC(y, m - 1, d, h, mi);
+    for (let i = 0; i < 2; i++) {
+      const p = parts(new Date(guess), tz);
+      const asUTC = Date.UTC(p.y, p.m - 1, p.d, p.h, p.mi);
+      guess += Date.UTC(y, m - 1, d, h, mi) - asUTC;
+    }
+    return new Date(guess);
+  }
+  const WEEKDAY = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+  // All open/close windows for a session around now (weekdays only)
+  function windows(s, now) {
+    const out = [];
+    for (let k = -2; k <= 8; k++) {
+      const base = parts(new Date(now.getTime() + k * 864e5), s.tz);
+      const start = zoned(base.y, base.m, base.d, s.open[0], s.open[1], s.tz);
+      if (!WEEKDAY.includes(parts(start, s.tz).wd)) continue;
+      out.push([start, zoned(base.y, base.m, base.d, s.close[0], s.close[1], s.tz)]);
+    }
+    const seen = new Set();
+    return out.filter(([a]) => !seen.has(+a) && seen.add(+a)).sort((a, b) => a[0] - b[0]);
+  }
+  function globexOpen(now) {
+    const p = parts(now, "America/New_York"), mins = p.h * 60 + p.mi;
+    if (p.wd === "Sat") return false;
+    if (p.wd === "Sun") return mins >= 18 * 60;
+    if (p.wd === "Fri") return mins < 17 * 60;
+    return !(mins >= 17 * 60 && mins < 18 * 60);
+  }
+  const fmt = (d, opts) => new Intl.DateTimeFormat(undefined, Object.assign({ hour: "2-digit", minute: "2-digit" }, opts)).format(d);
+  function dur(ms) {
+    const t = Math.max(0, Math.round(ms / 1000)), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), s = t % 60;
+    return (h ? h + "h " : "") + String(m).padStart(h ? 2 : 1, "0") + "m " + String(s).padStart(2, "0") + "s";
+  }
+
+  // 24h timeline in the visitor's own day
+  function drawTimeline(now) {
+    const tl = document.getElementById("timeline");
+    tl.querySelectorAll(".tl-row").forEach(r => r.remove());
+    const lp = parts(now, userTZ);
+    const dayStart = zoned(lp.y, lp.m, lp.d, 0, 0, userTZ), dayEnd = new Date(dayStart.getTime() + 864e5);
+    SESSIONS.forEach(s => {
+      const row = document.createElement("div"); row.className = "tl-row";
+      row.innerHTML = `<span class="tl-label">${s.short}</span>`;
+      windows(s, now).forEach(([a, b]) => {
+        const from = Math.max(a, dayStart), to = Math.min(b, dayEnd);
+        if (to <= from) return;
+        const bar = document.createElement("i");
+        bar.style.left = ((from - dayStart) / 864e5 * 100) + "%";
+        bar.style.width = ((to - from) / 864e5 * 100) + "%";
+        bar.style.background = s.colour;
+        bar.title = `${s.name}: ${fmt(a)}–${fmt(b)}`;
+        row.appendChild(bar);
+      });
+      tl.appendChild(row);
+    });
+    document.getElementById("tl-now").style.left = ((now - dayStart) / 864e5 * 100) + "%";
+  }
+  document.getElementById("tl-hours").innerHTML = [0, 3, 6, 9, 12, 15, 18, 21, 24].map(h => `<span style="left:${h / 24 * 100}%">${String(h).padStart(2, "0")}:00</span>`).join("");
+
+  function tick() {
+    const now = new Date();
+    document.getElementById("now-local").textContent = fmt(now, { second: "2-digit" });
+    document.getElementById("now-ny").textContent = fmt(now, { timeZone: "America/New_York" });
+    const g = globexOpen(now);
+    document.getElementById("globex").innerHTML = g ? '<span class="green">● Open</span>' : '<span class="red">● Closed</span>';
+
+    let next = null;
+    document.getElementById("sessions").innerHTML = SESSIONS.map(s => {
+      const w = windows(s, now);
+      const cur = w.find(([a, b]) => now >= a && now < b);
+      const up = w.find(([a]) => a > now);
+      if (up && (!next || up[0] < next.at)) next = { name: s.name, at: up[0] };
+      const status = cur
+        ? `<b class="green">Open</b><span>closes in ${dur(cur[1] - now)}</span>`
+        : `<b class="muted">Closed</b><span>${up ? "opens in " + dur(up[0] - now) : ""}</span>`;
+      const hours = up || cur ? `${fmt((cur || up)[0])}–${fmt((cur || up)[1])} your time` : "";
+      return `<div class="sess ${cur ? "is-open" : ""}" style="--c:${s.colour}">
+        <h3>${s.name}</h3><div class="sess-status">${status}</div>
+        <p class="mono small">${hours}</p><p class="small">${s.note}</p></div>`;
+    }).join("");
+    const ny = SESSIONS[2], nyNext = windows(ny, now).find(([a]) => a > now);
+    const cd = document.getElementById("countdown");
+    cd.innerHTML = nyNext
+      ? `<span class="small">New York open in</span><b>${dur(nyNext[0] - now)}</b><span class="small">${new Intl.DateTimeFormat(undefined, { weekday: "long" }).format(nyNext[0])} at ${fmt(nyNext[0])} your time</span>`
+      : "";
+    drawTimeline(now);
+  }
+  tick(); setInterval(tick, 1000);
+  </script>
+  <script src="script.js"></script>
+</body>
+</html>

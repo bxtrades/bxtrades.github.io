@@ -21,6 +21,8 @@ const VIDEOS = [
 // Your backtests. Add a new one by copying a line and changing it.
 // Put the image in the "images" folder on GitHub first.
 const BACKTESTS = [
+  { date: "Wed 3 June 2026", market: "NAS100", side: "Long", result: "Loss", img: "images/backtest-2026-06-03.jpg",
+    note: "Swept liquidity and the 3m bearish gap inversed, so I went long on the 1m retest targeting the engineered liquidity above. Lesson: not enough confluences aligned." },
   { date: "Wed 20 May 2026", market: "NAS100", side: "Long", result: "Win · 2.29R", img: "images/backtest-2026-05-20.jpg",
     note: "Bullish SMT divergence with ES, then price swept out liquidity. AMD play: entered on the 1m retest and rejection, targeting the strong highs." },
   { date: "Wed 29 April 2026", market: "NAS100", side: "Long", result: "Win", img: "images/backtest-2026-04-29.jpg",

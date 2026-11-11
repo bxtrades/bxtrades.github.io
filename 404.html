@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page not found | BXTrades</title>
+  <meta name="description" content="This page doesn't exist.">
+  <meta property="og:title" content="Page not found | BXTrades">
+  <meta property="og:description" content="This page doesn't exist.">
+  <meta property="og:image" content="https://bxtrades.com/images/desk-setup.jpg">
+  <meta property="og:url" content="https://bxtrades.com/404.html">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23f3efe6'/><path d='M10 4v24M22 4v24' stroke='%231d1c1a' stroke-width='2'/><rect x='6' y='9' width='8' height='12' fill='%23b5392b'/><rect x='18' y='11' width='8' height='12' fill='%23f3efe6' stroke='%231f7a4d' stroke-width='2'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- ===== TOP BAR (same on every page) ===== -->
+  <div class="topbar">
+    <header class="bar">
+      <a href="/index.html" class="logo">BXTrades <span>by Boris</span></a>
+      <nav class="links" aria-label="Main">
+        <a href="/index.html#about">About</a>
+        <a href="/index.html#series">Videos</a>
+        <a href="/index.html#backtests">Backtests</a>
+        <a href="/index.html#tools">Tools</a>
+        <a href="/index.html#community">Community</a>
+      </nav>
+      <a class="nav-deal" href="/index.html#deal">40% off evals</a>
+      <button class="menu-btn" aria-label="Open menu" onclick="document.body.classList.toggle('menu-open')">Menu</button>
+    </header>
+  </div>
+
+  <main class="page notfound">
+    <p class="kicker">Error 404</p>
+    <h1 class="page-title">This page has been <span class="hl">stopped out.</span></h1>
+    <p class="lead">The link might be mistyped, or the page has moved. Here's where you probably wanted to go:</p>
+    <ol class="episodes">
+      <li><a href="/"><span class="ep">01</span><h4>Home</h4><p>Videos, backtests, tools and the Discord.</p><span class="watch">Go →</span></a></li>
+      <li><a href="/#tools"><span class="ep">02</span><h4>Free tools</h4><p>Eval tracker, risk calculator, backtest journal and session clock.</p><span class="watch">Go →</span></a></li>
+      <li><a href="/glossary.html"><span class="ep">03</span><h4>Glossary</h4><p>Every trading term in plain English.</p><span class="watch">Go →</span></a></li>
+    </ol>
+  </main>
+
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="footer-links">
+      <a href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">TikTok</a>
+      <a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener">Discord</a>
+      <a href="/tracker.html">Eval tracker</a>
+      <a href="/prop-calculator.html">Prop calculator</a>
+      <a href="/journal.html">Backtest journal</a>
+      <a href="/sessions.html">Session clock</a>
+      <a href="/glossary.html">Glossary</a>
+      <a href="/index.html#faq">FAQ</a>
+      <a href="/index.html#deal">TradersScale 40% off</a>
+    </div>
+    <p class="contact">Brand deals, collabs or questions: <a href="mailto:bxtrades1@gmail.com">bxtrades1@gmail.com</a></p>
+    <p class="disclaimer"><strong>Disclaimer:</strong> All content on this site is for educational and entertainment purposes only and is not financial advice. I am not a financial adviser. Results shown are from a paper (simulated) trading account or backtests. Trading futures carries a high risk of loss and is not suitable for everyone. Past performance does not guarantee future results.</p>
+    <p class="mono small">© <span id="year"></span> BXTrades</p>
+  </footer>
+
+  <script src="/script.js"></script>
+</body>
+</html>
