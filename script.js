@@ -556,3 +556,75 @@ if ("serviceWorker" in navigator) {
   });
   window.addEventListener("appinstalled", () => { box.hidden = true; });
 })();
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   PICTURES: video posters, tool cards and glossary diagrams.
+   Images live in images/videos, images/tools and images/glossary.
+   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+(function () {
+  // Video posters, matched by the video's title.
+  // (New videos: you can also just add  thumb: "images/videos/10-xyz.webp"  in VIDEOS.)
+  const VIDEO_PICS = {
+    "Candlesticks": "01-candlesticks",
+    "How and why the market moves": "02-how-the-market-moves",
+    "Timeframes": "03-timeframes",
+    "Trends and ranges": "04-trends-and-ranges",
+    "Support and resistance": "05-support-and-resistance",
+    "Liquidity": "06-liquidity",
+    "Break of structure": "07-break-of-structure",
+    "Fair value gaps": "08-fair-value-gaps",
+    "Trading sessions": "09-trading-sessions"
+  };
+  document.querySelectorAll("#videos .poster").forEach(function (p) {
+    if (p.querySelector("img")) return;
+    const h = p.parentElement.querySelector("h4");
+    const file = h && VIDEO_PICS[h.textContent.trim()];
+    if (file) p.innerHTML = '<img src="images/videos/' + file + '.webp" alt="" loading="lazy" decoding="async">';
+  });
+
+  // Tool cards on the home page, matched by link.
+  const TOOL_PICS = {
+    "tracker.html": "eval-tracker",
+    "prop-calculator.html": "risk-calculator",
+    "journal.html": "backtest-journal",
+    "sessions.html": "session-clock",
+    "glossary.html": "glossary"
+  };
+  const tools = document.querySelector("#tools .episodes");
+  if (tools) {
+    tools.classList.add("with-posters", "tool-pics");
+    tools.querySelectorAll("a").forEach(function (a) {
+      const file = TOOL_PICS[a.getAttribute("href")];
+      const ep = a.querySelector(".ep");
+      if (file && ep) ep.outerHTML = '<span class="poster" aria-hidden="true"><img src="images/tools/' + file + '.webp" alt="" loading="lazy" decoding="async"></span>';
+    });
+  }
+
+  // Glossary diagrams, added under each definition.
+  const GLOSS_PICS = {
+    "candlestick": "Candlestick with open, close, high and low labelled",
+    "timeframe": "Daily, 4-hour and 1-minute charts nested inside each other",
+    "trend-range": "An uptrend above a sideways range",
+    "support-resistance": "Price bouncing between support and resistance",
+    "sessions": "Clock with the Asia, London and New York sessions",
+    "liquidity": "Stop losses above equal highs and below equal lows",
+    "liquidity-sweep": "Price poking above a high, taking the stops, then dropping",
+    "draw-on-liquidity": "Price heading towards an untouched high",
+    "bos": "Price breaking above the last high",
+    "fvg": "Three candles leaving a fair value gap",
+    "ifvg": "Price closing through a bearish gap, which then acts as support",
+    "retest": "Price breaking a level, retesting it, then carrying on",
+    "smt": "NQ making a lower low while ES makes a higher low",
+    "amd": "Accumulation range, manipulation drop, distribution rally",
+    "r": "Entry with 1R risk below and a 2R target above",
+    "drawdown": "Account balance between the profit target and the drawdown limit",
+    "contracts": "Dollars per point: NQ 20, ES 50, MNQ 2, MES 5"
+  };
+  Object.keys(GLOSS_PICS).forEach(function (id) {
+    const dd = document.querySelector("dl.gloss #" + id + " dd");
+    if (!dd || dd.querySelector(".gloss-fig")) return;
+    dd.insertAdjacentHTML("beforeend",
+      '<img class="gloss-fig" src="images/glossary/' + id + '.webp" alt="Diagram: ' + GLOSS_PICS[id] +
+      '" width="1200" height="600" loading="lazy" decoding="async">');
+  });
+})();

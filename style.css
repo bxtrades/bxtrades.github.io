@@ -505,3 +505,19 @@ footer { max-width: 1120px; margin: 0 auto; padding: 2.5rem 24px 3rem; border-to
 .feedback-btn { display: inline-block; padding: .6rem 1.1rem; border: 1.5px solid var(--ink); color: var(--ink); text-decoration: none; font-weight: 600; font-size: .92rem; }
 .feedback-btn:hover { background: var(--ink); color: var(--paper, var(--bg)); }
 @media (max-width: 760px) { .feedback { margin: 0 16px 2rem; } }
+
+/* ~~~~~ PICTURES: posters, tool cards, glossary diagrams ~~~~~ */
+.episodes .poster { width: 4.6rem; }
+.episodes.with-posters a { grid-template-columns: 4.6rem 1fr auto; column-gap: 1.2rem; row-gap: .3rem; align-items: start; }
+.episodes.with-posters .poster { grid-row: 1 / span 2; grid-column: 1; }
+.episodes.with-posters h4 { grid-column: 2; grid-row: 1; align-self: end; }
+.episodes.with-posters p { grid-column: 2; grid-row: 2; max-width: 60ch; }
+.episodes.with-posters .watch { grid-column: 3; grid-row: 1 / span 2; align-self: center; }
+.episodes .poster:has(img) { border-color: #3a3833; }
+.episodes .poster:has(img)::after { color: #f6d64a; z-index: 1; }
+.tool-pics .poster::after { content: none; }
+.gloss-fig { display: block; width: 100%; max-width: 480px; height: auto; margin-top: .8rem; border: 1.5px solid var(--ink); background: #1d1c1a; }
+@media (max-width: 900px) {
+  .episodes.with-posters a { grid-template-columns: 3.8rem 1fr auto; column-gap: .9rem; }
+  .episodes.with-posters .poster { width: 3.8rem; }
+}
