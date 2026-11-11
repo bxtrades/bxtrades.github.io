@@ -463,3 +463,14 @@ footer { max-width: 1120px; margin: 0 auto; padding: 2.5rem 24px 3rem; border-to
   .logo span { display: none; }
   .nav-deal { font-size: .75rem; padding: .3rem .5rem; }
 }
+
+/* ===== LIVE CHART + NEWS (TradingView widgets) ===== */
+.tv-chart { position: relative; height: 300px; }
+.tv-chart > canvas { position: absolute; inset: 0; }
+.tv-chart .tradingview-widget-container { position: absolute; inset: 0; z-index: 1; background: var(--card); }
+.tv-chart .tradingview-widget-copyright, .tv-news .tradingview-widget-copyright { display: none; }
+.chart-fig figcaption a { color: inherit; }
+.tv-news { border: 1px solid var(--ink); background: var(--card); height: 560px; }
+.social-proof { display: flex; flex-wrap: wrap; gap: .4rem 1.4rem; margin-top: 1.3rem; font: 500 .9rem var(--mono); }
+.social-proof b { font-size: 1.05rem; }
+@media (max-width: 760px) { .tv-chart { height: 240px; } .tv-news { height: 520px; } }

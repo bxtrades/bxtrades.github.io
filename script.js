@@ -474,6 +474,49 @@ if (gSearch) {
   if (!reduceMotion) setInterval(() => { bars.push(newBar()); if (bars.length > 400) bars.shift(); draw(); }, 900);
 })();
 
+
+// --- Live TradingView widgets (hero chart + news calendar), re-drawn when dark mode changes ---
+function tvWidget(host, file, config) {
+  if (!host) return;
+  host.querySelectorAll(".tradingview-widget-container").forEach(el => el.remove());
+  const wrap = document.createElement("div");
+  wrap.className = "tradingview-widget-container";
+  wrap.innerHTML = '<div class="tradingview-widget-container__widget" style="height:100%;width:100%"></div>';
+  const sc = document.createElement("script");
+  sc.src = "https://s3.tradingview.com/external-embedding/" + file;
+  sc.async = true;
+  sc.textContent = JSON.stringify(config);
+  wrap.appendChild(sc);
+  host.appendChild(wrap);
+}
+function drawWidgets() {
+  const dark = document.documentElement.getAttribute("data-theme") === "dark";
+  const card = getComputedStyle(document.documentElement).getPropertyValue("--card").trim();
+  const userTZ = Intl.DateTimeFormat().resolvedOptions().timeZone || "Etc/UTC";
+  const chart = document.getElementById("tv-chart");
+  if (chart) tvWidget(chart, "embed-widget-advanced-chart.js", {
+    autosize: true, symbol: chart.dataset.symbol, interval: chart.dataset.interval, timezone: userTZ,
+    theme: dark ? "dark" : "light", style: "1", locale: "en", backgroundColor: card,
+    gridColor: dark ? "rgba(236,230,216,0.06)" : "rgba(29,28,26,0.06)",
+    hide_top_toolbar: true, hide_legend: false, hide_volume: true, allow_symbol_change: false,
+    save_image: false, calendar: false, withdateranges: false, support_host: "https://www.tradingview.com"
+  });
+  const news = document.getElementById("tv-news");
+  if (news) tvWidget(news, "embed-widget-events.js", {
+    colorTheme: dark ? "dark" : "light", isTransparent: true, width: "100%", height: "100%",
+    locale: "en", importanceFilter: "0,1", countryFilter: "us"
+  });
+}
+drawWidgets();
+window.addEventListener("themechange", drawWidgets);
+
+// --- Hero: live Discord member count next to TikTok followers ---
+const heroDc = document.getElementById("hero-dc");
+if (heroDc) fetch("https://discord.com/api/v9/invites/6UCdDEGptX?with_counts=true")
+  .then(r => r.ok ? r.json() : Promise.reject())
+  .then(d => { if (d.approximate_member_count) { document.getElementById("hero-dc-n").textContent = d.approximate_member_count.toLocaleString(); heroDc.hidden = false; } })
+  .catch(() => {});
+
 // --- Footer year + close mobile menu after tapping a link ---
 const yearEl = document.getElementById("year");
 if (yearEl) yearEl.textContent = new Date().getFullYear();
