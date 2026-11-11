@@ -21,7 +21,7 @@
     --height:110px;        /* banner height. Taller bar = bigger text */
     --font:27px;           /* text size */
     --margin:16px;         /* gap around the bar */
-    --chart-opacity:.13;   /* how visible the candles behind the text are (0 to 1) */
+    --chart-opacity:.26;   /* how visible the candles behind the text are (0 to 1) */
     --chart-speed:40s;     /* time for the chart to loop. Higher = slower */
   }
   html,body{margin:0; padding:0; background:transparent; overflow:hidden}
@@ -45,6 +45,17 @@
 
   .stage{position:relative; flex:1; min-width:0}
   /* faint candles drifting behind the text */
+  .bar{background:linear-gradient(100deg,#f6f1e4 0%,var(--paper) 45%,#efe8d6 100%)}
+  .grid{position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.5;
+    background:
+      repeating-linear-gradient(90deg, rgba(29,28,26,.07) 0 1px, transparent 1px 28px),
+      repeating-linear-gradient(0deg,  rgba(29,28,26,.07) 0 1px, transparent 1px 28px);
+    animation:gridmove 30s linear infinite}
+  @keyframes gridmove{to{background-position:-280px 0, 0 0}}
+  .shine{position:absolute; top:-20%; bottom:-20%; width:22%; left:-30%; z-index:1; pointer-events:none;
+    background:linear-gradient(100deg, transparent, rgba(255,255,255,.75), transparent); transform:skewX(-18deg)}
+  .shine.go{animation:sweep 1.1s .15s ease-out}
+  @keyframes sweep{to{left:120%}}
   .chart{position:absolute; inset:0; z-index:0; pointer-events:none; opacity:var(--chart-opacity);
     -webkit-mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent);
             mask-image:linear-gradient(90deg,transparent,#000 10%,#000 90%,transparent)}
@@ -53,13 +64,24 @@
   @keyframes drift{to{transform:translate3d(-50%,0,0)}}
 
   .slide{
-    position:absolute; inset:0; z-index:1; display:flex; align-items:center; justify-content:center; gap:.45em; padding:0 .5em;
+    position:absolute; inset:0; z-index:2; display:flex; align-items:center; justify-content:center; gap:.45em; padding:0 .5em;
     font-size:var(--font); font-weight:500; line-height:1.15; white-space:nowrap;
     opacity:0; transform:translateY(55%); transition:opacity .55s ease, transform .55s cubic-bezier(.2,.8,.2,1);
   }
   .slide.show{opacity:1; transform:none}
+  /* icon pops in, FREE badge bounces, then a little nudge halfway through to catch the eye */
+  .slide.show .ico{animation:pop .6s cubic-bezier(.3,1.7,.5,1) both}
+  .slide.show .pill{animation:pop .6s .15s cubic-bezier(.3,1.7,.5,1) both}
+  .slide.nudge .ico{animation:wiggle .7s ease-in-out}
+  .slide.nudge .pill{animation:bounce .7s ease-in-out}
+  @keyframes pop{0%{transform:scale(0) rotate(-25deg)}100%{transform:none}}
+  @keyframes wiggle{0%,100%{transform:none}20%{transform:rotate(-14deg) scale(1.1)}40%{transform:rotate(12deg) scale(1.1)}60%{transform:rotate(-8deg)}80%{transform:rotate(5deg)}}
+  @keyframes bounce{0%,100%{transform:none}30%{transform:translateY(-22%)}55%{transform:translateY(4%)}75%{transform:translateY(-8%)}}
   .slide.out{opacity:0; transform:translateY(-55%)}
-  .slide b{font-weight:700; background:linear-gradient(transparent 55%, var(--hi) 55%, var(--hi) 92%, transparent 92%); padding:0 .08em}
+  /* highlighter "draws" across the key words each time a slide appears */
+  .slide b{font-weight:700; padding:0 .08em; background:linear-gradient(var(--hi),var(--hi)) no-repeat 0 88% / 0% 42%}
+  .slide.show b{animation:marker .55s .45s cubic-bezier(.4,0,.2,1) forwards}
+  @keyframes marker{to{background-size:100% 42%}}
   .slide .soft{color:var(--muted)}
   .slide .mono{font-family:"IBM Plex Mono",monospace; font-weight:600}
   .ico{flex:none; width:1.45em; height:1.45em; border:2px solid var(--ink); border-radius:50%; display:inline-flex; align-items:center; justify-content:center; background:var(--paper-2)}
@@ -69,17 +91,15 @@
   .code{font-family:"IBM Plex Mono",monospace; font-weight:600; letter-spacing:.06em; border:2px dashed var(--ink); background:var(--hi); padding:.05em .4em}
   .ad{font-family:"IBM Plex Mono",monospace; font-size:.5em; font-weight:600; color:var(--muted); border:1.5px solid var(--muted); padding:.1em .35em}
 
-  /* progress line along the bottom */
-  .progress{position:absolute; left:0; bottom:0; height:4px; width:0; background:var(--ink); z-index:2}
-  .progress.run{animation:fill linear forwards}
   @keyframes fill{to{width:100%}}
 </style>
 </head>
 <body>
   <div class="bar">
     <div class="stage" id="stage">
+      <div class="grid"></div>
       <div class="chart"><div class="move" id="move"></div></div>
-      <div class="progress" id="progress"></div>
+      <div class="shine" id="shine"></div>
     </div>
   </div>
 
@@ -114,7 +134,7 @@
   if (q.get("seconds")) SECONDS = parseFloat(q.get("seconds")) || SECONDS;
   if (q.get("height")) root.setProperty("--height", parseFloat(q.get("height")) + "px");
 
-  var stage = document.getElementById("stage"), progress = document.getElementById("progress");
+  var stage = document.getElementById("stage"), shine = document.getElementById("shine");
   var els = SLIDES.map(function(s){
     var d = document.createElement("div"); d.className = "slide";
     d.innerHTML = '<span class="ico">' + (ICONS[s.icon] || ICONS.chat) + '</span><span>' + s.text + '</span>';
@@ -167,7 +187,8 @@
     var cur = els[i];
     if (prev) { prev.classList.remove("show"); prev.classList.add("out"); setTimeout(function(){ prev.classList.remove("out"); }, 600); }
     cur.classList.remove("out"); void cur.offsetWidth; cur.classList.add("show");
-    progress.classList.remove("run"); progress.style.animationDuration = SECONDS + "s"; void progress.offsetWidth; progress.classList.add("run");
+    shine.classList.remove("go"); void shine.offsetWidth; shine.classList.add("go");
+    clearTimeout(window._nudge); window._nudge = setTimeout(function(){ cur.classList.remove("nudge"); void cur.offsetWidth; cur.classList.add("nudge"); }, SECONDS * 520);
   }
   (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(function(){
     fit(); next(); setInterval(next, SECONDS * 1000);
