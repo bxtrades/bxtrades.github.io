@@ -22,8 +22,18 @@ const VIDEOS = [
 // Your backtests. Add a new one by copying a line and changing it.
 // Put the image in the "images" folder on GitHub first (.jpg, .png or .webp all work).
 const BACKTESTS = [
+  { date: "Wed 1 July 2026", market: "NAS100", side: "Long", result: "Win · 3.34R", img: "images/backtest-2026-07-01.webp",
+    note: "Swept liquidity, then entered on the 1m retest and rejection. AMD play targeting the New York PM high and the Asia highs." },
+  { date: "Wed 17 June 2026", market: "NAS100", side: "Long", result: "Win", img: "images/backtest-2026-06-17.webp",
+    note: "Swept liquidity and the 5m bearish gap inversed, then inversed again. Entered on the 1m retest under equal highs, targeting the London highs and the engineered liquidity above." },
+  { date: "Tue 9 June 2026", market: "NAS100", side: "No entry", result: "No trade", img: "images/backtest-2026-06-09.webp",
+    note: "Bullish SMT divergence after a sweep, but price sold off hard and no EXPO model formed, so I stayed out. Sitting on my hands counts too." },
+  { date: "Fri 5 June 2026", market: "NAS100", side: "Long", result: "Loss", img: "images/backtest-2026-06-05.webp",
+    note: "Swept liquidity with bullish SMT divergence, then went long on the 1m inversion targeting the New York session high. Price came back down and stopped me out." },
   { date: "Wed 3 June 2026", market: "NAS100", side: "Long", result: "Loss", img: "images/backtest-2026-06-03.webp",
     note: "Swept liquidity and the 3m bearish gap inversed, so I went long on the 1m retest targeting the engineered liquidity above. Lesson: not enough confluences aligned." },
+  { date: "Fri 22 May 2026", market: "NAS100", side: "Long", result: "Win · 2.13R", img: "images/backtest-2026-05-22.webp",
+    note: "Bullish SMT divergence, a sweep of liquidity, and the 3m bearish gap inversed. Entered on the 1m bullish retest after a bit of equilibrium, targeting the Asia highs." },
   { date: "Wed 20 May 2026", market: "NAS100", side: "Long", result: "Win · 2.29R", img: "images/backtest-2026-05-20.webp",
     note: "Bullish SMT divergence with ES, then price swept out liquidity. AMD play: entered on the 1m retest and rejection, targeting the strong highs." },
   { date: "Wed 29 April 2026", market: "NAS100", side: "Long", result: "Win", img: "images/backtest-2026-04-29.webp",
@@ -73,14 +83,16 @@ if (videoList) {
 const btList = document.getElementById("backtest-list");
 if (btList) {
   const isWin = b => /win/i.test(b.result);
+  const isLoss = b => /loss/i.test(b.result);
   const btId = b => "bt-" + (b.img.match(/(\d{4}-\d{2}-\d{2})/) || [, b.date.replace(/\W+/g, "-").toLowerCase()])[1];
   const rs = BACKTESTS.map(b => parseFloat((b.result.match(/(-?\d+(?:\.\d+)?)\s*R/i) || [])[1])).filter(isFinite);
   const wins = BACKTESTS.filter(isWin).length;
+  const traded = wins + BACKTESTS.filter(isLoss).length;
   const avgR = rs.length ? (rs.reduce((a, b) => a + b, 0) / rs.length).toFixed(2) + "R" : "–";
   document.getElementById("bt-stats").innerHTML = [
     ["Backtests logged", BACKTESTS.length],
-    ["Win rate", BACKTESTS.length ? Math.round(wins / BACKTESTS.length * 100) + "%" : "–"],
-    ["Average R", avgR + (rs.length && rs.length < BACKTESTS.length ? ` <small>(${rs.length} of ${BACKTESTS.length} recorded)</small>` : "")],
+    ["Win rate", traded ? Math.round(wins / traded * 100) + "%" : "–"],
+    ["Average R", avgR + (rs.length && rs.length < traded ? ` <small>(${rs.length} of ${traded} recorded)</small>` : "")],
     ["Latest", BACKTESTS.length ? BACKTESTS[0].date.replace(/^\w+ /, "") : "–"]
   ].map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join("");
 
@@ -88,11 +100,11 @@ if (btList) {
   let filter = "all", shown = PAGE;
   const moreBtn = document.getElementById("bt-more");
   function renderBacktests() {
-    const list = BACKTESTS.map((b, i) => ({ b, i })).filter(({ b }) => filter === "all" || (filter === "win") === isWin(b));
+    const list = BACKTESTS.map((b, i) => ({ b, i })).filter(({ b }) => filter === "all" || (filter === "win" ? isWin(b) : isLoss(b)));
     btList.innerHTML = list.slice(0, shown).map(({ b, i }) => `
       <button class="bt" type="button" data-i="${i}" id="${btId(b)}">
         <img src="${b.img}" alt="Annotated backtest, ${b.market}, ${b.date}" loading="lazy" decoding="async">
-        <span class="bt-meta"><span class="mono">${b.date} · ${b.market} · ${b.side}</span><span class="bt-res ${isWin(b) ? "green" : "red"}">${b.result}</span></span>
+        <span class="bt-meta"><span class="mono">${b.date} · ${b.market} · ${b.side}</span><span class="bt-res ${isWin(b) ? "green" : isLoss(b) ? "red" : ""}">${b.result}</span></span>
         <span class="bt-note">${b.note}</span>
       </button>`).join("") || `<p class="small">No ${filter === "win" ? "wins" : "losses"} logged yet.</p>`;
     moreBtn.hidden = list.length <= shown;
