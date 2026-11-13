@@ -640,3 +640,25 @@ if ("serviceWorker" in navigator) {
       '" width="1200" height="600" loading="lazy" decoding="async">');
   });
 })();
+
+
+// --- Hero chart: keep the animated candles + "Loading live chart" label showing until TradingView has loaded ---
+(function chartLoading() {
+  const host = document.getElementById("tv-chart");
+  if (!host) return;
+  function watch(frame) {
+    host.classList.remove("tv-ready");
+    frame.addEventListener("load", function () {
+      setTimeout(function () { host.classList.add("tv-ready"); }, 700);
+    }, { once: true });
+  }
+  if (host.querySelector("iframe")) host.classList.add("tv-ready");
+  new MutationObserver(function (changes) {
+    changes.forEach(function (ch) {
+      ch.addedNodes.forEach(function (n) {
+        if (n.tagName === "IFRAME") watch(n);
+        else if (n.querySelectorAll) n.querySelectorAll("iframe").forEach(watch);
+      });
+    });
+  }).observe(host, { childList: true, subtree: true });
+})();
