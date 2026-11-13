@@ -662,3 +662,32 @@ if ("serviceWorker" in navigator) {
     });
   }).observe(host, { childList: true, subtree: true });
 })();
+
+// --- Tap to play: TikTok videos open in a pop-up player, so visitors stay on the site ---
+(function videoPlayer() {
+  const list = document.getElementById("videos");
+  if (!list || !window.HTMLDialogElement) return;
+  const box = document.createElement("dialog");
+  box.className = "vplayer";
+  box.innerHTML = '<div class="vp-head"><span class="vp-title"></span><button type="button" class="vp-close" aria-label="Close video">✕</button></div>' +
+    '<div class="vp-frame"></div><a class="vp-out" target="_blank" rel="noopener">Open in TikTok →</a>';
+  document.body.appendChild(box);
+  const frame = box.querySelector(".vp-frame");
+  box.addEventListener("close", function () { frame.innerHTML = ""; });
+  box.querySelector(".vp-close").addEventListener("click", function () { box.close(); });
+  box.addEventListener("click", function (e) { if (e.target === box) box.close(); });
+  list.querySelectorAll(".watch").forEach(function (w) { w.textContent = "▶ Play"; });
+  list.addEventListener("click", function (e) {
+    const a = e.target.closest("a");
+    if (!a || e.ctrlKey || e.metaKey || e.shiftKey) return;
+    const m = a.href.match(/video\/(\d+)/);
+    if (!m) return;
+    e.preventDefault();
+    const h = a.querySelector("h4");
+    box.querySelector(".vp-title").textContent = h ? h.textContent : "";
+    box.querySelector(".vp-out").href = a.href;
+    frame.innerHTML = '<iframe src="https://www.tiktok.com/player/v1/' + m[1] + '?autoplay=1&rel=0&description=0&music_info=0"' +
+      ' allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="TikTok video"></iframe>';
+    box.showModal();
+  });
+})();
