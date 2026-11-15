@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eval pass simulator | BXTrades</title>
+<meta name="description" content="Free prop firm evaluation simulator. Enter your win rate, reward to risk and risk per trade, pick a firm, and see how often you'd pass across 10,000 simulated evaluations.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BXTrades">
+<meta property="og:title" content="Eval pass simulator | BXTrades">
+<meta property="og:description" content="See how often you'd pass a prop firm evaluation, from 10,000 simulated attempts.">
+<meta property="og:image" content="https://bxtrades.com/images/og-home.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="BXTrades eval pass simulator">
+<meta property="og:url" content="https://bxtrades.com/simulator.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://bxtrades.com/images/og-home.jpg">
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/images/favicon-48.png" sizes="48x48" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+<meta name="theme-color" content="#f3efe6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="BXTrades">
+<script>try{var t=localStorage.getItem("bxt-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<link rel="canonical" href="https://bxtrades.com/simulator.html">
+<script data-goatcounter="https://bxtrades.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+<style>
+/* Simulator only. Uses the site's colours, so dark mode just works. */
+.sim-grid { display: grid; gap: 2rem; grid-template-columns: minmax(0,1fr); }
+@media (min-width: 920px) {
+  .sim-grid { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); align-items: start; }
+  .sim-out { position: sticky; top: 5rem; }
+}
+.box { border: 1.5px solid var(--ink); background: var(--card); padding: 1.3rem; box-shadow: 4px 4px 0 var(--ink); }
+.grp { margin-bottom: 1.6rem; }
+.grp:last-child { margin-bottom: 0; }
+.grp h2 { font-family: var(--mono); font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 .6rem; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; }
+@media (max-width: 420px) { .fields { grid-template-columns: 1fr; } }
+.f { display: flex; flex-direction: column; gap: .3rem; font-size: .88rem; font-weight: 600; color: var(--ink); }
+.inp { display: flex; align-items: center; border: 1px solid var(--rule); background: var(--paper); padding: 0 .6rem; min-height: 44px; }
+.inp:focus-within { border-color: var(--ink); }
+.inp span { color: var(--muted); font-family: var(--mono); font-size: .85rem; }
+.inp input { border: 0; outline: 0; background: transparent; color: var(--ink); width: 100%; padding: .55rem .3rem; font: 500 1rem var(--mono); }
+select.sel { width: 100%; min-height: 44px; border: 1px solid var(--rule); background: var(--paper); color: var(--ink); font: 600 .95rem var(--sans); padding: 0 .6rem; }
+.seg { display: flex; flex-wrap: wrap; gap: .4rem; }
+.seg button { font: 600 .88rem var(--mono); color: var(--ink); background: var(--paper); border: 1px solid var(--rule); padding: .45rem .8rem; min-height: 40px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.hint { font-size: .82rem; color: var(--muted); margin: .5rem 0 0; }
+.firm-note { font-size: .86rem; color: var(--body-ink); margin: .6rem 0 0; }
+.check { display: flex; gap: .5rem; align-items: center; font-size: .88rem; margin-top: .7rem; color: var(--body-ink); }
+.check input { width: 18px; height: 18px; accent-color: var(--ink); }
+.big-num { font: 600 clamp(3rem, 10vw, 4.4rem) var(--mono); line-height: 1; margin: .3rem 0 .2rem; }
+.big-num.good { color: var(--green); } .big-num.bad { color: var(--red); }
+.split { display: flex; height: 12px; border: 1px solid var(--ink); margin: .9rem 0 .4rem; }
+.split i { display: block; height: 100%; }
+.split .p { background: var(--green); } .split .d { background: var(--red); } .split .l { background: var(--red); opacity: .55; } .split .o { background: var(--rule); }
+.legend { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: .8rem; color: var(--muted); font-family: var(--mono); }
+.legend b { color: var(--ink); font-weight: 600; }
+.stat-row { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--rule); margin-top: 1.2rem; }
+.stat-row div { padding: .75rem .9rem; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: .1rem; }
+.stat-row div:nth-child(odd) { border-right: 1px solid var(--rule); }
+.stat-row div:nth-last-child(-n+2) { border-bottom: 0; }
+.stat-row span { font-size: .76rem; color: var(--muted); }
+.stat-row b { font: 600 1.25rem var(--mono); }
+.chart-wrap { margin-top: 1.4rem; }
+.chart-wrap h3, .sweep h3 { font-size: 1rem; margin: 0 0 .3rem; }
+#paths { width: 100%; height: 260px; display: block; border: 1px solid var(--rule); background: var(--paper); margin-top: .5rem; }
+.warns { list-style: none; margin: 1.2rem 0 0; padding: 0; display: grid; gap: .5rem; }
+.warns li { border-left: 3px solid var(--hi); padding: .35rem 0 .35rem .8rem; font-size: .9rem; }
+.warns li.bad { border-color: var(--red); } .warns li.ok { border-color: var(--green); }
+.sweep { margin-top: 1.6rem; border-top: 1px solid var(--rule); padding-top: 1.2rem; }
+.sweep table { width: 100%; border-collapse: collapse; font-size: .88rem; margin-top: .5rem; }
+.sweep td { padding: .45rem .3rem; border-top: 1px solid var(--rule); font-family: var(--mono); vertical-align: middle; }
+.sweep td.bar { width: 50%; }
+.sweep .b { height: 10px; background: var(--green); min-width: 2px; }
+.sweep tr.cur td { font-weight: 600; }
+.sweep tr.cur td:first-child { box-shadow: inset 3px 0 0 var(--ink); padding-left: .6rem; }
+.btn-row { display: flex; gap: .8rem; flex-wrap: wrap; align-items: center; margin-top: 1.2rem; }
+.btn-row .btn { cursor: pointer; }
+.how { margin-top: 3.5rem; max-width: 46rem; }
+.how h2 { font-family: var(--serif); font-weight: 600; font-size: 1.6rem; margin: 2.2rem 0 .7rem; }
+.how p, .how li { color: var(--body-ink); }
+.how ol, .how ul { padding-left: 1.2rem; }
+.how li { margin: .35rem 0; }
+</style>
+</head>
+<body>
+<!-- ===== TOP BAR (same on every page) ===== -->
+<div class="topbar">
+<header class="bar">
+<a href="index.html" class="logo">BXTrades <span>by Boris</span></a>
+<nav class="links" aria-label="Main">
+<a href="index.html#about">About</a>
+<a href="index.html#series">Videos</a>
+<a href="index.html#backtests">Backtests</a>
+<a href="index.html#tools">Tools</a>
+<a href="index.html#community">Community</a>
+</nav>
+<a class="nav-deal" href="index.html#deal">40% off evals</a>
+<button class="theme-btn" type="button" aria-label="Switch dark mode" title="Dark / light mode" onclick="(function(){var r=document.documentElement,d=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',d);try{localStorage.setItem('bxt-theme',d)}catch(e){}document.querySelectorAll('meta[name=theme-color]').forEach(function(m){m.content=d==='dark'?'#161719':'#f3efe6'});window.dispatchEvent(new Event('themechange'))})()"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg></button>
+<button class="menu-btn" aria-label="Open menu" onclick="document.body.classList.toggle('menu-open')">Menu</button>
+</header>
+</div>
+
+<main class="page">
+<a class="back-link" href="index.html#tools">← Back to the tools</a>
+<p class="kicker">Free tool · 10,000 evaluations in a second</p>
+<h1 class="page-title">Eval pass simulator</h1>
+<p class="lead">Pick a prop firm, enter how you trade, and this plays out 10,000 imaginary evaluations under the firm's rules. It's like crash-testing your plan thousands of times before you pay for a real attempt.</p>
+
+<div class="sim-grid">
+<!-- ===== INPUTS ===== -->
+<section class="box" aria-label="Firm and trading settings">
+<div class="grp">
+<h2>1 · Prop firm</h2>
+<select class="sel" id="firm" aria-label="Prop firm"></select>
+<p class="firm-note" id="firmNote"></p>
+</div>
+
+<div class="grp">
+<h2>2 · Account size</h2>
+<div class="seg" id="sizes" role="group" aria-label="Account size"></div>
+<p class="hint">Picking a size fills in the rules below. You can change any number. For two-phase challenges, the account resets to the starting balance for phase 2.</p>
+</div>
+
+<div class="grp">
+<h2>3 · Evaluation rules</h2>
+<div class="fields">
+<label class="f">Profit target<div class="inp"><span>$</span><input id="target" inputmode="decimal"></div></label>
+<label class="f">Phase 2 target<div class="inp"><span>$</span><input id="target2" inputmode="decimal" placeholder="0 = one phase"></div></label>
+<label class="f">Max drawdown<div class="inp"><span>$</span><input id="dd" inputmode="decimal"></div></label>
+<label class="f">Daily loss limit<div class="inp"><span>$</span><input id="dll" inputmode="decimal" placeholder="0 = none"></div></label>
+<label class="f">Drawdown type
+<select class="sel" id="ddType" aria-label="Drawdown type">
+<option value="eod">End-of-day trailing</option>
+<option value="intraday">Intraday trailing</option>
+<option value="static">Static (doesn't move)</option>
+</select></label>
+</div>
+<label class="check"><input type="checkbox" id="softDll"> Daily limit only pauses the day (doesn't fail the account)</label>
+<label class="check"><input type="checkbox" id="lock"> Trailing drawdown stops at the starting balance</label>
+</div>
+
+<div class="grp">
+<h2>4 · How you trade</h2>
+<div class="fields">
+<label class="f">Win rate<div class="inp"><input id="win" inputmode="decimal"><span>%</span></div></label>
+<label class="f">Reward to risk<div class="inp"><input id="rr" inputmode="decimal"><span>R</span></div></label>
+<label class="f">Risk per trade<div class="inp"><span>$</span><input id="risk" inputmode="decimal"></div></label>
+<label class="f">Trades per day<div class="inp"><input id="tpd" inputmode="numeric"></div></label>
+<label class="f">Breakeven trades<div class="inp"><input id="be" inputmode="decimal"><span>%</span></div></label>
+<label class="f">Fees + slippage<div class="inp"><span>$</span><input id="cost" inputmode="decimal"><span>/trade</span></div></label>
+<label class="f">Days allowed<div class="inp"><input id="days" inputmode="numeric"><span>days</span></div></label>
+</div>
+<p class="hint">Win rate and breakeven are out of all your trades, so 45% wins and 10% breakeven means 45% lose. Be honest: use your paper or backtest numbers, not your best week.</p>
+</div>
+</section>
+
+<!-- ===== RESULTS ===== -->
+<section class="sim-out" aria-live="polite">
+<div class="box">
+<p class="kicker">Chance of passing</p>
+<div class="big-num" id="passPct">–</div>
+<p id="passLine" style="margin:0;color:var(--body-ink)"></p>
+
+<div class="split" id="split" aria-hidden="true"><i class="p"></i><i class="d"></i><i class="l"></i><i class="o"></i></div>
+<div class="legend" id="legend"></div>
+
+<div class="stat-row">
+<div><span>Typical days to pass</span><b id="sDays">–</b></div>
+<div><span>Average profit per trade</span><b id="sEv">–</b></div>
+<div><span>Losses in a row to expect</span><b id="sStreak">–</b></div>
+<div><span>Full losses the drawdown allows</span><b id="sLives">–</b></div>
+</div>
+
+<ul class="warns" id="warns"></ul>
+
+<div class="chart-wrap">
+<h3>40 of those evaluations, trade by trade</h3>
+<p class="hint" style="margin:0">Each line is one attempt. <span style="color:var(--green)">Green</span> passed, <span style="color:var(--red)">red</span> failed, grey ran out of days. Same trader, same rules, different luck.</p>
+<canvas id="paths" role="img" aria-label="Chart of 40 simulated evaluation balances"></canvas>
+</div>
+
+<div class="sweep">
+<h3>What if you changed your risk?</h3>
+<p class="hint" style="margin:0">Same win rate and rules, different risk per trade.</p>
+<table><tbody id="sweep"></tbody></table>
+</div>
+
+<div class="btn-row">
+<button class="btn" type="button" id="rerun">Roll the dice again</button>
+<span class="small">New random results, same settings.</span>
+</div>
+</div>
+</section>
+</div>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section class="how">
+<h2>How it works</h2>
+<ol>
+<li><strong>Every trade is a dice roll.</strong> With a 50% win rate, each trade has a 50% chance of winning your risk times your R, and otherwise loses your risk. Fees come off every trade.</li>
+<li><strong>Every evaluation is a run of trades.</strong> After each trade it checks the rules like a referee: hit the target and you pass, touch the drawdown or the daily limit and you fail, run out of days and it's unfinished.</li>
+<li><strong>Then it repeats 10,000 times.</strong> One attempt tells you nothing, the same way one coin flip can't tell you if a coin is fair. Thousands of attempts show you the real odds.</li>
+</ol>
+
+<h2>The drawdown types</h2>
+<ul>
+<li><strong>End-of-day trailing:</strong> the fail line moves up to sit "max drawdown" below your best <em>closing</em> balance, checked once a day.</li>
+<li><strong>Intraday trailing:</strong> the fail line moves up after every trade. Stricter, because a winning morning followed by a losing afternoon tightens it straight away. Real firms track open profit too, so the real thing is stricter still.</li>
+<li><strong>Static:</strong> the fail line never moves. The most forgiving.</li>
+</ul>
+<p>A trailing drawdown is like a ratchet: it only ever moves up. Most firms stop it once it reaches your starting balance.</p>
+
+<h2>What it doesn't know</h2>
+<ul>
+<li>It treats every trade as independent. Real traders tilt after losses, and markets have streaky weeks. Read the result as a <strong>best case</strong>.</li>
+<li>Consistency rules (like "your best day can't be more than half your profit") and minimum trading days aren't included.</li>
+<li>Firms change their rules often. The presets are a starting point, so check your firm's current rules and type them in.</li>
+<li>Your win rate is a guess until you have a lot of trades. 10 trades can't tell you your real win rate; 100 is a start.</li>
+</ul>
+<p class="callout">This is an education tool, not a prediction or financial advice. Most people fail prop firm evaluations, so only pay for one you can afford to lose.</p>
+</section>
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+<div class="footer-links">
+<a href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">TikTok</a>
+<a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener">Discord</a>
+<a href="tracker.html">Eval tracker</a>
+<a href="prop-calculator.html">Prop calculator</a>
+<a href="simulator.html">Pass simulator</a>
+<a href="journal.html">Backtest journal</a>
+<a href="sessions.html">Session clock</a>
+<a href="glossary.html">Glossary</a>
+<a href="index.html#faq">FAQ</a>
+<a href="index.html#deal">TradersScale 40% off</a>
+<a href="media.html">Media kit</a>
+<a href="privacy.html">Privacy</a>
+</div>
+<p class="not-broker"><strong>Not a broker.</strong> BXTrades is my personal education page. I'm not a broker or investment firm, I never manage anyone's money, and I'll never DM you asking you to invest.</p>
+<p class="contact">Brand deals, collabs or questions: <a href="mailto:bxtrades1@gmail.com">bxtrades1@gmail.com</a></p>
+<p class="disclaimer"><strong>Disclaimer:</strong> All content on this site is for educational and entertainment purposes only and is not financial advice. I am not a financial adviser. Results shown are from a paper (simulated) trading account or backtests. Trading futures carries a high risk of loss and is not suitable for everyone. Past performance does not guarantee future results.</p>
+<p class="mono small">© <span id="year"></span> BXTrades</p>
+</footer>
+
+<script src="script.js"></script>
+<script>
+(function () {
+  // ---------- Firm presets (same numbers as the prop firm risk calculator) ----------
+  // sizes: [profit target, max drawdown, daily loss limit (0 = none), phase 2 target (0 = one phase)]
+  function pctSizes(list, t, dd, dll, t2) {
+    var o = {}; list.forEach(function (k) { o[k] = [k * t, k * dd, k * dll, k * (t2 || 0)]; }); return o;
+  }
+  var TS_SIZES = [10000, 25000, 50000, 100000, 200000];
+  var FIRMS = {
+    topstep: { name: "Topstep – Trading Combine", ddType: "eod", softDll: false,
+      note: "End-of-day trailing drawdown. The daily loss limit depends on your platform and plan, and can be switched off on TopstepX.",
+      sizes: { 50000: [3000, 2000, 1000], 100000: [6000, 3000, 2000], 150000: [9000, 4500, 3000] } },
+    apex: { name: "Apex Trader Funding – Intraday", ddType: "intraday", softDll: false,
+      note: "Intraday trailing drawdown that moves with every tick. No daily loss limit on the Intraday plan.",
+      sizes: { 25000: [1500, 1000, 0], 50000: [3000, 2000, 0], 100000: [6000, 3000, 0], 150000: [9000, 4000, 0] } },
+    tpt: { name: "Take Profit Trader – Test", ddType: "eod", softDll: false,
+      note: "End-of-day trailing drawdown. No daily loss limit, so the drawdown is the only hard stop.",
+      sizes: { 25000: [1500, 1500, 0], 50000: [3000, 2000, 0], 75000: [4500, 2500, 0], 100000: [6000, 3000, 0], 150000: [9000, 4500, 0] } },
+    mffu: { name: "My Funded Futures – Rapid", ddType: "eod", softDll: false,
+      note: "End-of-day trailing drawdown. No daily loss limit. 25K is the Flex plan.",
+      sizes: { 25000: [1500, 1000, 0], 50000: [3000, 2000, 0], 100000: [6000, 3000, 0], 150000: [9000, 4500, 0] } },
+    tradeify: { name: "Tradeify – Growth", ddType: "eod", softDll: true,
+      note: "End-of-day trailing drawdown. The daily loss limit is a soft breach: trading pauses for the day but the account doesn't fail.",
+      sizes: { 25000: [1500, 1000, 600], 50000: [3000, 2000, 1250], 100000: [6000, 3500, 2500], 150000: [9000, 5000, 3750] } },
+    ts2: { name: "TradersScale – 2-Step Pro (forex/CFD)", ddType: "static", softDll: false,
+      note: "Forex and CFDs on MT5 or Match-Trader, not futures. Two phases: +8%, then +5%. 5% daily loss limit and a static 10% max loss that never trails. No time limit (set to 120 days here), 4 minimum trading days (not modelled), no consistency rule.",
+      sizes: pctSizes(TS_SIZES, 0.08, 0.10, 0.05, 0.05), days: 120 },
+    ts1: { name: "TradersScale – Speedy 1-Step (forex/CFD)", ddType: "static", softDll: false,
+      note: "Forex and CFDs on MT5 or Match-Trader, not futures. One +10% target, 4% daily loss limit, 8% max loss. No time limit (set to 120 days here). Its 40% consistency rule isn't modelled.",
+      sizes: pctSizes(TS_SIZES, 0.10, 0.08, 0.04, 0), days: 120 },
+    custom: { name: "Custom or other firm", ddType: "eod", softDll: false,
+      note: "Typical starting values. Type in your own firm's rules.",
+      sizes: { 25000: [1500, 1500, 500], 50000: [3000, 2500, 1000], 100000: [6000, 3000, 2000], 150000: [9000, 4500, 3000] } }
+  };
+
+  var KEY = "bxt-sim-v1";
+  var defaults = { firm: "topstep", size: 50000, target: 3000, dd: 2000, dll: 1000, target2: 0, ddType: "eod", softDll: false, lock: true,
+    win: 45, rr: 2, risk: 250, tpd: 2, be: 0, cost: 10, days: 30 };
+  var s = Object.assign({}, defaults);
+  try { var saved = JSON.parse(localStorage.getItem(KEY) || "null"); if (saved) s = Object.assign(s, saved); } catch (e) {}
+  if (!FIRMS[s.firm]) s.firm = "topstep";
+
+  var N = 10000, SWEEP_N = 3000, seed = 12345;
+  function $(id) { return document.getElementById(id); }
+  function num(v) { var n = parseFloat(String(v).replace(/[^0-9.\-]/g, "")); return isFinite(n) ? n : 0; }
+  function money(n) { var sign = n < 0 ? "−" : ""; return sign + "$" + Math.round(Math.abs(n)).toLocaleString("en-US"); }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
+
+  // Small seeded random number generator, so results don't jump about while you type.
+  function rng(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  // ---------- The simulation ----------
+  function simulate(p, n, sd, keep) {
+    var r = rng(sd), start = p.size;
+    var out = { pass: 0, dd: 0, dll: 0, open: 0, days: [], streaks: [], paths: [] };
+    var winP = p.win / 100, beP = p.be / 100;
+    function floorOf(peak) {
+      if (p.ddType === "static") return start - p.dd;
+      var f = peak - p.dd; return p.lock ? Math.min(f, start) : f;
+    }
+    for (var i = 0; i < n; i++) {
+      var bal = start, peak = start, res = null, day = 0, streak = 0, worst = 0, phase = 1;
+      var path = i < keep ? [bal] : null;
+      for (var d = 1; d <= p.days && !res; d++) {
+        day = d; var dayStart = bal;
+        for (var t = 0; t < p.tpd; t++) {
+          var u = r();
+          if (u < winP) { bal += p.risk * p.rr; streak = 0; }
+          else if (u < winP + beP) { /* breakeven: only fees */ }
+          else { bal -= p.risk; streak++; if (streak > worst) worst = streak; }
+          bal -= p.cost;
+          if (path) path.push(bal);
+          if (p.ddType === "intraday" && bal > peak) peak = bal;
+          if (bal <= floorOf(peak)) { res = "dd"; break; }
+          if (bal - start >= (phase === 1 ? p.target : p.target2)) {
+            if (phase === 1 && p.target2 > 0) { phase = 2; bal = start; peak = start; dayStart = start; if (path) path.push(bal); break; }
+            res = "pass"; break;
+          }
+          if (p.dll > 0 && dayStart - bal >= p.dll) { if (p.softDll) break; res = "dll"; break; }
+        }
+        if (!res && p.ddType === "eod" && bal > peak) peak = bal;
+      }
+      if (!res) res = "open";
+      out[res]++;
+      if (res === "pass") out.days.push(day);
+      out.streaks.push(worst);
+      if (path) out.paths.push({ pts: path, res: res });
+    }
+    out.days.sort(function (a, b) { return a - b; });
+    out.streaks.sort(function (a, b) { return a - b; });
+    return out;
+  }
+
+  // ---------- Building the form ----------
+  var firmEl = $("firm"), sizesEl = $("sizes");
+  Object.keys(FIRMS).forEach(function (k) {
+    var o = document.createElement("option"); o.value = k; o.textContent = FIRMS[k].name; firmEl.appendChild(o);
+  });
+  function buildSizes() {
+    sizesEl.innerHTML = "";
+    Object.keys(FIRMS[s.firm].sizes).forEach(function (k) {
+      var b = document.createElement("button"); b.type = "button"; b.dataset.v = k; b.textContent = (k / 1000) + "K";
+      sizesEl.appendChild(b);
+    });
+  }
+  function applySize(size) {
+    var p = FIRMS[s.firm].sizes[size]; if (!p) return;
+    s.size = +size; s.target = p[0]; s.dd = p[1]; s.dll = p[2]; s.target2 = p[3] || 0;
+  }
+  function applyFirm(k) {
+    s.firm = k; var f = FIRMS[k];
+    s.ddType = f.ddType; s.softDll = f.softDll; s.lock = true; if (f.days) s.days = f.days;
+    applySize(f.sizes[s.size] ? s.size : (f.sizes[50000] ? 50000 : +Object.keys(f.sizes)[0]));
+  }
+  var FIELDS = ["target", "target2", "dd", "dll", "win", "rr", "risk", "tpd", "be", "cost", "days"];
+  function fill() {
+    firmEl.value = s.firm;
+    FIELDS.forEach(function (id) { $(id).value = s[id]; });
+    $("ddType").value = s.ddType; $("softDll").checked = s.softDll; $("lock").checked = s.lock;
+    $("firmNote").textContent = FIRMS[s.firm].note + " Check the firm's current rules before you pay.";
+    Array.prototype.forEach.call(sizesEl.querySelectorAll("button"), function (b) {
+      var p = FIRMS[s.firm].sizes[b.dataset.v];
+      var match = +b.dataset.v === s.size && p && p[0] === s.target && p[1] === s.dd && p[2] === s.dll && (p[3] || 0) === s.target2;
+      b.setAttribute("aria-pressed", String(!!match));
+    });
+  }
+
+  firmEl.addEventListener("change", function () { applyFirm(this.value); buildSizes(); fill(); schedule(); });
+  sizesEl.addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return; applySize(b.dataset.v); fill(); schedule();
+  });
+  FIELDS.forEach(function (id) { $(id).addEventListener("input", function () { s[id] = num(this.value); fill2(); schedule(); }); });
+  $("ddType").addEventListener("change", function () { s.ddType = this.value; schedule(); });
+  $("softDll").addEventListener("change", function () { s.softDll = this.checked; schedule(); });
+  $("lock").addEventListener("change", function () { s.lock = this.checked; schedule(); });
+  $("rerun").addEventListener("click", function () { seed = Math.floor(Math.random() * 1e9); run(); });
+  function fill2() { // keep size buttons in sync without overwriting what's being typed
+    Array.prototype.forEach.call(sizesEl.querySelectorAll("button"), function (b) {
+      var p = FIRMS[s.firm].sizes[b.dataset.v];
+      b.setAttribute("aria-pressed", String(!!(p && +b.dataset.v === s.size && p[0] === s.target && p[1] === s.dd && p[2] === s.dll && (p[3] || 0) === s.target2)));
+    });
+  }
+
+  var timer = null;
+  function schedule() { clearTimeout(timer); timer = setTimeout(run, 180); }
+
+  function params(risk) {
+    return { size: s.size || 50000, target: Math.max(s.target, 1), target2: Math.max(s.target2 || 0, 0), dd: Math.max(s.dd, 1), dll: Math.max(s.dll, 0),
+      ddType: s.ddType, softDll: s.softDll, lock: s.lock,
+      win: Math.min(Math.max(s.win, 0), 100), be: Math.min(Math.max(s.be, 0), 100 - Math.min(Math.max(s.win, 0), 100)),
+      rr: Math.max(s.rr, 0), risk: Math.max(risk, 1), tpd: Math.min(Math.max(Math.round(s.tpd), 1), 20),
+      cost: Math.max(s.cost, 0), days: Math.min(Math.max(Math.round(s.days), 1), 250) };
+  }
+
+  // ---------- Results ----------
+  var lastPaths = [], lastP = null;
+  function run() {
+    save();
+    var p = params(s.risk);
+    var r = simulate(p, N, seed, 40);
+    lastPaths = r.paths; lastP = p;
+
+    var pass = r.pass / N, pct = Math.round(pass * 100);
+    var big = $("passPct");
+    big.textContent = (pass > 0 && pct === 0 ? "<1" : pct) + "%";
+    big.className = "big-num " + (pct >= 60 ? "good" : (pct < 35 ? "bad" : ""));
+    $("passLine").innerHTML = "Out of <strong>" + N.toLocaleString("en-GB") + "</strong> simulated evaluations, you passed <strong>" +
+      r.pass.toLocaleString("en-GB") + "</strong>.";
+
+    var parts = [["p", r.pass], ["d", r.dd], ["l", r.dll], ["o", r.open]];
+    var bars = $("split").children;
+    parts.forEach(function (x, i) { bars[i].style.width = (x[1] / N * 100) + "%"; });
+    function pc(x) { return Math.round(x / N * 100) + "%"; }
+    $("legend").innerHTML = "<span>Passed <b>" + pc(r.pass) + "</b></span><span>Hit drawdown <b>" + pc(r.dd) + "</b></span>" +
+      (p.dll > 0 && !p.softDll ? "<span>Hit daily limit <b>" + pc(r.dll) + "</b></span>" : "") +
+      "<span>Ran out of days <b>" + pc(r.open) + "</b></span>";
+
+    $("sDays").textContent = r.days.length ? r.days[Math.floor(r.days.length / 2)] + " days" : "–";
+    var lossP = 1 - p.win / 100 - p.be / 100;
+    var ev = (p.win / 100) * p.risk * p.rr - lossP * p.risk - p.cost;
+    var evEl = $("sEv"); evEl.textContent = (ev > 0 ? "+" : "") + money(ev); evEl.style.color = ev > 0 ? "var(--green)" : "var(--red)";
+    var med = r.streaks[Math.floor(N / 2)], p90 = r.streaks[Math.floor(N * 0.9)];
+    $("sStreak").textContent = med + (p90 > med ? "–" + p90 : "");
+    var lives = Math.floor(p.dd / (p.risk + p.cost));
+    $("sLives").textContent = lives;
+
+    var w = [];
+    if (s.win + s.be > 100) w.push({ c: "bad", t: "Win rate plus breakeven is over 100%, so breakeven has been cut down to fit." });
+    if (ev <= 0) w.push({ c: "bad", t: "With these numbers you lose " + money(-ev) + " per trade on average. Any passes here are luck, not an edge." });
+    else w.push({ c: "ok", t: "You make " + money(ev) + " per trade on average, so you'd need about " + Math.ceil((p.target + p.target2) / ev) + " trades to reach the target" + (p.target2 > 0 ? "s in both phases." : ".") });
+    if (p.risk + p.cost >= p.dd) w.push({ c: "bad", t: "One loss is as big as the whole drawdown. A single losing trade fails the account." });
+    else if (lives <= p90) w.push({ c: "bad", t: "Your drawdown only fits " + lives + " full losses, but losing streaks of " + p90 + " showed up in 1 in 10 attempts. Lower your risk." });
+    if (p.dll > 0 && p.risk + p.cost > p.dll) w.push({ c: "bad", t: "One loss is bigger than the daily loss limit." });
+    if (r.open / N > 0.3) w.push({ c: "", t: Math.round(r.open / N * 100) + "% of attempts ran out of days. Your edge is small for this target, or you're not taking enough trades." });
+    w.push({ c: "", t: "Losing streaks: half of attempts had a run of " + med + " or more losses in a row, and 1 in 10 had " + p90 + " or more. That's normal maths, not bad luck." });
+    $("warns").innerHTML = w.map(function (x) { return '<li class="' + x.c + '">' + x.t + "</li>"; }).join("");
+
+    sweep(p);
+    draw();
+  }
+
+  function sweep(p) {
+    var fracs = [0.05, 0.075, 0.1, 0.125, 0.15, 0.2, 0.25, 0.35];
+    var risks = fracs.map(function (f) { return Math.max(25, Math.round(p.dd * f / 25) * 25); });
+    if (risks.indexOf(Math.round(p.risk)) < 0) risks.push(Math.round(p.risk));
+    risks = risks.filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return a - b; });
+    var rows = risks.map(function (rk) {
+      var q = Object.assign({}, p, { risk: rk });
+      var r = simulate(q, SWEEP_N, seed + rk, 0);
+      return { rk: rk, pass: r.pass / SWEEP_N, days: r.days.length ? r.days[Math.floor(r.days.length / 2)] : null };
+    });
+    $("sweep").innerHTML = rows.map(function (x) {
+      var cur = x.rk === Math.round(p.risk);
+      return '<tr class="' + (cur ? "cur" : "") + '"><td>' + money(x.rk) + (cur ? " ← you" : "") + '</td>' +
+        '<td class="bar"><div class="b" style="width:' + (x.pass * 100) + '%"></div></td>' +
+        "<td>" + Math.round(x.pass * 100) + "%</td><td class=\"small\">" + (x.days ? "~" + x.days + "d" : "") + "</td></tr>";
+    }).join("");
+  }
+
+  // ---------- Chart ----------
+  function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+  function draw() {
+    var c = $("paths"), p = lastP; if (!p) return;
+    var dpr = window.devicePixelRatio || 1, W = c.clientWidth, H = c.clientHeight;
+    c.width = W * dpr; c.height = H * dpr;
+    var g = c.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    var start = p.size, top = start + p.target, bottom = start - p.dd, maxX = 1;
+    lastPaths.forEach(function (x) {
+      maxX = Math.max(maxX, x.pts.length - 1);
+      x.pts.forEach(function (v) { if (v > top) top = v; if (v < bottom) bottom = v; });
+    });
+    var pad = { l: 52, r: 10, t: 12, b: 22 }, span = (top - bottom) || 1;
+    top += span * 0.05; bottom -= span * 0.05;
+    function X(i) { return pad.l + i / maxX * (W - pad.l - pad.r); }
+    function Y(v) { return pad.t + (top - v) / (top - bottom) * (H - pad.t - pad.b); }
+    var green = css("--green"), red = css("--red"), muted = css("--muted"), rule = css("--rule");
+
+    g.font = "11px 'IBM Plex Mono', monospace"; g.textBaseline = "middle"; g.lineWidth = 1;
+    function hline(v, col, label, dash) {
+      g.strokeStyle = col; g.setLineDash(dash ? [5, 4] : []); g.beginPath(); g.moveTo(pad.l, Y(v)); g.lineTo(W - pad.r, Y(v)); g.stroke();
+      g.setLineDash([]); g.fillStyle = col; g.textAlign = "right"; g.fillText(label, pad.l - 6, Y(v));
+    }
+    hline(start, rule, (start / 1000) + "K", false);
+    hline(start + p.target, green, "+" + (p.target / 1000) + "K", true);
+    hline(start - p.dd, red, "−" + (p.dd / 1000) + "K", true);
+
+    lastPaths.forEach(function (x) {
+      g.strokeStyle = x.res === "pass" ? green : (x.res === "open" ? muted : red);
+      g.globalAlpha = 0.6; g.lineWidth = 1.3; g.beginPath();
+      x.pts.forEach(function (v, i) { if (i) g.lineTo(X(i), Y(v)); else g.moveTo(X(i), Y(v)); });
+      g.stroke();
+    });
+    g.globalAlpha = 1;
+    g.fillStyle = muted; g.textAlign = "center"; g.textBaseline = "alphabetic";
+    g.fillText("trades →", (pad.l + W) / 2, H - 6);
+  }
+  window.addEventListener("resize", function () { clearTimeout(draw.t); draw.t = setTimeout(draw, 150); });
+  window.addEventListener("themechange", function () { setTimeout(draw, 30); });
+
+  buildSizes(); fill(); run();
+})();
+</script>
+</body>
+</html>
