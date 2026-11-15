@@ -16,7 +16,9 @@ const VIDEOS = [
   { title: "Liquidity",                     desc: "Where the stop losses sit, and why price loves to hunt them before making its real move.",        link: "https://www.tiktok.com/@bxtrades_/video/7697676474819677472" },
   { title: "Break of structure",            desc: "When price breaks a key high or low, and how it signals the trend is continuing or changing.",    link: "https://www.tiktok.com/@bxtrades_/video/7698082653949414688" },
   { title: "Fair value gaps",               desc: "The gaps a fast move leaves behind, and why price often comes back to fill them.",                link: "https://www.tiktok.com/@bxtrades_/video/7699208707934145824" },
-  { title: "Trading sessions",              desc: "Asia, London, New York: when each session runs and why the time of day changes how price moves.", link: "https://www.tiktok.com/@bxtrades_/video/7700027724538055958" }
+  { title: "Trading sessions",              desc: "Asia, London, New York: when each session runs and why the time of day changes how price moves.", link: "https://www.tiktok.com/@bxtrades_/video/7700027724538055958" },
+  { title: "Risk to reward",                desc: "How much you risk versus how much you aim to make, and why you can lose more trades than you win and still come out ahead.", link: "https://www.tiktok.com/@bxtrades_/video/7708205611623795990" },
+  { title: "Leverage",                      desc: "Trading a bigger position than your account could pay for, and why it makes your losses grow just as fast as your wins.", link: "https://www.tiktok.com/@bxtrades_/video/7708366449433201942" }
 ];
 
 // Your backtests. Add a new one by copying a line and changing it.
@@ -585,7 +587,9 @@ if ("serviceWorker" in navigator) {
     "Liquidity": "06-liquidity",
     "Break of structure": "07-break-of-structure",
     "Fair value gaps": "08-fair-value-gaps",
-    "Trading sessions": "09-trading-sessions"
+    "Trading sessions": "09-trading-sessions",
+    "Risk to reward": "10-risk-to-reward",
+    "Leverage": "11-leverage"
   };
   document.querySelectorAll("#videos .poster").forEach(function (p) {
     if (p.querySelector("img")) return;
