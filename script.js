@@ -588,14 +588,14 @@ if ("serviceWorker" in navigator) {
     "Break of structure": "07-break-of-structure",
     "Fair value gaps": "08-fair-value-gaps",
     "Trading sessions": "09-trading-sessions",
-    "Risk to reward": "10-risk-to-reward",
-    "Leverage": "11-leverage"
+    "Risk to reward": "10-risk-to-reward.svg",
+    "Leverage": "11-leverage.svg"
   };
   document.querySelectorAll("#videos .poster").forEach(function (p) {
     if (p.querySelector("img")) return;
     const h = p.parentElement.querySelector("h4");
     const file = h && VIDEO_PICS[h.textContent.trim()];
-    if (file) p.innerHTML = '<img src="images/videos/' + file + '.webp" alt="" loading="lazy" decoding="async">';
+    if (file) p.innerHTML = '<img src="images/videos/' + (/\.\w+$/.test(file) ? file : file + '.webp') + '" alt="" loading="lazy" decoding="async">';
   });
 
   // Tool cards on the home page, matched by link.
