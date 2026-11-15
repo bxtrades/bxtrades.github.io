@@ -600,7 +600,8 @@ if ("serviceWorker" in navigator) {
     "prop-calculator.html": "risk-calculator",
     "journal.html": "backtest-journal",
     "sessions.html": "session-clock",
-    "glossary.html": "glossary"
+    "glossary.html": "glossary",
+    "simulator.html": "pass-simulator"
   };
   const tools = document.querySelector("#tools .episodes");
   if (tools) {
