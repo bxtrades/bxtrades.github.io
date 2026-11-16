@@ -14,60 +14,84 @@
 <style>
 /* Test bench for the engine. The page only draws and passes clicks on:
    every number on it comes from window.BXEngine. */
-.wrap { max-width: 1180px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
-.wrap h1 { font-family: var(--serif); font-size: 1.6rem; line-height: 1.2; }
-.wrap .sub { color: var(--muted); font-size: .92rem; margin: .25rem 0 1rem; }
-.row { display: flex; flex-wrap: wrap; gap: .6rem; align-items: end; }
-.row label { display: flex; flex-direction: column; font-size: .72rem; color: var(--muted); font-family: var(--mono); text-transform: uppercase; letter-spacing: .04em; gap: .2rem; }
-.row select, .row input { font: 500 .95rem var(--mono); padding: .45rem .5rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--card); color: var(--ink); min-height: 40px; }
-.row input { width: 6.5rem; }
-.b { font: 600 .92rem var(--sans); padding: .5rem .9rem; min-height: 40px; border: 1px solid var(--ink); border-radius: 6px; background: var(--card); color: var(--ink); cursor: pointer; }
-.b:disabled { opacity: .4; cursor: not-allowed; }
-.b.buy { background: var(--green); border-color: var(--green); color: #fff; }
-.b.sell { background: var(--red); border-color: var(--red); color: #fff; }
-.grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); margin-top: 1rem; }
-@media (min-width: 940px) { .grid { grid-template-columns: minmax(0, 1fr) 330px; align-items: start; } }
-.panel { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: .8rem .9rem; }
-.panel + .panel { margin-top: 1rem; }
-.panel h2 { font: 600 .74rem var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: .45rem; }
-#cv { width: 100%; height: 470px; display: block; border-radius: 6px; user-select: none; -webkit-user-select: none; }
-@media (max-width: 600px) { #cv { height: 380px; } }
-.tools { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .5rem; }
-.tools button { font: 600 .82rem var(--sans); padding: .35rem .65rem; min-height: 36px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--ink); cursor: pointer; }
+.wrap { max-width: 1500px; margin: 0 auto; padding: .8rem .9rem 3rem; }
+.top { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin-bottom: .7rem; }
+.top h1 { font-family: var(--serif); font-size: 1.25rem; line-height: 1.2; margin-right: .4rem; }
+.top a { font-size: .85rem; color: var(--muted); }
+select, input[type=number] { font: 500 .92rem var(--mono); padding: .4rem .5rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--card); color: var(--ink); min-height: 38px; }
+.seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 7px; overflow: hidden; background: var(--card); }
+.seg button { font: 600 .82rem var(--mono); padding: .4rem .6rem; min-height: 38px; min-width: 40px; border: 0; border-right: 1px solid var(--rule); background: transparent; color: var(--ink); cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.seg button.other { color: var(--muted); }
+.b { font: 600 .88rem var(--sans); padding: .45rem .8rem; min-height: 38px; border: 1px solid var(--ink); border-radius: 6px; background: var(--card); color: var(--ink); cursor: pointer; }
+.b:disabled, .rb button:disabled { opacity: .4; cursor: not-allowed; }
+.b.small { font-size: .78rem; padding: .2rem .5rem; min-height: 28px; }
+.app { display: grid; gap: .8rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 1000px) { .app { grid-template-columns: minmax(0, 1fr) 318px; align-items: start; } }
+.panel { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: .7rem .8rem; }
+.panel + .panel { margin-top: .8rem; }
+.panel h2 { font: 600 .72rem var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: .45rem; }
+.chartbox { position: relative; }
+#cv { width: 100%; height: 560px; display: block; border-radius: 6px; user-select: none; -webkit-user-select: none; }
+@media (max-width: 999px) { #cv { height: 420px; } }
+.tools { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .45rem; }
+.tools button { font: 600 .8rem var(--sans); padding: .3rem .6rem; min-height: 34px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--ink); cursor: pointer; }
 .tools button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .tools .gap { flex: 1 1 auto; }
-.hint { font-size: .8rem; color: var(--muted); margin-top: .45rem; }
-dl.kv { display: grid; grid-template-columns: auto auto; gap: .15rem .8rem; font: .9rem var(--mono); }
-dl.kv dt { color: var(--muted); } dl.kv dd { text-align: right; }
+/* the replay bar: sits under the chart like a video player's controls, so it never hides a candle */
+.rb { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; justify-content: center; margin: .5rem auto 0; width: fit-content; max-width: 100%;
+      background: var(--card); border: 1px solid var(--ink); border-radius: 10px; padding: .35rem .6rem; }
+.rb button { width: 40px; height: 38px; border: 1px solid var(--rule); border-radius: 7px; background: var(--paper); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
+.rb button.play { background: var(--ink); color: var(--paper); border-color: var(--ink); width: 48px; }
+.rb svg { width: 18px; height: 18px; fill: currentColor; }
+.rb label { display: flex; align-items: center; gap: .3rem; font: 600 .7rem var(--mono); text-transform: uppercase; color: var(--muted); }
+.rb select { min-height: 36px; padding: .25rem .35rem; font-size: .85rem; }
+.rb .clock { font: 600 .82rem var(--mono); padding: 0 .3rem; white-space: nowrap; }
+.hint { font-size: .78rem; color: var(--muted); margin-top: .45rem; }
+/* order ticket */
+.quick { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+.quick button { border: 0; border-radius: 8px; padding: .5rem .4rem; cursor: pointer; color: #fff; font: 600 .8rem var(--sans); display: flex; flex-direction: column; align-items: center; gap: .1rem; min-height: 58px; }
+.quick button b { font: 600 1.05rem var(--mono); }
+.quick .sell { background: var(--red); } .quick .buy { background: var(--green); }
+.quick button:disabled { opacity: .4; cursor: not-allowed; }
+.field { display: grid; grid-template-columns: 1fr 7.2rem; align-items: center; gap: .4rem; margin-top: .45rem; font-size: .86rem; }
+.field input { width: 100%; text-align: right; }
+.field small { grid-column: 1 / -1; text-align: right; font: .78rem var(--mono); color: var(--muted); margin-top: -.25rem; min-height: 1rem; }
+.ticket .seg { display: flex; margin-top: .55rem; } .ticket .seg button { flex: 1; }
+.rr { margin-top: .5rem; padding: .4rem .5rem; border-radius: 6px; background: var(--paper-2); font: 600 .84rem var(--mono); display: flex; justify-content: space-between; }
+dl.kv { display: grid; grid-template-columns: auto auto; gap: .12rem .8rem; font: .86rem var(--mono); }
+dl.kv dt { color: var(--muted); } dl.kv dd { text-align: right; font-weight: 500; }
+dl.kv .big { font-size: 1.05rem; font-weight: 600; }
 .up { color: var(--green); } .dn { color: var(--red); }
-#msg { min-height: 1.5rem; font-size: .9rem; margin-top: .6rem; color: var(--red); }
+#msg { min-height: 1.3rem; font-size: .85rem; margin-top: .45rem; color: var(--red); }
+.tabs { display: flex; gap: .3rem; align-items: center; flex-wrap: wrap; margin-bottom: .4rem; }
+.tabs button { font: 600 .78rem var(--mono); text-transform: uppercase; letter-spacing: .04em; padding: .35rem .6rem; min-height: 34px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); cursor: pointer; }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
+.tabs .sum { margin-left: auto; font: .82rem var(--mono); color: var(--body-ink); }
 table.t { width: 100%; border-collapse: collapse; font: .82rem var(--mono); }
-table.t th, table.t td { text-align: right; padding: .25rem .3rem; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+table.t th, table.t td { text-align: right; padding: .28rem .35rem; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+table.t th { color: var(--muted); font-weight: 500; }
 table.t th:first-child, table.t td:first-child { text-align: left; }
-.scroll { overflow-x: auto; }
-#feed { font: .8rem var(--mono); max-height: 170px; overflow-y: auto; color: var(--body-ink); }
-#feed div { padding: .12rem 0; border-bottom: 1px dotted var(--rule); }
-.trade-row { margin-top: .7rem; }
+.scroll { overflow-x: auto; max-height: 230px; overflow-y: auto; }
+#feed { font: .78rem var(--mono); max-height: 130px; overflow-y: auto; color: var(--body-ink); }
+#feed div { padding: .1rem 0; border-bottom: 1px dotted var(--rule); }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Replay engine demo</h1>
-  <p class="sub">A test bench for the trading engine. Pick a market, step through real candles and place practice trades. <a href="/">Back to BXTrades</a></p>
-
-  <div class="row">
-    <label>Market <select id="market"></select></label>
-    <label>Chart <select id="tf"></select></label>
-    <label>Rules <select id="rules"></select></label>
+  <div class="top">
+    <h1>Replay engine demo</h1>
+    <select id="market" aria-label="Market"></select>
+    <div class="seg" id="tfs" role="group" aria-label="Chart timeframe"></div>
+    <select id="rules" aria-label="Account rules"></select>
     <button class="b" id="newBtn" type="button">New chart</button>
-    <button class="b" id="stepBtn" type="button">Next candle</button>
-    <button class="b" id="playBtn" type="button">Play</button>
+    <a href="/">Back to BXTrades</a>
   </div>
 
-  <div class="grid">
+  <div class="app">
     <div>
       <div class="panel">
-        <h2 id="chartTitle">Chart</h2>
         <div class="tools" role="toolbar" aria-label="Chart tools">
           <button type="button" data-tool="cursor" aria-pressed="true" title="Drag to move the chart">Move</button>
           <button type="button" data-tool="line" aria-pressed="false" title="Drag from one point to another">Trend line</button>
@@ -80,26 +104,52 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
           <button type="button" id="clearBtn">Clear drawings</button>
           <button type="button" id="resetBtn">Reset view</button>
         </div>
-        <canvas id="cv" role="img" aria-label="Candlestick chart of the replay"></canvas>
-        <p class="hint">Drag the chart to move it. Scroll or pinch to zoom. Drag the price scale on the right, or the time scale underneath, to stretch it. Double-click to reset.</p>
-        <div class="row trade-row">
-          <label><span id="sizeLbl">Size</span> <input id="size" type="number" inputmode="decimal"></label>
-          <label><span id="slLbl">Stop (points)</span> <input id="sl" type="number" inputmode="decimal" min="0"></label>
-          <label><span id="tpLbl">Target (points)</span> <input id="tp" type="number" inputmode="decimal" min="0"></label>
-          <button class="b buy" id="buyBtn" type="button">Buy</button>
-          <button class="b sell" id="sellBtn" type="button">Sell</button>
-          <button class="b" id="closeBtn" type="button">Close</button>
+        <div class="chartbox">
+          <canvas id="cv" role="img" aria-label="Candlestick chart of the replay"></canvas>
+          <div class="rb" role="group" aria-label="Replay controls">
+            <button type="button" id="backBtn" aria-label="Rewind one step" title="Rewind (left arrow)"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+            <button type="button" id="playBtn" class="play" aria-label="Play" title="Play or pause (space)"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4v16l13-8z"/></svg></button>
+            <button type="button" id="stepBtn" aria-label="Forward one step" title="Forward (right arrow)"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+            <label>Skip <select id="skip" title="How much time each step moves"></select></label>
+            <label>Speed <select id="speed"><option value="0.5">0.5x</option><option value="1" selected>1x</option><option value="2">2x</option><option value="5">5x</option><option value="10">10x</option></select></label>
+            <select id="goto" aria-label="Go to"><option value="">Go to…</option><option value="event">Next fill or exit</option><option value="day">Next trading day</option><option value="end">End of chart</option></select>
+            <span class="clock" id="clock"></span>
+          </div>
         </div>
-        <p id="msg" role="status" aria-live="polite"></p>
+        <p class="hint" id="hint"></p>
       </div>
+
       <div class="panel">
-        <h2>Trade log</h2>
-        <div class="scroll"><table class="t"><thead><tr><th>Side</th><th>Size</th><th>Entry</th><th>Exit</th><th id="ptsHead">Points</th><th>Net</th><th>Why</th></tr></thead><tbody id="log"></tbody></table></div>
+        <div class="tabs" role="tablist">
+          <button type="button" role="tab" data-tab="pos" aria-selected="true">Positions</button>
+          <button type="button" role="tab" data-tab="ord" aria-selected="false">Orders</button>
+          <button type="button" role="tab" data-tab="his" aria-selected="false">History</button>
+          <span class="sum" id="sum"></span>
+        </div>
+        <div class="scroll"><table class="t" id="tbl"></table></div>
       </div>
     </div>
+
     <div>
+      <div class="panel ticket">
+        <h2>Order</h2>
+        <div class="quick">
+          <button type="button" class="sell" id="sellBtn">Sell<b id="bid">–</b></button>
+          <button type="button" class="buy" id="buyBtn">Buy<b id="ask">–</b></button>
+        </div>
+        <div class="seg" id="otype" role="group" aria-label="Order type">
+          <button type="button" data-type="market" aria-pressed="true">Market</button>
+          <button type="button" data-type="limit" aria-pressed="false">Limit</button>
+          <button type="button" data-type="stop" aria-pressed="false">Stop</button>
+        </div>
+        <div class="field" id="priceRow" hidden><label for="oprice">Order price</label><input id="oprice" type="number" inputmode="decimal"></div>
+        <div class="field"><label for="size" id="sizeLbl">Size</label><input id="size" type="number" inputmode="decimal"></div>
+        <div class="field"><label for="sl" id="slLbl">Stop loss (points)</label><input id="sl" type="number" inputmode="decimal" min="0"><small id="slMoney"></small></div>
+        <div class="field"><label for="tp" id="tpLbl">Take profit (points)</label><input id="tp" type="number" inputmode="decimal" min="0"><small id="tpMoney"></small></div>
+        <div class="rr"><span>Risk : reward</span><span id="rr">–</span></div>
+        <p id="msg" role="status" aria-live="polite"></p>
+      </div>
       <div class="panel"><h2>Account</h2><dl class="kv" id="acct"></dl></div>
-      <div class="panel"><h2>Position</h2><dl class="kv" id="posn"></dl></div>
       <div class="panel" id="propPanel"><h2>Prop rules</h2><dl class="kv" id="prop"></dl></div>
       <div class="panel"><h2>What just happened</h2><div id="feed"></div></div>
     </div>
@@ -113,83 +163,196 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
 (function () {
   var E = window.BXEngine, $ = function (id) { return document.getElementById(id); };
   var loader = E.createDataLoader({ baseUrl: "/engine/data/" });
-  var markets = [], cache = {}, S = null, timer = null, fresh = false;
-  var toolBtns = Array.prototype.slice.call(document.querySelectorAll(".tools [data-tool]"));
-  function showTool(name) { toolBtns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.tool === name)); }); }
-  var chart = window.BXChart.create($("cv"), { onTool: showTool });
-  toolBtns.forEach(function (b) { b.onclick = function () { chart.setTool(b.dataset.tool); showTool(b.dataset.tool); }; });
-  $("undoBtn").onclick = chart.undo; $("clearBtn").onclick = chart.clearDrawings; $("resetBtn").onclick = chart.resetView;
+  var markets = [], cache = {}, S = null, timer = null;
+  var tf = null, base = null, baseSec = 300, tab = "pos", otype = "market";
   var SYM = { USD: "$", GBP: "£", EUR: "€" };
+  var PLAY = "M7 4v16l13-8z", PAUSE = "M6 4h4v16H6zM14 4h4v16h-4z";
+  var clockFmt = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
   function cash(x, cur) {
     var s = Math.abs(x).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return (x < 0 ? "−" : "") + (SYM[cur] || cur + " ") + s;
   }
-  function px(x) { return x.toFixed(E.instruments.decimals(S.instrument.tickSize)); }
+  function px(x) { var d = E.instruments.decimals(S.instrument.tickSize); return x.toLocaleString("en-GB", { minimumFractionDigits: d, maximumFractionDigits: d }); }
   function cls(x) { return x > 0 ? "up" : x < 0 ? "dn" : ""; }
-  function kv(el, rows) {
-    el.innerHTML = rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd class='" + (r[2] || "") + "'>" + r[1] + "</dd>"; }).join("");
-  }
+  function kv(el, rows) { el.innerHTML = rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd class='" + (r[2] || "") + "'>" + r[1] + "</dd>"; }).join(""); }
   function say(t) { $("msg").textContent = t || ""; }
+  function tfName(sec) { return sec % 86400 === 0 ? sec / 86400 + "d" : sec % 3600 === 0 ? sec / 3600 + "h" : sec / 60 + "m"; }
+  function market() { return markets.find(function (x) { return x.id === $("market").value; }); }
+  function baseOf(t) { return market().builtFrom[t] || t; }
+
+  /* ---------- chart + tools ---------- */
+  var toolBtns = Array.prototype.slice.call(document.querySelectorAll(".tools [data-tool]"));
+  function showTool(name) { toolBtns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.tool === name)); }); }
+  var chart = window.BXChart.create($("cv"), { onTool: showTool });
+  toolBtns.forEach(function (b) { b.onclick = function () { chart.setTool(b.dataset.tool); showTool(b.dataset.tool); }; });
+  $("undoBtn").onclick = chart.undo; $("clearBtn").onclick = chart.clearDrawings; $("resetBtn").onclick = chart.resetView;
 
   /* ---------- set-up ---------- */
   loader.listMarkets().then(function (list) {
     markets = list;
     $("market").innerHTML = list.map(function (m) { return "<option value='" + m.id + "'>" + m.id + " · " + m.name + "</option>"; }).join("");
     var presets = E.PropRules.presets, names = { futures50k: "Futures 50k (end-of-day trailing)", futures50kIntradayTrail: "Futures 50k (intraday trailing)", futures50kStatic: "Futures 50k (static)", forex100k: "Forex/CFD 100k challenge" };
-    $("rules").innerHTML = "<option value=''>None (plain account)</option>" + Object.keys(presets).map(function (k) { return "<option value='" + k + "'>" + (names[k] || k) + "</option>"; }).join("");
+    $("rules").innerHTML = "<option value=''>Plain account, no rules</option>" + Object.keys(presets).map(function (k) { return "<option value='" + k + "'>" + (names[k] || k) + "</option>"; }).join("");
     onMarket();
   }).catch(function (e) { say("Could not load the market list: " + e.message); });
 
   function onMarket() {
-    var m = markets.find(function (x) { return x.id === $("market").value; });
-    var long = { m: " minute", h: " hour", d: " day" };
-    $("tf").innerHTML = m.timeframes.map(function (t) { var n = parseInt(t, 10); return "<option value='" + t + "'>" + n + long[t.slice(-1)] + (n > 1 && t.slice(-1) !== "m" ? "s" : "") + "</option>"; }).join("");
+    var m = market();
+    $("tfs").innerHTML = m.timeframes.map(function (t) { return "<button type='button' data-tf='" + t + "'>" + t + "</button>"; }).join("");
+    Array.prototype.forEach.call($("tfs").children, function (b) { b.onclick = function () { setTf(b.dataset.tf); }; });
     $("rules").value = m.type === "future" ? "futures50k" : "";
+    tf = m.timeframes[0];
     newChart();
+  }
+  function showTf() {
+    Array.prototype.forEach.call($("tfs").children, function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.tf === tf));
+      b.className = baseOf(b.dataset.tf) === base ? "" : "other";
+      b.title = baseOf(b.dataset.tf) === base ? "Same replay, different candle size" : "Opens a new chart";
+    });
+    var same = market().timeframes.filter(function (t) { return baseOf(t) === base; });
+    $("hint").textContent = "This replay runs on " + base + " data. " + (same.length > 1 ? "Switch between " + same.join(", ") + " and you keep your place; " : "") +
+      "the greyed timeframes open a new chart. Space = play, arrow keys = step. Drag the chart to move it, scroll to zoom, drag the price scale to stretch it.";
+  }
+  function setTf(t) {
+    if (S && baseOf(t) === base) { tf = t; fillSkip(); showTf(); render("regroup"); }
+    else { tf = t; newChart(); }
+  }
+  function fillSkip() {
+    var tfSec = E.timeframeSeconds(tf), opts = [1, 2, 3, 4, 6, 12, 24, 48].filter(function (n) { return n * baseSec <= 86400; });
+    $("skip").innerHTML = opts.map(function (n) { return "<option value='" + n + "'>" + tfName(n * baseSec) + "</option>"; }).join("");
+    $("skip").value = String(Math.max(1, tfSec / baseSec));
   }
   function newChart() {
     stop();
-    var id = $("market").value, tf = $("tf").value, key = id + "|" + tf;
-    (cache[key] ? Promise.resolve(cache[key]) : loader.load(id, tf).then(function (d) { return (cache[key] = d); })).then(function (d) {
+    var id = $("market").value, key;
+    base = baseOf(tf); baseSec = E.timeframeSeconds(base); key = id + "|" + base;
+    (cache[key] ? Promise.resolve(cache[key]) : loader.load(id, base).then(function (d) { return (cache[key] = d); })).then(function (d) {
       var ses = d.sessions[Math.floor(Math.random() * d.sessions.length)];
       var I = E.instruments.get(id), rules = E.PropRules.presets[$("rules").value] || null;
-      S = E.createSession({ instrument: id, candles: ses.candles, startIndex: Math.max(5, Math.min(30, Math.floor(ses.candles.length / 3))),
+      S = E.createSession({ instrument: id, candles: ses.candles, startIndex: Math.max(5, Math.floor(ses.candles.length / 3)),
                             account: { currency: I.currency, balance: rules ? rules.startBalance : (I.type === "future" ? 50000 : 10000) }, propRules: rules });
       S.on("*", feed);
       $("feed").innerHTML = ""; say("");
       $("size").value = I.minSize; $("size").step = I.sizeStep; $("size").min = I.minSize;
+      $("oprice").step = I.tickSize;
       $("sizeLbl").textContent = "Size (" + I.sizeUnit + ")";
-      $("slLbl").textContent = "Stop (" + I.pointName + "s)"; $("tpLbl").textContent = "Target (" + I.pointName + "s)";
-      $("ptsHead").textContent = I.pointName === "pip" ? "Pips" : "Points";
-      $("chartTitle").textContent = I.name + ", " + $("tf").selectedOptions[0].textContent + " candles, UK time";
+      $("slLbl").textContent = "Stop loss (" + I.pointName + "s)"; $("tpLbl").textContent = "Take profit (" + I.pointName + "s)";
       chart.setFormat({ decimals: E.instruments.decimals(I.tickSize), tick: I.tickSize, pointSize: I.pointSize, pointName: I.pointName });
-      showTool("cursor"); chart.setTool("cursor"); fresh = true;
-      render();
+      showTool("cursor"); chart.setTool("cursor");
+      fillSkip(); showTf(); render("reset");
     }).catch(function (e) { say("Could not load the chart: " + e.message); });
   }
 
-  /* ---------- actions ---------- */
-  function trade(side) {
-    if (!S) return;
-    var I = S.instrument, q = S.quote(), dir = side === "buy" ? 1 : -1, ref = dir > 0 ? q.ask : q.bid;
-    var slP = parseFloat($("sl").value), tpP = parseFloat($("tp").value);
-    var r = S.placeOrder({ side: side, type: "market", size: parseFloat($("size").value),
-                           sl: slP > 0 ? ref - dir * slP * I.pointSize : null, tp: tpP > 0 ? ref + dir * tpP * I.pointSize : null });
-    say(r.ok ? "" : r.error);
-    render();
-  }
+  /* ---------- replay controls ---------- */
+  function skipN() { return parseInt($("skip").value, 10) || 1; }
   function step() {
     if (!S || S.isDone()) { stop(); return; }
-    S.step(); render();
+    S.step(skipN()); render();
     if (S.isDone()) { stop(); say("End of this chart. Press New chart for another."); }
   }
-  function stop() { if (timer) { clearInterval(timer); timer = null; } $("playBtn").textContent = "Play"; }
-  $("market").onchange = onMarket; $("tf").onchange = newChart; $("rules").onchange = newChart; $("newBtn").onclick = newChart;
-  $("stepBtn").onclick = step;
-  $("playBtn").onclick = function () { if (timer) return stop(); timer = setInterval(step, 600); $("playBtn").textContent = "Pause"; };
+  function back() { if (S && S.stepBack(skipN())) { say(""); render(); } }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } $("playIcon").firstElementChild.setAttribute("d", PLAY); $("playBtn").setAttribute("aria-label", "Play"); }
+  function play() {
+    if (timer) return stop();
+    if (!S || S.isDone()) return;
+    timer = setInterval(step, 1000 / parseFloat($("speed").value));
+    $("playIcon").firstElementChild.setAttribute("d", PAUSE); $("playBtn").setAttribute("aria-label", "Pause");
+  }
+  $("stepBtn").onclick = step; $("backBtn").onclick = back; $("playBtn").onclick = play;
+  $("speed").onchange = function () { if (timer) { stop(); play(); } };
+  $("goto").onchange = function () {
+    var v = this.value; this.value = "";
+    if (!S || !v) return;
+    stop();
+    if (v === "event") S.stepUntil({ events: ["fill", "trade", "stopOut", "propStatus"] });
+    else if (v === "day") S.stepUntil({ events: ["dayRollover"] });
+    else S.stepUntil({});
+    render();
+    if (S.isDone()) say("End of this chart. Press New chart for another.");
+  };
+  $("market").onchange = onMarket; $("rules").onchange = newChart; $("newBtn").onclick = newChart;
+  document.addEventListener("keydown", function (e) {
+    if (/^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(e.target.tagName)) return;
+    if (e.code === "Space") { e.preventDefault(); play(); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); step(); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); back(); }
+  });
+
+  /* ---------- order ticket ---------- */
+  Array.prototype.forEach.call($("otype").children, function (b) {
+    b.onclick = function () {
+      otype = b.dataset.type;
+      Array.prototype.forEach.call($("otype").children, function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+      $("priceRow").hidden = otype === "market";
+      if (otype !== "market" && S && !$("oprice").value) $("oprice").value = S.quote().mid;
+      ticket();
+    };
+  });
+  function ticket() {
+    if (!S) return;
+    var I = S.instrument, size = parseFloat($("size").value) || 0, sl = parseFloat($("sl").value) || 0, tp = parseFloat($("tp").value) || 0, cur = S.currency;
+    $("slMoney").textContent = sl > 0 && size > 0 ? "risk " + cash(-S.pointsToMoney(sl, size), cur) : "";
+    $("tpMoney").textContent = tp > 0 && size > 0 ? "reward +" + cash(S.pointsToMoney(tp, size), cur) : "";
+    $("rr").textContent = sl > 0 && tp > 0 ? "1 : " + (tp / sl).toFixed(2) : "–";
+    $("sellBtn").firstChild.textContent = otype === "market" ? "Sell" : "Sell " + otype;
+    $("buyBtn").firstChild.textContent = otype === "market" ? "Buy" : "Buy " + otype;
+  }
+  ["size", "sl", "tp"].forEach(function (id) { $(id).oninput = ticket; });
+  function trade(side) {
+    if (!S) return;
+    var I = S.instrument, q = S.quote(), dir = side === "buy" ? 1 : -1, price = otype === "market" ? null : parseFloat($("oprice").value);
+    var ref = otype === "market" ? (dir > 0 ? q.ask : q.bid) : price;
+    var slP = parseFloat($("sl").value), tpP = parseFloat($("tp").value);
+    var r = S.placeOrder({ side: side, type: otype, size: parseFloat($("size").value), price: price,
+                           sl: slP > 0 ? ref - dir * slP * I.pointSize : null, tp: tpP > 0 ? ref + dir * tpP * I.pointSize : null });
+    say(r.ok ? "" : r.error);
+    if (r.ok && otype !== "market") setTab("ord");
+    render();
+  }
   $("buyBtn").onclick = function () { trade("buy"); }; $("sellBtn").onclick = function () { trade("sell"); };
-  $("closeBtn").onclick = function () { var r = S.close(); say(r.ok ? "" : r.error); render(); };
+
+  /* ---------- bottom tabs ---------- */
+  function setTab(t) {
+    tab = t;
+    Array.prototype.forEach.call(document.querySelectorAll(".tabs [data-tab]"), function (b) { b.setAttribute("aria-selected", String(b.dataset.tab === t)); });
+    table();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".tabs [data-tab]"), function (b) { b.onclick = function () { setTab(b.dataset.tab); }; });
+  $("tbl").onclick = function (e) {
+    var b = e.target.closest("button"); if (!b || !S) return;
+    if (b.dataset.act === "close") { var r = S.close(); say(r.ok ? "" : r.error); }
+    else if (b.dataset.act === "be") { var p = S.position(), r2 = S.setStops({ sl: p.avgPrice }); say(r2.ok ? "" : r2.error); }
+    else if (b.dataset.act === "cancel") S.cancelOrder(+b.dataset.id);
+    render();
+  };
+  function table() {
+    if (!S) return;
+    var p = S.position(), cur = S.currency, I = S.instrument, ptsHead = I.pointName === "pip" ? "Pips" : "Points", h = "", rows = "";
+    if (tab === "pos") {
+      h = "<tr><th>Side</th><th>Size</th><th>Entry</th><th>Stop</th><th>Target</th><th>" + ptsHead + "</th><th>Profit</th><th></th></tr>";
+      rows = p ? "<tr><td class='" + (p.dir > 0 ? "up" : "dn") + "'>" + p.side + "</td><td>" + p.size + "</td><td>" + px(p.avgPrice) + "</td><td>" + (p.sl == null ? "–" : px(p.sl)) + "</td><td>" + (p.tp == null ? "–" : px(p.tp)) +
+        "</td><td class='" + cls(p.points) + "'>" + p.points.toFixed(1) + "</td><td class='" + cls(p.unrealized) + "'>" + cash(p.unrealized, cur) +
+        "</td><td><button class='b small' data-act='be' title='Move the stop loss to your entry price'>Stop to entry</button> <button class='b small' data-act='close'>Close</button></td></tr>"
+        : "<tr><td colspan='8'>No open position</td></tr>";
+    } else if (tab === "ord") {
+      h = "<tr><th>Order</th><th>Size</th><th>Price</th><th>Stop</th><th>Target</th><th></th></tr>";
+      rows = S.openOrders().map(function (o) {
+        return "<tr><td class='" + (o.dir > 0 ? "up" : "dn") + "'>" + o.side + " " + o.type + "</td><td>" + o.size + "</td><td>" + px(o.price) + "</td><td>" + (o.sl == null ? "–" : px(o.sl)) + "</td><td>" + (o.tp == null ? "–" : px(o.tp)) +
+               "</td><td><button class='b small' data-act='cancel' data-id='" + o.id + "'>Cancel</button></td></tr>";
+      }).join("") || "<tr><td colspan='6'>No waiting orders</td></tr>";
+    } else {
+      h = "<tr><th>Side</th><th>Size</th><th>Entry</th><th>Exit</th><th>" + ptsHead + "</th><th>R</th><th>Net</th><th>Why</th></tr>";
+      rows = S.trades.slice().reverse().map(function (t) {
+        return "<tr><td>" + t.side + "</td><td>" + t.size + "</td><td>" + px(t.entryPrice) + "</td><td>" + px(t.exitPrice) + "</td><td class='" + cls(t.points) + "'>" + t.points.toFixed(1) +
+               "</td><td class='" + cls(t.r) + "'>" + (t.r == null ? "–" : t.r.toFixed(2)) + "</td><td class='" + cls(t.netPnl) + "'>" + cash(t.netPnl, cur) + "</td><td>" + t.reason + "</td></tr>";
+      }).join("") || "<tr><td colspan='8'>No closed trades yet</td></tr>";
+    }
+    $("tbl").innerHTML = "<thead>" + h + "</thead><tbody>" + rows + "</tbody>";
+    var st = S.stats();
+    $("sum").textContent = st.trades ? st.trades + " trade" + (st.trades === 1 ? "" : "s") + " · " + Math.round(st.winRate) + "% won · net " + cash(st.netPnl, cur) : "";
+  }
 
   function feed(e) {
     var cur = S.currency, t = null;
@@ -201,58 +364,52 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
     else if (e.type === "financing") t = "Overnight financing: " + cash(-e.amount, cur);
     else if (e.type === "propStatus") t = e.status === "passed" ? "Evaluation PASSED" : e.status === "failed" ? "Account FAILED (" + e.reason + ")" : (e.dayLocked ? "Daily loss limit hit: locked for today" : null);
     else if (e.type === "dayRollover") t = "New trading day";
+    else if (e.type === "rewind") t = "Rewound " + tfName(e.candles * baseSec);
     if (!t) return;
     var d = document.createElement("div"); d.textContent = t;
     $("feed").insertBefore(d, $("feed").firstChild);
   }
 
-  /* ---------- drawing ---------- */
-  function render() {
+  /* ---------- drawing the numbers ---------- */
+  function render(mode) {
     if (!S) return;
     var a = S.account(), p = S.position(), cur = a.currency, q = S.quote(), I = S.instrument;
+    $("bid").textContent = px(q.bid); $("ask").textContent = px(q.ask);
+    $("clock").textContent = clockFmt.format(new Date((S.time + baseSec) * 1000));
     kv($("acct"), [
-      ["Balance", cash(a.balance, cur)], ["Equity", cash(a.equity, cur)], ["Open profit", cash(a.unrealized, cur), cls(a.unrealized)],
+      ["Balance", cash(a.balance, cur), "big"], ["Equity", cash(a.equity, cur)], ["Open profit", cash(a.unrealized, cur), cls(a.unrealized)],
+      ["Closed profit", cash(a.realized, cur), cls(a.realized)],
       ["Margin in use", cash(a.usedMargin, cur)], ["Free margin", cash(a.freeMargin, cur)],
-      ["Margin level", a.marginLevel == null ? "n/a" : Math.round(a.marginLevel) + "%"],
-      ["Commission paid", cash(a.fees.commission, cur)], ["Spread paid", cash(a.fees.spread, cur)], ["Financing paid", cash(a.fees.financing, cur)],
-      ["Bid / ask", px(q.bid) + " / " + px(q.ask)], ["Candles left", S.remaining()]
+      ["Margin level", a.marginLevel == null ? "–" : Math.round(a.marginLevel) + "%"],
+      ["Costs so far", cash(a.fees.commission + a.fees.spread + a.fees.financing, cur)]
     ]);
-    kv($("posn"), p ? [
-      ["Side", p.side, p.dir > 0 ? "up" : "dn"], ["Size", p.size + " " + I.sizeUnit], ["Average price", px(p.avgPrice)],
-      [I.pointName === "pip" ? "Pips" : "Points", p.points.toFixed(1), cls(p.points)], ["Profit", cash(p.unrealized, cur), cls(p.unrealized)],
-      ["Stop loss", p.sl == null ? "none" : px(p.sl)], ["Take profit", p.tp == null ? "none" : px(p.tp)]
-    ] : [["Flat", "no open position"]]);
     var r = S.propStatus();
     $("propPanel").style.display = r ? "" : "none";
     if (r) kv($("prop"), [
-      ["Status", r.status + (r.dayLocked ? " (locked today)" : ""), r.status === "passed" ? "up" : r.status === "failed" ? "dn" : ""],
-      ["Profit", cash(r.profit, cur), cls(r.profit)], ["Still needed", r.toTarget == null ? "n/a" : cash(r.toTarget, cur)],
-      ["Fail below", r.drawdownFloor == null ? "n/a" : cash(r.drawdownFloor, cur)], ["Room left", r.drawdownRoom == null ? "n/a" : cash(r.drawdownRoom, cur)],
-      ["Daily limit at", r.dailyLossFloor == null ? "n/a" : cash(r.dailyLossFloor, cur)],
-      ["Max size", r.maxSize == null ? "n/a" : r.maxSize + " " + I.sizeUnit], ["Days traded", r.tradingDays + (r.minTradingDays ? " of " + r.minTradingDays : "")]
+      ["Status", r.status + (r.dayLocked ? " (locked today)" : ""), "big " + (r.status === "passed" ? "up" : r.status === "failed" ? "dn" : "")],
+      ["Profit so far", cash(r.profit, cur), cls(r.profit)], ["Still needed", r.toTarget == null ? "–" : cash(r.toTarget, cur)],
+      ["Fail if equity hits", r.drawdownFloor == null ? "–" : cash(r.drawdownFloor, cur)], ["Room before that", r.drawdownRoom == null ? "–" : cash(r.drawdownRoom, cur), r.drawdownRoom != null && r.drawdownRoom < 500 ? "dn" : ""],
+      ["Today's loss limit", r.dailyLossRoom == null ? "–" : cash(r.dailyLossRoom, cur) + " left"],
+      ["Max size", r.maxSize == null ? "–" : r.maxSize + " " + I.sizeUnit], ["Days traded", r.tradingDays + (r.minTradingDays ? " of " + r.minTradingDays : "")]
     ]);
-    $("log").innerHTML = S.trades.slice().reverse().map(function (t) {
-      return "<tr><td>" + t.side + "</td><td>" + t.size + "</td><td>" + px(t.entryPrice) + "</td><td>" + px(t.exitPrice) + "</td><td class='" + cls(t.points) + "'>" +
-             t.points.toFixed(1) + "</td><td class='" + cls(t.netPnl) + "'>" + cash(t.netPnl, cur) + "</td><td>" + t.reason + "</td></tr>";
-    }).join("") || "<tr><td colspan='7'>No closed trades yet</td></tr>";
-    var lock = S.locked(), dis = !!lock || false;
-    $("buyBtn").disabled = $("sellBtn").disabled = dis; $("closeBtn").disabled = !p;
-    $("stepBtn").disabled = $("playBtn").disabled = S.isDone();
+    var lock = S.locked();
+    $("buyBtn").disabled = $("sellBtn").disabled = !!lock;
+    $("stepBtn").disabled = $("playBtn").disabled = S.isDone(); $("backBtn").disabled = !S.canStepBack();
     if (lock && !$("msg").textContent) say("Trading is locked: " + lock);
-    draw();
+    ticket(); table(); draw(mode);
   }
-  function draw() {
-    var p = S.position(), cur = S.currency, lines = [];
+  function draw(mode) {
+    var p = S.position(), cur = S.currency, lines = [], tfSec = E.timeframeSeconds(tf);
     function at(level) { return cash(S.pointsToMoney(p.dir * (level - p.avgPrice) / S.instrument.pointSize, p.size), cur); }
     if (p) {
       lines.push({ kind: "entry", price: p.avgPrice, label: (p.dir > 0 ? "Long " : "Short ") + p.size + "  ·  " + cash(p.unrealized, cur) });
       if (p.sl != null) lines.push({ kind: "stop", price: p.sl, label: "Stop  ·  " + at(p.sl) });
-      if (p.tp != null) lines.push({ kind: "target", price: p.tp, label: "Target  ·  +" + at(p.tp) });
+      if (p.tp != null) lines.push({ kind: "target", price: p.tp, label: "Target  ·  " + at(p.tp) });
     }
     S.openOrders().forEach(function (o) { lines.push({ kind: "order", price: o.price, label: o.side + " " + o.type + " " + o.size }); });
     chart.setLines(lines);
-    chart.setData(S.visible(), fresh);
-    fresh = false;
+    chart.setMarkers(S.log.filter(function (e) { return e.type === "fill"; }).map(function (e) { return { t: e.time, price: e.price, side: e.side }; }));
+    chart.setData(tfSec > baseSec ? E.aggregate(S.visible(), tfSec) : S.visible(), mode, tfSec);
   }
 })();
 </script>

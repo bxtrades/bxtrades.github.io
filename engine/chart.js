@@ -6,7 +6,8 @@
  *
  *   var chart = BXChart.create(canvas, { onTool: function (name) {} });
  *   chart.setFormat({ decimals: 2, tick: 0.25, pointSize: 1, pointName: "point" });
- *   chart.setData(candles);                 // [{t,o,h,l,c}], call again as candles are revealed
+ *   chart.setData(candles, mode, seconds);  // [{t,o,h,l,c}], call again as candles are revealed
+ *   chart.setMarkers([{ t, price, side: "buy" | "sell" }]);
  *   chart.setLines([{ price, label, kind: "entry" | "stop" | "target" }]);
  *   chart.setTool("cursor" | "line" | "hline" | "zone" | "measure" | "erase");
  *   chart.undo(); chart.clearDrawings(); chart.resetView();
@@ -36,7 +37,7 @@
     opts = opts || {};
     var g = canvas.getContext("2d");
     var st = { candles: [], lines: [], drawings: [], tool: "cursor", barW: 9, right: 0, autoY: true, y0: 0, y1: 1,
-               hover: null, draft: null, fmt: { decimals: 2, tick: 0.01, pointSize: 1, pointName: "point" } };
+               hover: null, draft: null, markers: [], dt: 300, fmt: { decimals: 2, tick: 0.01, pointSize: 1, pointName: "point" } };
     var W = 0, H = 0, AX = 84, TX = 28, plotW = 0, plotH = 0, queued = false, fitted = false;
     var ptrs = {}, drag = null;
 
@@ -45,6 +46,25 @@
     function iOf(x) { return st.right + 0.5 - (plotW - x) / st.barW; }
     function yOf(p) { return plotH - (p - st.y0) / (st.y1 - st.y0) * plotH; }
     function pOf(y) { return st.y0 + (plotH - y) / plotH * (st.y1 - st.y0); }
+    /* Drawings are pinned to a TIME, not a candle number, so they stay put when the timeframe changes. */
+    function tAt(i) {
+      var c = st.candles, n = c.length;
+      if (!n) return 0;
+      if (i <= 0) return c[0].t + i * st.dt;
+      if (i >= n - 1) return c[n - 1].t + (i - (n - 1)) * st.dt;
+      var k = Math.floor(i);
+      return c[k].t + (i - k) * (c[k + 1].t - c[k].t);
+    }
+    function iAt(t) {
+      var c = st.candles, n = c.length;
+      if (!n) return 0;
+      if (t <= c[0].t) return (t - c[0].t) / st.dt;
+      if (t >= c[n - 1].t) return n - 1 + (t - c[n - 1].t) / st.dt;
+      var lo = 0, hi = n - 1;
+      while (hi - lo > 1) { var m = (lo + hi) >> 1; if (c[m].t <= t) lo = m; else hi = m; }
+      return lo + (t - c[lo].t) / (c[lo + 1].t - c[lo].t);
+    }
+    function xT(t) { return xOf(iAt(t)); }
     function price(v) { return v.toLocaleString("en-GB", { minimumFractionDigits: st.fmt.decimals, maximumFractionDigits: st.fmt.decimals }); }
     function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
 
@@ -100,7 +120,7 @@
       g.beginPath(); g.moveTo(0, y); g.lineTo(plotW, y); g.stroke(); g.setLineDash([]);
     }
     function measureText(a, b) {
-      var d = b.p - a.p, pts = d / st.fmt.pointSize, pct = a.p ? d / a.p * 100 : 0, bars = Math.round(Math.abs(b.i - a.i));
+      var d = b.p - a.p, pts = d / st.fmt.pointSize, pct = a.p ? d / a.p * 100 : 0, bars = Math.round(Math.abs(iAt(b.t) - iAt(a.t)));
       var sign = d >= 0 ? "+" : "−";
       return sign + Math.abs(pts).toLocaleString("en-GB", { maximumFractionDigits: 2 }) + " " + st.fmt.pointName + "s  (" + sign + Math.abs(pct).toFixed(2) + "%)  ·  " + bars + " candle" + (bars === 1 ? "" : "s");
     }
@@ -108,7 +128,7 @@
       var x1, y1, x2, y2;
       g.globalAlpha = ghost ? 0.7 : 1; g.lineWidth = 2; g.strokeStyle = BLUE; g.setLineDash([]);
       if (d.type === "hline") { hLine(d.a.p, BLUE, [], 2); g.globalAlpha = 1; return; }
-      x1 = xOf(d.a.i); y1 = yOf(d.a.p); x2 = xOf(d.b.i); y2 = yOf(d.b.p);
+      x1 = xT(d.a.t); y1 = yOf(d.a.p); x2 = xT(d.b.t); y2 = yOf(d.b.p);
       if (d.type === "line") {
         g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
         g.fillStyle = BLUE; [[x1, y1], [x2, y2]].forEach(function (q) { g.beginPath(); g.arc(q[0], q[1], 3, 0, 6.3); g.fill(); });
@@ -164,6 +184,12 @@
       }
       st.drawings.forEach(function (d) { drawOne(d, false); });
       if (st.draft) drawOne(st.draft, true);
+      // where you got in and out: up arrow = bought, down arrow = sold
+      st.markers.forEach(function (m) {
+        var mx = xOf(Math.floor(iAt(m.t) + 1e-6)), my = yOf(m.price), u = m.side === "buy" ? 1 : -1;
+        g.fillStyle = m.side === "buy" ? green : red; g.strokeStyle = card; g.lineWidth = 1.5;
+        g.beginPath(); g.moveTo(mx, my); g.lineTo(mx - 6, my + u * 11); g.lineTo(mx + 6, my + u * 11); g.closePath(); g.fill(); g.stroke();
+      });
       // position / order lines, with a plain-English label on the left
       var colours = { entry: ink, stop: red, target: green, order: BLUE };
       st.lines.forEach(function (l) {
@@ -222,7 +248,7 @@
     function local(e) { var r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
     function zone(p) { return p.x > plotW ? "price" : p.y > plotH ? "time" : "plot"; }
     function snap(v) { var t = st.fmt.tick; return +(Math.round(v / t) * t).toFixed(st.fmt.decimals + 2); }
-    function point(p) { return { i: iOf(p.x), p: snap(pOf(p.y)) }; }
+    function point(p) { return { t: tAt(iOf(p.x)), p: snap(pOf(p.y)) }; }
     function limitRight() { st.right = clamp(st.right, 3, st.candles.length - 1 + plotW / st.barW - 3); }
     function zoomX(f, atX) {
       var a = iOf(atX);
@@ -238,7 +264,7 @@
       for (var k = st.drawings.length - 1; k >= 0; k--) {
         var d = st.drawings[k];
         if (d.type === "hline") { if (Math.abs(p.y - yOf(d.a.p)) < 9) return k; continue; }
-        var x1 = xOf(d.a.i), y1 = yOf(d.a.p), x2 = xOf(d.b.i), y2 = yOf(d.b.p);
+        var x1 = xT(d.a.t), y1 = yOf(d.a.p), x2 = xT(d.b.t), y2 = yOf(d.b.p);
         if (d.type === "line") { if (segDist(p, x1, y1, x2, y2) < 9) return k; }
         else if (p.x >= Math.min(x1, x2) - 6 && p.x <= Math.max(x1, x2) + 6 && p.y >= Math.min(y1, y2) - 6 && p.y <= Math.max(y1, y2) + 6) return k;
       }
@@ -330,15 +356,30 @@
 
     return {
       setFormat: function (f) { for (var k in f) st.fmt[k] = f[k]; redraw(); },
-      /* Pass reset = true when it is a different chart. Otherwise the view follows new candles
-         only while the newest one is on screen, so you can scroll back without being yanked forward. */
-      setData: function (candles, reset) {
-        var before = st.candles.length;
+      /* mode: "reset"   a different chart: fit the view and wipe drawings
+               "regroup" same replay shown in another timeframe: keep the same stretch of time on screen
+               (none)    more candles of the same chart. The view follows new candles only while the
+                         newest one is on screen, so you can scroll back without being yanked forward. */
+      setData: function (candles, mode, interval) {
+        var before = st.candles.length, oldDt = st.dt, tRight = before ? tAt(st.right) : null;
         st.candles = candles || [];
-        if (reset || !fitted) { fitted = false; st.drawings = []; st.draft = null; }
+        if (interval > 0) st.dt = interval;
+        else {
+          var gaps = [], k;
+          for (k = 1; k < st.candles.length; k++) gaps.push(st.candles[k].t - st.candles[k - 1].t);
+          gaps.sort(function (x, y) { return x - y; });
+          if (gaps.length) st.dt = gaps[Math.floor(gaps.length / 4)] || st.dt;    // the usual gap, ignoring breaks
+        }
+        if (mode === true || mode === "reset" || !fitted) { fitted = false; st.drawings = []; st.draft = null; }
+        else if (mode === "regroup" && tRight != null) {
+          st.barW = clamp(st.barW * st.dt / oldDt, 2, 60);
+          st.right = iAt(tRight);
+          limitRight();
+        }
         else if (st.candles.length > before && st.right >= before - 1) st.right += st.candles.length - before;
         redraw();
       },
+      setMarkers: function (m) { st.markers = m || []; redraw(); },
       setLines: function (lines) { st.lines = (lines || []).filter(function (l) { return l && isFinite(l.price); }); redraw(); },
       setTool: function (name) { setTool(name, true); },
       getTool: function () { return st.tool; },

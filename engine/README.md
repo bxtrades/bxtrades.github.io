@@ -34,3 +34,11 @@ Or JSON: `{ "sessions": [ { "id": "any-name", "candles": [[unixSeconds, open, hi
 Each session is one stretch of candles that gets replayed on its own.
 
 `"MNQ": { "sameAs": "NQ" }` in `index.json` lets one market reuse another's candles (MNQ and NQ trade at the same price).
+
+## Replay controls the engine offers
+
+- `step(n)` moves forward n candles of the data the replay runs on.
+- `stepBack(n)` rewinds n candles and undoes everything that happened in them (trades, balance, prop rules).
+- `stepUntil({ events, time, maxCandles })` skips ahead until a fill, an exit, a new trading day or a set time.
+- `BXEngine.aggregate(session.visible(), seconds)` regroups the revealed candles into a bigger timeframe for the chart,
+  so you can watch a 10m candle form while stepping 5m at a time.

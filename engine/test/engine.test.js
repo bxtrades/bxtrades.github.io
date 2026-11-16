@@ -289,6 +289,27 @@ test("data loader lists only markets that have data, and reads JSON and CSV", as
   assert.equal(p.sessions[0].candles[1].h, 1.3);
 });
 
+test("rewind puts everything back, and skipping stops when something happens", () => {
+  const rows = [[100, 100, 100, 100], [100, 104, 100, 104], [104, 112, 104, 111], [111, 111, 111, 111], [111, 111, 111, 111], [111, 111, 111, 111]];
+  const s = E.createSession({ instrument: "NQ", slippage: 0, propRules: E.PropRules.presets.futures50k, candles: candles(rows) });
+  assert.equal(s.canStepBack(), false);
+  s.buy(1, { sl: 95, tp: 110 });
+  s.placeOrder({ side: "sell", type: "limit", size: 1, price: 150 });
+  const before = JSON.stringify([s.account(), s.position(), s.openOrders(), s.propStatus()]);
+  const ev = s.stepUntil({ events: ["trade"] });                            // skips to the candle where the target is hit
+  assert.equal(s.i, 2); assert.ok(ev.some(e => e.type === "trade"));
+  assert.equal(s.trades.length, 1); near(s.account().balance, 50196);
+  assert.equal(s.stepBack(2), 2);                                            // back to before either candle played
+  assert.equal(s.i, 0); assert.equal(s.trades.length, 0);
+  assert.equal(JSON.stringify([s.account(), s.position(), s.openOrders(), s.propStatus()]), before);
+  s.step(2);                                                                 // replaying gives the same result again
+  assert.equal(s.trades.length, 1); near(s.account().balance, 50196);
+  assert.ok(s.cancelOrder(s.openOrders()[0].id));                            // restored orders still work
+  s.stepUntil({ time: T0 + 4 * 300 }); assert.equal(s.i, 4);
+  s.stepUntil({ maxCandles: 50 }); assert.equal(s.isDone(), true);
+  assert.equal(s.stepBack(100), 5);
+});
+
 test("the engine files never touch the page", () => {
   ["replay.js", "instruments.js"].forEach(f => {
     const src = fs.readFileSync(path.join(__dirname, "..", f), "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");

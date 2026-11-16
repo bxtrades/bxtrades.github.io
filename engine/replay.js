@@ -347,7 +347,7 @@
     this.fees = { commission: 0, spread: 0, financing: 0 };
     this.maxDrawdown = 0;
     this._peakEq = this.balance; this._marginCalled = false;
-    this._id = 0; this._buf = null; this._listeners = {};
+    this._id = 0; this._buf = null; this._listeners = {}; this._history = [];
     this.rules = pr ? new PropRules(pr, this) : null;
   }
   var S = Session.prototype;
@@ -726,12 +726,57 @@
   /* Reveal the next n candles. Returns every event that happened. */
   S.step = function (n) {
     return this._run(function () {
-      for (var k = 0; k < (n || 1) && !this.isDone(); k++) this._advance();
+      for (var k = 0; k < (n || 1) && !this.isDone(); k++) {
+        this._history.push(this._snapshot());
+        if (this._history.length > 3000) this._history.shift();
+        this._advance();
+      }
     });
+  };
+  /* Skip ahead until something happens. Stops at the first of:
+       events: ["trade", "fill", "dayRollover", ...]   one of these event types fires
+       time:   unix seconds                            the replay clock reaches this time
+       maxCandles                                      this many candles have gone by
+     or the end of the data. Returns every event on the way. */
+  S.stepUntil = function (o) {
+    o = o || {};
+    var want = o.events || [], max = o.maxCandles || Infinity, self = this;
+    return this._run(function () {
+      for (var k = 0; k < max && !self.isDone(); k++) {
+        var before = self._buf.length;
+        self.step(1);
+        if (o.time != null && self.time >= o.time) break;
+        if (self._buf.slice(before).some(function (e) { return want.indexOf(e.type) >= 0; })) break;
+      }
+    });
+  };
+  /* Rewind n candles. Everything goes back to how it was just before those candles played:
+     balance, position, orders, trade log and prop rules. Returns how many candles it went back. */
+  S.stepBack = function (n) {
+    var snap = null, count = 0;
+    for (var k = 0; k < (n || 1) && this._history.length; k++) { snap = this._history.pop(); count++; }
+    if (snap) { this._restore(snap); this._emit("rewind", { candles: count }); }
+    return count;
+  };
+  S.canStepBack = function () { return this._history.length > 0; };
+  S._snapshot = function () {
+    var r = this.rules;
+    return JSON.stringify({ i: this.i, mid: this.mid, time: this.time, balance: this.balance, pos: this.pos, orders: this.orders,
+      trades: this.trades.length, log: this.log.length, fees: this.fees, maxDrawdown: this.maxDrawdown, peakEq: this._peakEq,
+      marginCalled: this._marginCalled, id: this._id,
+      rules: r ? { peak: r.peak, dayStart: r.dayStart, status: r.status, reason: r.reason, dayLocked: r.dayLocked, days: r._days, dayCount: r.dayCount } : null });
+  };
+  S._restore = function (json) {
+    var z = JSON.parse(json), r = this.rules;
+    this.i = z.i; this.mid = z.mid; this.time = z.time; this.balance = z.balance; this.pos = z.pos; this.orders = z.orders;
+    this.trades.length = z.trades; this.log.length = z.log; this.fees = z.fees; this.maxDrawdown = z.maxDrawdown; this._peakEq = z.peakEq;
+    this._marginCalled = z.marginCalled; this._id = z.id;
+    if (r && z.rules) { r.peak = z.rules.peak; r.dayStart = z.rules.dayStart; r.status = z.rules.status; r.reason = z.rules.reason;
+                        r.dayLocked = z.rules.dayLocked; r._days = z.rules.days; r.dayCount = z.rules.dayCount; }
   };
 
   return {
-    version: "1.1.0",
+    version: "1.2.0",
     instruments: Inst,
     createSession: function (opts) { return new Session(opts); },
     Session: Session,
