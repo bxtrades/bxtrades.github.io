@@ -164,6 +164,26 @@ details.custom textarea,details.custom input{box-sizing:border-box; max-width:10
 details.custom .fields > *{min-width:0}
 details.custom input[type=text]{background:var(--surface)}
 .legendrow{display:flex; justify-content:space-between; align-items:baseline; gap:8px}
+.chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:8px}
+.chips button{flex:1 1 56px; font:inherit; font-weight:700; font-size:.95rem; min-height:44px; border-radius:8px; border:1px solid var(--line); background:var(--bg); color:var(--ink); cursor:pointer; font-variant-numeric:tabular-nums}
+.chips button.l{color:var(--loss)} .chips button.w{color:var(--gain)}
+.chips button[aria-pressed="true"]{background:var(--ink); color:var(--surface); border-color:var(--ink)}
+details.calc{margin-top:8px; font-size:.9rem}
+details.calc summary{cursor:pointer; color:var(--muted); font-weight:600}
+details.calc .fields{grid-template-columns:repeat(3,minmax(0,1fr)); margin-top:8px}
+.fields > *{min-width:0}
+details.calc output{display:block; margin-top:8px; font-weight:700}
+.tip{background:var(--soft); border-radius:8px; padding:10px 12px; font-size:.92rem; margin:0 0 14px}
+.editing{border:2px solid var(--amber); border-radius:8px; padding:8px 12px; margin:0 0 14px; font-weight:600; font-size:.92rem; display:flex; justify-content:space-between; gap:8px; align-items:center; flex-wrap:wrap}
+.editing[hidden]{display:none}
+.toast{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); background:var(--ink); color:var(--surface); padding:10px 14px; border-radius:10px; display:flex; gap:14px; align-items:center; font-size:.95rem; font-weight:600; z-index:50; box-shadow:0 6px 20px rgba(0,0,0,.25); max-width:calc(100vw - 24px)}
+.toast[hidden]{display:none}
+.toast button{font:inherit; font-weight:700; background:none; border:0; color:inherit; text-decoration:underline; cursor:pointer; padding:4px}
+table.mini{min-width:0; margin-top:4px}
+table.mini td,table.mini th{padding:6px 8px}
+tr.pick td{background:var(--soft)}
+.logtools{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:6px}
+.logtools input{max-width:280px}
 .linkbtn{font:inherit; font-size:.85rem; background:none; border:0; color:var(--accent); cursor:pointer; padding:0; text-decoration:underline}
 </style>
 <link rel="stylesheet" href="tools.css">
@@ -214,7 +234,7 @@ details.custom input[type=text]{background:var(--surface)}
     <section class="panel" aria-label="Add a trade" style="border-top:1px solid var(--line)">
       <h2>Add a trade</h2>
       <details class="custom" id="custom">
-        <summary>Customise your journal</summary>
+        <summary>Settings: your checklist, question and markets</summary>
         <div class="fields">
           <label class="f">Your setup checklist (one step per line)
             <textarea id="cSteps" rows="6" placeholder="e.g. Higher timeframe bias is clear"></textarea>
@@ -233,35 +253,59 @@ details.custom input[type=text]{background:var(--surface)}
         </div>
         <p class="hint">Changing your checklist won't change trades you've already saved. Each trade keeps the checklist it was logged with.</p>
       </details>
+      <p class="tip" id="tip" hidden><strong>Quick start:</strong> pick Long or Short, tap your result, press Save. Everything else is optional and you can fill it in later with Edit.</p>
+      <div class="editing" id="editing" hidden><span>Editing a saved trade</span><button class="linkbtn" id="cancelEdit" type="button">Cancel</button></div>
       <div class="fields">
+        <div class="f full"><span style="font-size:.88rem;font-weight:600">Direction</span>
+          <div class="seg" id="dir" role="group" aria-label="Direction"><button type="button" data-v="Long">Long</button><button type="button" data-v="Short">Short</button></div>
+        </div>
+        <div class="f full">
+          <label for="r" style="font-size:.88rem;font-weight:600">Result in R <span class="hint" style="display:inline;margin:0;font-weight:400">(1R = the amount you risked)</span></label>
+          <input type="text" id="r" inputmode="decimal" autocomplete="off" placeholder="Tap a button below, or type e.g. 1.5">
+          <div class="chips" id="chips" role="group" aria-label="Quick result">
+            <button type="button" class="l" data-r="-1" title="Full stop loss">−1R</button><button type="button" data-r="0" title="Breakeven">0</button>
+            <button type="button" class="w" data-r="1">+1R</button><button type="button" class="w" data-r="2">+2R</button><button type="button" class="w" data-r="3">+3R</button>
+          </div>
+          <details class="calc" id="calc">
+            <summary>Not sure? Work it out from your prices</summary>
+            <div class="fields">
+              <label class="f">Entry<input type="number" id="cEntry" step="any" inputmode="decimal"></label>
+              <label class="f">Stop loss<input type="number" id="cStop" step="any" inputmode="decimal"></label>
+              <label class="f">Exit<input type="number" id="cExit" step="any" inputmode="decimal"></label>
+            </div>
+            <output id="cOut" aria-live="polite"></output>
+          </details>
+        </div>
         <label class="f">Date<input type="date" id="date"></label>
         <label class="f">Instrument
           <select id="inst"></select>
         </label>
-        <div class="f full"><span style="font-size:.88rem;font-weight:600">Direction</span>
-          <div class="seg" id="dir" role="group" aria-label="Direction"><button data-v="Long">Long</button><button data-v="Short">Short</button></div>
-        </div>
         <label class="f">Type
           <select id="mode"><option value="backtest">Backtest</option><option value="paper">Paper</option><option value="live">Live / eval</option></select>
         </label>
-        <label class="f">Result in R<input type="number" id="r" step="0.1" inputmode="decimal" placeholder="e.g. 2 or -1"></label>
+        <label class="f">Setup name
+          <input type="text" id="setup" list="setupList" autocomplete="off" maxlength="40" placeholder="Optional, e.g. NY open"><datalist id="setupList"></datalist>
+        </label>
         <label class="f full" id="usdWrap">Result in $ <span class="hint" style="display:inline;margin:0">(optional: also adds it to your <a href="/tracker">eval tracker</a>)</span>
           <input type="number" id="usd" step="1" inputmode="decimal" placeholder="e.g. 400 or -200">
         </label>
-        <label class="f full"><span id="qLabel">Did you follow your plan?</span>
-          <select id="aligned"><option value="">Not recorded</option><option value="yes">Yes</option><option value="no">No</option></select>
-        </label>
+        <div class="f full"><span id="qLabel" style="font-size:.88rem;font-weight:600">Did you follow your plan?</span>
+          <div class="seg" id="aligned" role="group" aria-labelledby="qLabel"><button type="button" data-v="yes">Yes</button><button type="button" data-v="no">No</button><button type="button" data-v="">Skip</button></div>
+        </div>
         <fieldset class="full">
-          <legend class="legendrow"><span>Setup checklist</span></legend>
+          <legend class="legendrow"><span>Setup checklist</span><button class="linkbtn" id="tickAll" type="button">Tick all</button></legend>
           <div class="checks" id="checks"></div>
         </fieldset>
         <label class="f full">Notes<textarea id="notes" placeholder="What did you see? What would you do differently?"></textarea></label>
+        <label class="f full">Chart screenshot link <span class="hint" style="display:inline;margin:0;font-weight:400">(optional)</span>
+          <input type="text" id="link" inputmode="url" autocomplete="off" placeholder="Paste a TradingView snapshot link">
+        </label>
       </div>
       <div class="formfoot">
-        <button class="btn primary" id="add">Save trade</button>
+        <button class="btn primary" id="add" type="button">Save trade</button>
         <span class="msg" id="msg" role="status"></span>
       </div>
-      <p class="hint">Use −1 for a full stop-out, 0 for breakeven, and your reward multiple for a win (2 means you made twice what you risked).</p>
+      <p class="hint">−1R is a full stop-out, 0 is breakeven, +2R means you made twice what you risked. Press Enter in the result box to save quickly.</p>
     </section>
 
     <section class="panel" aria-label="Your stats" style="border-top:1px solid var(--line)">
@@ -274,6 +318,7 @@ details.custom input[type=text]{background:var(--surface)}
 
   <section class="panel" style="margin-top:18px; border-top:1px solid var(--line)" aria-label="Trade log">
     <h2>Trade log</h2>
+    <div class="logtools" id="logtools" hidden><input type="text" id="find" placeholder="Search notes, setup or market" aria-label="Search your trades"><span class="muted" id="count" style="font-size:.88rem"></span></div>
     <div id="log"></div>
     <div class="backup">
       <button class="btn ghost small" id="exportJson">Download backup</button>
@@ -284,6 +329,7 @@ details.custom input[type=text]{background:var(--surface)}
     <p class="warnbox">Your trades are saved in this browser on this device only. Download a backup now and then so you don’t lose them if you clear your browser or switch devices.</p>
   </section>
 
+  <div class="toast" id="toast" role="status" hidden><span id="toastText"></span><button type="button" id="toastUndo">Undo</button></div>
   <section class="tool-notes">
     <p class="small-note">Made by bxtrades. A journal for learning and review, not financial advice.</p>
   </section>
@@ -332,7 +378,8 @@ details.custom input[type=text]{background:var(--surface)}
   if(typeof cfg.question !== "string" || !cfg.question) cfg.question = DEFAULTS.question;
   var STEPS = cfg.steps;
   function saveCfg(){ try{ localStorage.setItem(SKEY, JSON.stringify(cfg)); }catch(e){} }
-  var trades = [], filter = "all", dir = "Long";
+  var LKEY = "bxt-journal-last-v1";
+  var trades = [], filter = "all", dir = "Long", aligned = "", editId = null, find = "";
   try{ trades = JSON.parse(localStorage.getItem(KEY) || "[]"); if(!Array.isArray(trades)) trades = []; }catch(e){ trades = []; }
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(trades)); }catch(e){} }
   function $(id){ return document.getElementById(id); }
@@ -345,7 +392,7 @@ details.custom input[type=text]{background:var(--surface)}
     STEPS = cfg.steps;
     $("checks").innerHTML = STEPS.length ? STEPS.map(function(s,i){
       return '<label><input type="checkbox" data-i="'+i+'"><span class="n">'+(i+1)+'</span>'+esc(s)+'</label>';
-    }).join("") : '<p class="hint" style="margin:0">No checklist yet. Open “Customise your journal” above to add your setup steps.</p>';
+    }).join("") : '<p class="hint" style="margin:0">No checklist yet. Open “Settings” above to add your setup steps.</p>';
     $("qLabel").textContent = cfg.question;
     var cur = $("inst").value;
     $("inst").innerHTML = cfg.instruments.map(function(x){ return '<option>'+esc(x)+'</option>'; }).join("");
@@ -369,24 +416,85 @@ details.custom input[type=text]{background:var(--surface)}
   });
   var firstVisit = true; try{ firstVisit = !localStorage.getItem(SKEY) && !trades.length; }catch(e){}
   applyCfg();
-  if(firstVisit) $("custom").open = true;
+  $("tip").hidden = !firstVisit;
 
   // Defaults
-  $("date").value = new Date().toISOString().slice(0,10);
+  function today(){ var d=new Date(); return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2); }
+  $("date").value = today();
+  // Start from whatever you used last time, so logging a run of trades is quick
+  try{
+    var last = JSON.parse(localStorage.getItem(LKEY) || "null");
+    if(last){
+      if(last.dir==="Long"||last.dir==="Short") dir = last.dir;
+      if(cfg.instruments.indexOf(last.inst)>=0) $("inst").value = last.inst;
+      if(["backtest","paper","live"].indexOf(last.mode)>=0) $("mode").value = last.mode;
+      if(typeof last.setup==="string") $("setup").value = last.setup;
+    }
+  }catch(e){}
+  function parseR(v){ v=String(v).trim().replace("−","-").replace(",",".").replace(/r$/i,"").replace(/^\+/,""); return v===""||!isFinite(Number(v)) ? null : Number(v); }
+  function showChips(){ var v=parseR($("r").value); Array.prototype.forEach.call($("chips").children,function(b){ b.setAttribute("aria-pressed", String(v!==null && Number(b.dataset.r)===v)); }); }
+  $("chips").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; $("r").value=b.dataset.r; showChips(); $("msg").textContent=""; });
+  $("r").addEventListener("input", showChips);
+  $("r").addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); $("add").click(); } });
+  $("notes").addEventListener("keydown",function(e){ if(e.key==="Enter" && (e.ctrlKey||e.metaKey)){ e.preventDefault(); $("add").click(); } });
+  // R from prices: how far it went your way, divided by how far your stop was
+  function calcR(){
+    var en=parseFloat($("cEntry").value), st=parseFloat($("cStop").value), ex=parseFloat($("cExit").value), out=$("cOut");
+    if(!isFinite(en)||!isFinite(st)||!isFinite(ex)){ out.textContent=""; return; }
+    var risk = dir==="Long" ? en-st : st-en;
+    if(!(risk>0)){ out.style.color="var(--loss)"; out.textContent="For a "+dir.toLowerCase()+", the stop loss should be "+(dir==="Long"?"below":"above")+" the entry."; return; }
+    var r = Math.round((dir==="Long" ? ex-en : en-ex)/risk*100)/100;
+    $("r").value = r; showChips();
+    out.style.color=""; out.textContent = "That’s "+fmtR(r)+". It’s filled in above.";
+  }
+  ["cEntry","cStop","cExit"].forEach(function(id){ $(id).addEventListener("input", calcR); });
+  $("aligned").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; aligned=b.dataset.v; setPressed($("aligned"),aligned); });
+  $("tickAll").addEventListener("click",function(){
+    var boxes=document.querySelectorAll("#checks input"), all=Array.prototype.every.call(boxes,function(c){return c.checked;});
+    Array.prototype.forEach.call(boxes,function(c){ c.checked=!all; });
+  });
+  function cleanLink(v){ v=String(v||"").trim(); if(!v) return ""; if(!/^https?:\/\//i.test(v)) v="https://"+v; try{ var u=new URL(v); return /^https?:$/.test(u.protocol) ? u.href : ""; }catch(e){ return ""; } }
+  var beforeEdit = null;
+  function resetForm(){
+    if(beforeEdit){   // put the form back how it was before you opened a trade to edit
+      dir = beforeEdit.dir; setPressed($("dir"), dir); $("date").value = beforeEdit.date; $("mode").value = beforeEdit.mode; $("setup").value = beforeEdit.setup;
+      if(cfg.instruments.indexOf(beforeEdit.inst)>=0) $("inst").value = beforeEdit.inst;
+      beforeEdit = null;
+    }
+    editId = null; $("editing").hidden = true; $("add").textContent = "Save trade";
+    $("r").value=""; $("usd").value=""; $("notes").value=""; $("link").value=""; aligned=""; setPressed($("aligned"),"x");
+    ["cEntry","cStop","cExit"].forEach(function(id){ $(id).value=""; }); $("cOut").textContent="";
+    document.querySelectorAll("#checks input").forEach(function(c){ c.checked=false; });
+    showChips(); toggleUsd();
+  }
+  $("cancelEdit").addEventListener("click",function(){ applyCfg(); resetForm(); $("msg").textContent=""; });
   function setPressed(el,v){ Array.prototype.forEach.call(el.querySelectorAll("button"),function(b){ b.setAttribute("aria-pressed", String(b.dataset.v===v)); }); }
-  setPressed($("dir"), dir); setPressed($("filter"), filter);
+  setPressed($("dir"), dir); setPressed($("filter"), filter); setPressed($("aligned"), "x");
   // The $ box only makes sense for paper or eval trades, not backtests
-  function toggleUsd(){ $("usdWrap").hidden = $("mode").value === "backtest"; if($("usdWrap").hidden) $("usd").value=""; }
+  function toggleUsd(){ $("usdWrap").hidden = $("mode").value === "backtest" || !!editId; if($("usdWrap").hidden) $("usd").value=""; }
   $("mode").addEventListener("change", toggleUsd); toggleUsd();
-  $("dir").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; dir=b.dataset.v; setPressed($("dir"),dir); });
+  $("dir").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; dir=b.dataset.v; setPressed($("dir"),dir); calcR(); });
   $("filter").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; filter=b.dataset.v; setPressed($("filter"),filter); render(); });
 
   $("add").addEventListener("click",function(){
-    var rv = $("r").value.trim();
-    if(rv === "" || !isFinite(parseFloat(rv))){ $("msg").style.color="var(--loss)"; $("msg").textContent="Enter the result in R to save."; $("r").focus(); return; }
+    var rv = parseR($("r").value);
+    if(rv === null){ $("msg").style.color="var(--loss)"; $("msg").textContent="Tap a result button or type the result in R."; $("r").focus(); return; }
     var steps = Array.prototype.map.call(document.querySelectorAll("#checks input"),function(c){ return c.checked; });
-    trades.push({ id: Date.now().toString(36)+Math.random().toString(36).slice(2,6), date: $("date").value || new Date().toISOString().slice(0,10),
-      inst: $("inst").value, dir: dir, mode: $("mode").value, r: parseFloat(rv), aligned: $("aligned").value, q: cfg.question, steps: steps, stepNames: STEPS.slice(), notes: $("notes").value.trim() });
+    var fields = { date: $("date").value || today(), inst: $("inst").value, dir: dir, mode: $("mode").value, r: rv, aligned: aligned,
+                   steps: steps, notes: $("notes").value.trim(), setup: $("setup").value.trim(), link: cleanLink($("link").value) };
+    if(!editId){ try{ localStorage.setItem(LKEY, JSON.stringify({ dir: dir, inst: fields.inst, mode: fields.mode, setup: fields.setup })); }catch(e){} }
+    $("tip").hidden = true;
+    if(editId){
+      // Editing keeps the checklist and question the trade was first logged with
+      var old = trades.filter(function(t){ return t.id===editId; })[0];
+      if(old){ for(var k in fields) old[k] = fields[k]; }
+      save(); applyCfg(); resetForm();
+      $("msg").style.color="var(--gain)"; $("msg").textContent="Trade updated.";
+      setTimeout(function(){ $("msg").textContent=""; }, 2500);
+      render(); return;
+    }
+    fields.id = Date.now().toString(36)+Math.random().toString(36).slice(2,6); fields.q = cfg.question; fields.stepNames = STEPS.slice();
+    trades.push(fields);
     save();
     // Optional: copy it into the eval tracker as a dollar trade
     var usd = parseFloat($("usd").value), sentToTracker = false;
@@ -400,16 +508,46 @@ details.custom input[type=text]{background:var(--surface)}
         localStorage.setItem(TK, JSON.stringify(T)); sentToTracker = true;
       }catch(e){}
     }
-    $("r").value=""; $("usd").value=""; $("notes").value=""; $("aligned").value="";
-    document.querySelectorAll("#checks input").forEach(function(c){ c.checked=false; });
-    $("msg").style.color="var(--gain)"; $("msg").textContent = sentToTracker ? "Trade saved, and added to your eval tracker." : "Trade saved.";
+    resetForm();
+    $("msg").style.color="var(--gain)"; $("msg").textContent = sentToTracker ? "Trade saved, and added to your eval tracker." : "Trade saved. Ready for the next one.";
     setTimeout(function(){ $("msg").textContent=""; }, 2500);
     render();
   });
+  // Load a saved trade back into the form
+  function startEdit(id){
+    var t = trades.filter(function(x){ return x.id===id; })[0]; if(!t) return;
+    if(!beforeEdit) beforeEdit = { dir: dir, date: $("date").value, inst: $("inst").value, mode: $("mode").value, setup: $("setup").value };
+    editId = id; $("editing").hidden = false; $("add").textContent = "Update trade";
+    dir = t.dir==="Short" ? "Short" : "Long"; setPressed($("dir"), dir);
+    $("r").value = t.r; showChips(); $("date").value = t.date;
+    if(Array.prototype.every.call($("inst").options,function(o){ return o.value!==t.inst; })){ var o=document.createElement("option"); o.textContent=t.inst; $("inst").appendChild(o); }
+    $("inst").value = t.inst; $("mode").value = t.mode; $("setup").value = t.setup || ""; $("notes").value = t.notes || ""; $("link").value = t.link || "";
+    aligned = t.aligned || ""; setPressed($("aligned"), aligned || "x");
+    $("qLabel").textContent = t.q || cfg.question;
+    var names = t.stepNames && t.stepNames.length ? t.stepNames : STEPS;
+    $("checks").innerHTML = names.length ? names.map(function(n,i){
+      return '<label><input type="checkbox" data-i="'+i+'"'+((t.steps||[])[i]?' checked':'')+'><span class="n">'+(i+1)+'</span>'+esc(n)+'</label>';
+    }).join("") : '<p class="hint" style="margin:0">This trade was saved without a checklist.</p>';
+    toggleUsd(); render();
+    document.querySelector('section[aria-label="Add a trade"]').scrollIntoView({ behavior:"smooth", block:"start" });
+  }
 
   function sorted(list){ return list.slice().sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:(a.id<b.id?-1:1); }); }
 
+  // A small table comparing groups of trades, best first. Only shown when there is something to compare.
+  function groupTable(title, list, keyOf, blankName){
+    var g={}, keys=[];
+    list.forEach(function(t){ var k=keyOf(t); if(!g[k]){ g[k]=[]; keys.push(k); } g[k].push(t.r); });
+    if(keys.length<2) return "";
+    var rows = keys.map(function(k){ var a=g[k], tot=a.reduce(function(x,y){return x+y;},0); return { k:k, n:a.length, w:a.filter(function(x){return x>0;}).length, tot:tot }; })
+      .sort(function(a,b){ return b.tot-a.tot; });
+    return '<h3 class="sub">'+title+'</h3><div class="tablewrap"><table class="mini"><thead><tr><th></th><th class="r">Trades</th><th class="r">Win rate</th><th class="r">Average</th><th class="r">Total</th></tr></thead><tbody>'+
+      rows.map(function(x){ return '<tr><td>'+(x.k?esc(x.k):'<span class="muted">'+blankName+'</span>')+'</td><td class="r">'+x.n+'</td><td class="r">'+pct(x.w,x.n)+'</td><td class="r">'+fmtR(x.tot/x.n)+'</td><td class="r '+(x.tot>0?'pos':x.tot<0?'neg':'')+'">'+fmtR(x.tot)+'</td></tr>'; }).join("")+
+      '</tbody></table></div>';
+  }
   function render(){
+    var names={}; trades.forEach(function(t){ if(t.setup) names[t.setup]=1; });
+    $("setupList").innerHTML = Object.keys(names).sort().map(function(n){ return '<option value="'+esc(n)+'">'; }).join("");
     var list = sorted(trades.filter(function(t){ return filter==="all" || t.mode===filter; }));
     var area = $("statsArea");
     if(!list.length){
@@ -468,26 +606,46 @@ details.custom input[type=text]{background:var(--surface)}
         '</div>'+
         (insight ? '<p class="insight">'+insight+'</p>' : '')+
         (check ? '<p class="insight">'+check+'</p>' : '')+
+        groupTable("By setup", list, function(t){ return t.setup || ""; }, "No setup name")+
+        groupTable("Long vs short", list, function(t){ return t.dir; }, "")+
         '<h3 class="sub">Average R by weekday</h3><div class="bars">'+bars+'</div>';
     }
 
     // Log
-    var rows = sorted(trades.filter(function(t){ return filter==="all" || t.mode===filter; })).reverse();
-    if(!rows.length){ $("log").innerHTML = '<p class="empty">Your trades will be listed here.</p>'; return; }
+    var all = sorted(trades.filter(function(t){ return filter==="all" || t.mode===filter; })).reverse();
+    var needle = find.trim().toLowerCase();
+    var rows = needle ? all.filter(function(t){ return [t.notes,t.setup,t.inst,t.dir,t.date].join(" ").toLowerCase().indexOf(needle)>=0; }) : all;
+    $("logtools").hidden = all.length < 6 && !needle;
+    $("count").textContent = needle ? rows.length+" of "+all.length+" trades" : all.length+" trades";
+    if(!all.length){ $("log").innerHTML = '<p class="empty">Your trades will be listed here.</p>'; return; }
+    if(!rows.length){ $("log").innerHTML = '<p class="empty">No trades match “'+esc(find.trim())+'”.</p>'; return; }
     var modeName = {backtest:"Backtest", paper:"Paper", live:"Live / eval"};
     $("log").innerHTML = '<div class="tablewrap"><table><thead><tr><th>Date</th><th>Trade</th><th>Type</th><th>Checklist</th><th>Yes / no</th><th class="r">Result</th><th></th></tr></thead><tbody>'+
       rows.map(function(t){
-        var ticked = (t.steps||[]).filter(Boolean).length;
-        return '<tr><td>'+esc(t.date)+'</td><td>'+esc(t.inst)+' '+esc(t.dir)+(t.notes?'<span class="note">'+esc(t.notes)+'</span>':'')+'</td><td>'+(modeName[t.mode]||esc(t.mode))+'</td>'+
-          '<td>'+ticked+' of '+(t.steps||[]).length+'</td><td>'+(t.aligned==="yes"?"Yes":t.aligned==="no"?"No":"–")+'</td>'+
-          '<td class="r '+(t.r>0?'pos':t.r<0?'neg':'')+'">'+fmtR(t.r)+'</td><td><button class="del" data-id="'+esc(t.id)+'">Delete</button></td></tr>';
+        var ticked = (t.steps||[]).filter(Boolean).length, link = cleanLink(t.link);
+        return '<tr'+(t.id===editId?' class="pick"':'')+'><td>'+esc(t.date)+'</td><td>'+esc(t.inst)+' '+esc(t.dir)+(t.setup?' · '+esc(t.setup):'')+
+          (t.notes?'<span class="note">'+esc(t.notes)+'</span>':'')+(link?'<span class="note"><a href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">View chart</a></span>':'')+'</td><td>'+(modeName[t.mode]||esc(t.mode))+'</td>'+
+          '<td>'+((t.steps||[]).length ? ticked+' of '+t.steps.length : '–')+'</td><td>'+(t.aligned==="yes"?"Yes":t.aligned==="no"?"No":"–")+'</td>'+
+          '<td class="r '+(t.r>0?'pos':t.r<0?'neg':'')+'">'+fmtR(t.r)+'</td><td style="white-space:nowrap"><button class="del edit" data-id="'+esc(t.id)+'">Edit</button> <button class="del rm" data-id="'+esc(t.id)+'">Delete</button></td></tr>';
       }).join("")+'</tbody></table></div>';
   }
+  $("find").addEventListener("input",function(){ find=this.value; render(); });
 
+  // Delete straight away, with a few seconds to change your mind
+  var undoTimer = null, undoTrade = null;
+  $("toastUndo").addEventListener("click",function(){
+    if(undoTrade){ trades.push(undoTrade); undoTrade=null; save(); render(); }
+    $("toast").hidden = true; clearTimeout(undoTimer);
+  });
   $("log").addEventListener("click",function(e){
     var b=e.target.closest(".del"); if(!b) return;
-    if(!confirm("Delete this trade? This can’t be undone.")) return;
+    if(b.classList.contains("edit")){ startEdit(b.dataset.id); return; }
+    undoTrade = trades.filter(function(t){ return t.id===b.dataset.id; })[0] || null;
+    if(!undoTrade) return;
+    if(editId===undoTrade.id){ applyCfg(); resetForm(); }
     trades = trades.filter(function(t){ return t.id!==b.dataset.id; }); save(); render();
+    $("toastText").textContent = "Trade deleted."; $("toast").hidden = false;
+    clearTimeout(undoTimer); undoTimer = setTimeout(function(){ $("toast").hidden = true; undoTrade = null; }, 7000);
   });
 
   function download(name, text, type){
@@ -498,12 +656,12 @@ details.custom input[type=text]{background:var(--surface)}
   var stamp = function(){ return new Date().toISOString().slice(0,10); };
   $("exportJson").addEventListener("click",function(){ download("bxtrades-journal-backup-"+stamp()+".json", JSON.stringify(trades,null,2), "application/json"); });
   $("exportCsv").addEventListener("click",function(){
-    var head=["date","instrument","direction","type","result_R","question","answer","steps_ticked","steps_total","steps_missed","notes"];
+    var head=["date","instrument","direction","type","setup","result_R","question","answer","steps_ticked","steps_total","steps_missed","notes","chart_link"];
     var q=function(v){ v=String(v==null?"":v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
     var lines=[head.map(q).join(",")].concat(sorted(trades).map(function(t){
       var st=t.steps||[], names=t.stepNames||[];
       var missed=st.map(function(v,i){ return v ? null : (names[i] || ("Step "+(i+1))); }).filter(Boolean).join("; ");
-      return [t.date,t.inst,t.dir,t.mode,t.r,t.q||"",t.aligned,st.filter(Boolean).length,st.length,missed,t.notes].map(q).join(",");
+      return [t.date,t.inst,t.dir,t.mode,t.setup||"",t.r,t.q||"",t.aligned,st.filter(Boolean).length,st.length,missed,t.notes,t.link||""].map(q).join(",");
     }));
     download("bxtrades-journal-"+stamp()+".csv", lines.join("\n"), "text/csv");
   });
