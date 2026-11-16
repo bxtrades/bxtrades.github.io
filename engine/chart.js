@@ -10,7 +10,10 @@
  *   chart.setMarkers([{ t, price, side: "buy" | "sell" }]);
  *   chart.setLines([{ price, label, kind: "entry" | "stop" | "target" }]);
  *   chart.setTool("cursor" | "line" | "hline" | "zone" | "measure" | "erase");
- *   chart.undo(); chart.clearDrawings(); chart.resetView();
+ *   chart.undo(); chart.clearDrawings(); chart.removeSelected(); chart.resetView();
+ *
+ * Editing drawings (with the Move tool): click one to select it, drag it to move it, drag a round
+ * grab point to reshape it, press Delete to remove it, Escape to let go.
  *
  * Mouse / touch
  *   drag the chart          move it (sideways and up/down)
@@ -37,7 +40,7 @@
     opts = opts || {};
     var g = canvas.getContext("2d");
     var st = { candles: [], lines: [], drawings: [], tool: "cursor", barW: 9, right: 0, autoY: true, y0: 0, y1: 1,
-               hover: null, draft: null, markers: [], dt: 300, fmt: { decimals: 2, tick: 0.01, pointSize: 1, pointName: "point" } };
+               hover: null, draft: null, sel: -1, markers: [], dt: 300, fmt: { decimals: 2, tick: 0.01, pointSize: 1, pointName: "point" } };
     var W = 0, H = 0, AX = 84, TX = 28, plotW = 0, plotH = 0, queued = false, fitted = false;
     var ptrs = {}, drag = null;
 
@@ -184,6 +187,10 @@
       }
       st.drawings.forEach(function (d) { drawOne(d, false); });
       if (st.draft) drawOne(st.draft, true);
+      if (st.drawings[st.sel]) handles(st.drawings[st.sel]).forEach(function (hd) {       // grab points on the selected drawing
+        g.fillStyle = card; g.strokeStyle = BLUE; g.lineWidth = 2; g.setLineDash([]);
+        g.beginPath(); g.arc(hd.x, hd.y, 6, 0, 6.3); g.fill(); g.stroke();
+      });
       // where you got in and out: up arrow = bought, down arrow = sold
       st.markers.forEach(function (m) {
         var mx = xOf(Math.floor(iAt(m.t) + 1e-6)), my = yOf(m.price), u = m.side === "buy" ? 1 : -1;
@@ -270,9 +277,25 @@
       }
       return -1;
     }
+    /* The grab points of a drawing. Dragging one calls its set() with the new {t, p}. */
+    function handles(d) {
+      if (d.type === "hline") return [{ x: plotW / 2, y: yOf(d.a.p), set: function (q) { d.a.p = q.p; } }];
+      var out = [{ x: xT(d.a.t), y: yOf(d.a.p), set: function (q) { d.a = q; } },
+                 { x: xT(d.b.t), y: yOf(d.b.p), set: function (q) { d.b = q; } }];
+      if (d.type === "zone") out.push(
+        { x: xT(d.a.t), y: yOf(d.b.p), set: function (q) { d.a = { t: q.t, p: d.a.p }; d.b = { t: d.b.t, p: q.p }; } },
+        { x: xT(d.b.t), y: yOf(d.a.p), set: function (q) { d.b = { t: q.t, p: d.b.p }; d.a = { t: d.a.t, p: q.p }; } });
+      return out;
+    }
+    function handleAt(p, reach) {
+      var d = st.drawings[st.sel];
+      if (!d) return null;
+      return handles(d).filter(function (hd) { return Math.hypot(p.x - hd.x, p.y - hd.y) < reach; })[0] || null;
+    }
     function setCursor(p) {
       var z = zone(p);
-      canvas.style.cursor = z === "price" ? "ns-resize" : z === "time" ? "ew-resize" : st.tool === "cursor" ? (drag ? "grabbing" : "grab") : st.tool === "erase" ? "pointer" : "crosshair";
+      var over = z === "plot" && st.tool === "cursor" && !drag ? (handleAt(p, 10) ? "pointer" : hit(p) >= 0 ? "move" : null) : null;
+      canvas.style.cursor = z === "price" ? "ns-resize" : z === "time" ? "ew-resize" : over ? over : st.tool === "cursor" ? (drag ? "grabbing" : "grab") : st.tool === "erase" ? "pointer" : "crosshair";
     }
     function setTool(name, quiet) { st.tool = name; st.draft = null; if (!quiet && opts.onTool) opts.onTool(name); redraw(); }
 
@@ -291,9 +314,18 @@
       if (p.x > plotW && p.y > plotH) { st.autoY = true; redraw(); return; }   // the AUTO corner
       if (z === "price") { st.autoY = false; drag = { mode: "scaleY", y: p.y, y0: st.y0, y1: st.y1 }; }
       else if (z === "time") drag = { mode: "scaleX", x: p.x, barW: st.barW };
-      else if (st.tool === "cursor") drag = { mode: "pan", x: p.x, y: p.y, right: st.right, y0: st.y0, y1: st.y1 };
-      else if (st.tool === "hline") { st.drawings.push({ type: "hline", a: point(p) }); setTool("cursor"); }
-      else if (st.tool === "erase") { var k = hit(p); if (k >= 0) st.drawings.splice(k, 1); }
+      else if (st.tool === "cursor") {
+        // a drawing under the pointer is picked up; empty chart is dragged around
+        var reach = e.pointerType === "touch" ? 18 : 10, hd = handleAt(p, reach), k2 = hd ? st.sel : hit(p);
+        if (hd) drag = { mode: "handle", h: hd };
+        else if (k2 >= 0) {
+          st.sel = k2;
+          drag = { mode: "moveDraw", i: iOf(p.x), p: pOf(p.y), orig: JSON.parse(JSON.stringify(st.drawings[k2])) };
+        } else { st.sel = -1; drag = { mode: "pan", x: p.x, y: p.y, right: st.right, y0: st.y0, y1: st.y1 }; }
+        if (opts.onSelect) opts.onSelect(st.sel >= 0);
+      }
+      else if (st.tool === "hline") { st.drawings.push({ type: "hline", a: point(p) }); st.sel = st.drawings.length - 1; setTool("cursor"); if (opts.onSelect) opts.onSelect(true); }
+      else if (st.tool === "erase") { var k = hit(p); if (k >= 0) { st.drawings.splice(k, 1); st.sel = -1; } }
       else { drag = { mode: "draw", x: p.x, y: p.y }; st.draft = { type: st.tool, a: point(p), b: point(p) }; }
       setCursor(p); redraw();
     });
@@ -319,6 +351,13 @@
         } else if (drag.mode === "scaleX") {
           st.barW = clamp(drag.barW * Math.exp((drag.x - p.x) * 0.006), 2, 60); limitRight();
         } else if (drag.mode === "draw" && st.draft) st.draft.b = point(p);
+        else if (drag.mode === "handle") drag.h.set(point(p));
+        else if (drag.mode === "moveDraw" && st.drawings[st.sel]) {
+          var dsel = st.drawings[st.sel], di = iOf(p.x) - drag.i, dpr = pOf(p.y) - drag.p;
+          ["a", "b"].forEach(function (key) {
+            if (drag.orig[key]) dsel[key] = { t: drag.orig[key].t != null ? tAt(iAt(drag.orig[key].t) + di) : undefined, p: snap(drag.orig[key].p + dpr) };
+          });
+        }
       }
       setCursor(p); redraw();
     });
@@ -326,7 +365,7 @@
       delete ptrs[e.pointerId];
       if (drag && drag.mode === "draw" && st.draft) {
         var p = local(e);
-        if (Math.hypot(p.x - drag.x, p.y - drag.y) > 5) { st.drawings.push(st.draft); st.draft = null; drag = null; setTool("cursor"); }
+        if (Math.hypot(p.x - drag.x, p.y - drag.y) > 5) { st.drawings.push(st.draft); st.sel = st.drawings.length - 1; st.draft = null; drag = null; setTool("cursor"); if (opts.onSelect) opts.onSelect(true); }
         st.draft = null;
       }
       if (!Object.keys(ptrs).length || (drag && drag.mode === "pinch")) drag = null;
@@ -351,6 +390,17 @@
       if (zone(local(e)) === "price") st.autoY = true; else fit();
       redraw();
     });
+    function removeSelected() {
+      if (!st.drawings[st.sel]) return false;
+      st.drawings.splice(st.sel, 1); st.sel = -1;
+      if (opts.onSelect) opts.onSelect(false);
+      redraw(); return true;
+    }
+    root.addEventListener("keydown", function (e) {
+      if (/^(INPUT|SELECT|TEXTAREA)$/.test((e.target && e.target.tagName) || "")) return;
+      if ((e.key === "Delete" || e.key === "Backspace") && removeSelected()) e.preventDefault();
+      else if (e.key === "Escape" && (st.sel >= 0 || st.tool !== "cursor")) { st.sel = -1; setTool("cursor"); if (opts.onSelect) opts.onSelect(false); }
+    });
     if (root.ResizeObserver) new ResizeObserver(redraw).observe(canvas);
     else root.addEventListener("resize", redraw);
 
@@ -370,7 +420,7 @@
           gaps.sort(function (x, y) { return x - y; });
           if (gaps.length) st.dt = gaps[Math.floor(gaps.length / 4)] || st.dt;    // the usual gap, ignoring breaks
         }
-        if (mode === true || mode === "reset" || !fitted) { fitted = false; st.drawings = []; st.draft = null; }
+        if (mode === true || mode === "reset" || !fitted) { fitted = false; st.drawings = []; st.draft = null; st.sel = -1; }
         else if (mode === "regroup" && tRight != null) {
           st.barW = clamp(st.barW * st.dt / oldDt, 2, 60);
           st.right = iAt(tRight);
@@ -383,8 +433,9 @@
       setLines: function (lines) { st.lines = (lines || []).filter(function (l) { return l && isFinite(l.price); }); redraw(); },
       setTool: function (name) { setTool(name, true); },
       getTool: function () { return st.tool; },
-      undo: function () { st.drawings.pop(); redraw(); },
-      clearDrawings: function () { st.drawings = []; st.draft = null; redraw(); },
+      undo: function () { st.drawings.pop(); st.sel = -1; if (opts.onSelect) opts.onSelect(false); redraw(); },
+      clearDrawings: function () { st.drawings = []; st.draft = null; st.sel = -1; if (opts.onSelect) opts.onSelect(false); redraw(); },
+      removeSelected: removeSelected,
       drawings: function () { return st.drawings.slice(); },
       resetView: function () { fit(); redraw(); },
       view: function () { return { barWidth: st.barW, right: st.right, autoPrice: st.autoY, low: st.y0, high: st.y1 }; },

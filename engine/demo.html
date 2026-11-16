@@ -37,6 +37,7 @@ select, input[type=number] { font: 500 .92rem var(--mono); padding: .4rem .5rem;
 @media (max-width: 999px) { #cv { height: 420px; } }
 .tools { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .45rem; }
 .tools button { font: 600 .8rem var(--sans); padding: .3rem .6rem; min-height: 34px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--ink); cursor: pointer; }
+.tools button:disabled { opacity: .4; cursor: not-allowed; }
 .tools button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
 .tools .gap { flex: 1 1 auto; }
 /* the replay bar: sits under the chart like a video player's controls, so it never hides a candle */
@@ -100,6 +101,7 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
           <button type="button" data-tool="measure" aria-pressed="false" title="Drag to measure points, % and candles">Measure</button>
           <button type="button" data-tool="erase" aria-pressed="false" title="Click a drawing to delete it">Eraser</button>
           <span class="gap"></span>
+          <button type="button" id="delBtn" disabled title="Delete the selected drawing (Delete key)">Delete selected</button>
           <button type="button" id="undoBtn">Undo</button>
           <button type="button" id="clearBtn">Clear drawings</button>
           <button type="button" id="resetBtn">Reset view</button>
@@ -156,9 +158,9 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
   </div>
 </div>
 
-<script src="/engine/instruments.js?v=4"></script>
-<script src="/engine/replay.js?v=4"></script>
-<script src="/engine/chart.js?v=4"></script>
+<script src="/engine/instruments.js?v=5"></script>
+<script src="/engine/replay.js?v=5"></script>
+<script src="/engine/chart.js?v=5"></script>
 <script>
 (function () {
   var E = window.BXEngine, $ = function (id) { return document.getElementById(id); };
@@ -184,7 +186,8 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
   /* ---------- chart + tools ---------- */
   var toolBtns = Array.prototype.slice.call(document.querySelectorAll(".tools [data-tool]"));
   function showTool(name) { toolBtns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.tool === name)); }); }
-  var chart = window.BXChart.create($("cv"), { onTool: showTool });
+  var chart = window.BXChart.create($("cv"), { onTool: showTool, onSelect: function (on) { $("delBtn").disabled = !on; } });
+  $("delBtn").onclick = function () { chart.removeSelected(); };
   toolBtns.forEach(function (b) { b.onclick = function () { chart.setTool(b.dataset.tool); showTool(b.dataset.tool); }; });
   $("undoBtn").onclick = chart.undo; $("clearBtn").onclick = chart.clearDrawings; $("resetBtn").onclick = chart.resetView;
 
@@ -213,7 +216,7 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
     });
     var same = market().timeframes.filter(function (t) { return baseOf(t) === base; });
     $("hint").textContent = "This replay runs on " + base + " data. " + (same.length > 1 ? "Switch between " + same.join(", ") + " and you keep your place; " : "") +
-      "the greyed timeframes open a new chart. Space = play, arrow keys = step. Drag the chart to move it, scroll to zoom, drag the price scale to stretch it.";
+      "the greyed timeframes open a new chart. Space = play, arrow keys = step. Drag the chart to move it, scroll to zoom, drag the price scale to stretch it. Click a drawing to select it, then drag it or its round grab points to adjust it.";
   }
   function setTf(t) {
     if (S && baseOf(t) === base) { tf = t; fillSkip(); showTf(); render("regroup"); }
