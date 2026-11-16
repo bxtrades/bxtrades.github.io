@@ -149,7 +149,7 @@ html { scroll-padding-top: 76px; }
 .roadmap li.done span { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--muted); }
 .roadmap li.done::after { content: "done"; font-family: var(--mono); font-size: .75rem; color: var(--green); }
 .roadmap li.now span { -webkit-box-decoration-break: clone; box-decoration-break: clone; background: linear-gradient(transparent 55%, var(--hi) 55%, var(--hi) 92%, transparent 92%); }
-.roadmap li.now::after { content: "← you are here"; font-family: var(--mono); font-size: .75rem; }
+.roadmap li.now::after { content: "← bx is here"; font-family: var(--mono); font-size: .75rem; }
 .roadmap li > span, .roadmap li > small { grid-column: 2; justify-self: start; }
 .roadmap li { row-gap: .1rem; }
 .roadmap li > small { grid-row: 2; }
