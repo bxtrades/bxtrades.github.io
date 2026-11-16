@@ -572,41 +572,62 @@ if (heroDc || document.querySelector("[data-dc]")) fetch("https://discord.com/ap
   });
 })();
 
-// --- Candle Clash leaderboard ---
-// Reads data/candle-clash.json. To update it, open that file on GitHub, change the
-// names and scores, and commit. If the "players" list is empty the board stays hidden.
+// --- Candle Clash leaderboard (live from the game's Supabase database) ---
+// Settings live in /clash-config.js. Shows the longest current streaks and how many
+// people played today. If the database can't be reached, the board just stays hidden.
 (function () {
   const board = document.getElementById("clash-board");
-  if (!board) return;
-  fetch("/data/candle-clash.json", { cache: "no-cache" })
-    .then(r => r.ok ? r.json() : Promise.reject())
-    .then(d => {
-      const players = (d.players || []).filter(p => p && p.name)
-        .sort((a, b) => (b.correct || 0) - (a.correct || 0) || (a.played || 0) - (b.played || 0))
-        .slice(0, 10);
-      if (!players.length) return;
-      if (d.title) document.getElementById("cb-title").textContent = d.title;
-      if (d.updated) {
-        const when = new Date(d.updated + "T12:00:00");
-        document.getElementById("cb-updated").textContent = "Updated " +
-          (isNaN(when) ? d.updated : when.toLocaleDateString(undefined, { day: "numeric", month: "long" })) + ".";
-      }
-      const list = document.getElementById("cb-list");
+  const cfg = window.CLASH_CFG || {};
+  if (!board || !cfg.url || !cfg.key) return;
+  const head = { apikey: cfg.key, Authorization: "Bearer " + cfg.key };
+  const base = cfg.url.replace(/\/$/, "") + "/rest/v1/";
+  const get = path => fetch(base + path, { headers: head, cache: "no-store" }).then(r => r.ok ? r.json() : Promise.reject());
+  const pad = n => String(n).padStart(2, "0");
+  const key = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  const toDate = k => { const p = k.split("-").map(Number); return new Date(p[0], p[1] - 1, p[2]); };
+  const gap = (a, b) => Math.round((toDate(b) - toDate(a)) / 86400000);
+
+  Promise.all([get("clash_players?select=id,nick"), get("clash_scores?select=player,day,correct&order=day.asc&limit=10000")])
+    .then(([players, scores]) => {
+      const today = key(new Date());
+      const byPlayer = {};
+      scores.forEach(s => { (byPlayer[s.player] = byPlayer[s.player] || []).push(s); });
+      const rows = [];
+      let playedToday = 0;
       players.forEach(p => {
+        const days = byPlayer[p.id] || [];
+        if (!days.length) return;
+        // Current streak: correct calls on back-to-back days, still alive if the last one was today or yesterday.
+        let run = 0, prev = null, wins = 0;
+        days.forEach(d => {
+          if (d.correct) { wins++; run = (prev && gap(prev, d.day) === 1 && run > 0) ? run + 1 : 1; } else run = 0;
+          prev = d.day;
+        });
+        const last = days[days.length - 1];
+        if (last.day === today) playedToday++;
+        const streak = gap(last.day, today) <= 1 && last.correct ? run : 0;
+        rows.push({ nick: p.nick, streak, wins, played: days.length });
+      });
+      if (!rows.length) return;
+      rows.sort((a, b) => b.streak - a.streak || b.wins - a.wins || a.played - b.played);
+      const list = document.getElementById("cb-list");
+      rows.slice(0, 10).forEach(r => {
         const li = document.createElement("li");
         const name = document.createElement("span");
-        name.textContent = p.name;
+        name.textContent = r.nick;
         const score = document.createElement("span");
         score.className = "cb-score";
-        score.textContent = (p.correct || 0) + " right";
-        if (p.played) {
-          const of = document.createElement("small");
-          of.textContent = " / " + p.played;
-          score.appendChild(of);
-        }
+        score.textContent = r.streak + " streak";
+        const of = document.createElement("small");
+        of.textContent = " · " + r.wins + "/" + r.played + " right";
+        score.appendChild(of);
         li.append(name, score);
         list.appendChild(li);
       });
+      document.getElementById("cb-updated").textContent =
+        playedToday ? playedToday + (playedToday === 1 ? " person has" : " people have") + " played today." : "Nobody's played today's chart yet.";
+      const t = document.getElementById("clash-today");
+      if (t) { t.textContent = rows.length + (rows.length === 1 ? " player" : " players") + " on the board so far."; t.hidden = false; }
       board.hidden = false;
     })
     .catch(() => {});

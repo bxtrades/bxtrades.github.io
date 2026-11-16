@@ -87,7 +87,7 @@
       <li><span class="step-n">1</span><h3>Watch the basics</h3><p><a href="https://www.tiktok.com/@bxtrades_/video/7695536751363853600" target="_blank" rel="noopener">Candlesticks</a>, then <a href="https://www.tiktok.com/@bxtrades_/video/7696507411435113760" target="_blank" rel="noopener">Timeframes</a>, then <a href="https://www.tiktok.com/@bxtrades_/video/7696940688981773600" target="_blank" rel="noopener">Trends and ranges</a>. About a minute each.</p></li>
       <li><span class="step-n">2</span><h3>Learn the words</h3><p>FVG, SMT, liquidity sweep... the <a href="/glossary">glossary</a> explains every term, and the <a href="/cheatsheet">free cheat sheet</a> fits the basics on one page.</p></li>
       <li><span class="step-n">3</span><h3>Practise for free</h3><p>Paper trade first. Use the <a href="/tracker">eval tracker</a> and <a href="/prop-calculator">risk calculator</a> like it's a real account.</p></li>
-      <li><span class="step-n">4</span><h3>Join the Discord</h3><p>Play <a href="#community">Candle Clash</a> every day and ask questions when you're stuck.</p></li>
+      <li><span class="step-n">4</span><h3>Join the Discord</h3><p>Play <a href="/clash">Candle Clash</a> every day and ask questions when you're stuck.</p></li>
     </ol>
   </section>
 
@@ -188,7 +188,7 @@
           <h3>What's in there</h3>
           <p class="dc-count" id="dc-count" hidden><span><b id="dc-members">–</b> members</span><span class="dc-online"><b id="dc-online">–</b> online now</span></p>
           <ul class="ticks">
-            <li><strong>Candle Clash</strong> every weekday, with a reminder so you don't forget</li>
+            <li>A reminder for <strong>Candle Clash</strong> every weekday, so you don't lose your streak</li>
             <li>A <strong>ping when I go live</strong> on TikTok</li>
             <li>Post your charts and get a second opinion</li>
             <li>Ask the "stupid" questions. Everyone here started at zero</li>
@@ -197,31 +197,26 @@
           <a class="btn primary full" href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener" data-goatcounter-click="community-discord" data-goatcounter-title="Community: Discord">Join BXT's Community</a>
           <p class="safe-note">Free to join. Nobody from BXTrades will ever DM you asking for money or to invest.</p>
         </div>
-      <div class="game">
-        <p class="eyebrow">Daily game</p>
+        <div class="game">
+        <p class="eyebrow">Daily game · free, no sign-up</p>
         <h3>Candle Clash</h3>
-        <p>Each day, call whether <strong>NQ</strong> closes <span class="green">up</span> or <span class="red">down</span>. Get it right, climb the leaderboard.</p>
-        <div class="vote">
-          <button class="up" type="button" onclick="vote('up')">▲ UP</button>
-          <button class="down" type="button" onclick="vote('down')">▼ DOWN</button>
+        <p>One <strong>real NQ chart</strong> a day with the last 20 candles hidden. Call it: does price finish <span class="green">higher</span> or <span class="red">lower</span>? Get it right to build your streak and climb the leaderboard.</p>
+        <a class="btn primary full" href="/clash" data-goatcounter-click="home-play-clash" data-goatcounter-title="Home: Play Candle Clash">Play today's chart →</a>
+        <p class="small" id="clash-today" style="margin-top:.8rem" hidden></p>
         </div>
-        <p class="small" id="vote-msg">Pick a side here, then post it in the Discord.</p>
-        <p class="streak" id="streak"></p>
-        <div class="lock" id="lock"><span class="small">Votes lock at the New York open</span><b id="lock-time">–</b></div>
-      </div>
       </div>
 
       <div class="how-clash" aria-label="How Candle Clash works">
-        <div><b>1 · before the open</b>Call whether NQ closes up or down today, here or in the Discord.</div>
-        <div><b>2 · 9:30am New York</b>Votes lock when the market opens. No changing your mind.</div>
-        <div><b>3 · at the close</b>Get it right and you climb the leaderboard. Keep a streak going.</div>
+        <div><b>1 · look at the chart</b>A real stretch of NQ futures. Mark your levels with the drawing tools if you like.</div>
+        <div><b>2 · make one call</b>Higher or lower once the hidden 20 candles play out? One go per day, no take-backs.</div>
+        <div><b>3 · watch the reveal</b>Right calls build your streak. Pick a name once and you're on the leaderboard.</div>
       </div>
 
       <div class="clash-board" id="clash-board" hidden>
-        <p class="eyebrow">Candle Clash leaderboard</p>
-        <h3 id="cb-title">Top callers</h3>
+        <p class="eyebrow">Candle Clash leaderboard · live</p>
+        <h3 id="cb-title">Longest streaks right now</h3>
         <ol id="cb-list"></ol>
-        <p class="small" style="margin-top:.8rem"><span id="cb-updated"></span> Scores come from the Discord. <a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener">Join to get on the board →</a></p>
+        <p class="small" style="margin-top:.8rem"><span id="cb-updated"></span> <a href="/clash">Play today's chart to get on the board →</a></p>
       </div>
     </div>
   </section>
@@ -286,7 +281,7 @@
       <details><summary>Which prop firm should I pick?</summary><p>The one whose rules you can actually live with. Compare the profit target, the max drawdown (and whether it trails), any daily loss limit, and the price. My <a href="/prop-calculator">risk calculator</a> has common firms built in. I have a 40% off code for <a href="#deal">TradersScale</a>, but that's an affiliate code, so don't pick a firm just because of a discount.</p></details>
       <details><summary>What are ES and NQ?</summary><p>Futures contracts on the US stock market. <strong>ES</strong> follows the S&amp;P 500 and <strong>NQ</strong> follows the Nasdaq-100. One point on NQ is worth $20 per contract and on ES $50. The micro versions, <strong>MNQ</strong> and <strong>MES</strong>, are a tenth of the size, which is why beginners often start with them.</p></details>
       <details><summary>What do all the words in your annotations mean?</summary><p>FVG, SMT, AMD, liquidity sweep and the rest are all explained in plain English in the <a href="/glossary">glossary</a>, with links to my videos where I've made one.</p></details>
-      <details><summary>How do I play Candle Clash?</summary><p>Join the <a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener">Discord</a>. Each day there's a reminder post: call whether NQ closes up or down, and the leaderboard tracks who reads the market best.</p></details>
+      <details><summary>How do I play Candle Clash?</summary><p>Open <a href="/clash">bxtrades.com/clash</a>. Each day there's one real NQ chart with the last 20 candles hidden: call higher or lower, then watch the reveal. Pick a name once and your streak shows on the leaderboard, here and in the game. No account needed. There's a reminder in the <a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener">Discord</a> every weekday morning.</p></details>
       <details><summary>Are you a broker? Can I invest with you?</summary><p>No. BXTrades is my personal education page: videos, backtests and free tools. I'm not a broker or investment firm, I never manage anyone's money, and I'll never DM you asking you to invest. If anyone messages you claiming to be me and offering to trade for you, it's a scam. Please report it and let me know in the Discord.</p></details>
       <details><summary>Is any of this financial advice?</summary><p>No. Everything here is education and entertainment. I'm a student, not a financial adviser. Futures are risky and most people who try to trade them lose money.</p></details>
     </div>
@@ -304,6 +299,7 @@
       <a href="/sessions">Session clock</a>
       <a href="/glossary">Glossary</a>
       <a href="/cheatsheet">Cheat sheet</a>
+      <a href="/clash">Candle Clash</a>
       <a href="/#faq">FAQ</a>
       <a href="/#deal">TradersScale 40% off</a>
       <a href="/media">Media kit</a>
@@ -331,6 +327,7 @@
     </div>
   </dialog>
 
+  <script src="/clash-config.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

@@ -1,6 +1,0 @@
-{
-  "how_to_update": "Change the names and scores below, set 'updated' to today's date (YYYY-MM-DD), then commit. 'correct' = right calls, 'played' = days they voted. Leave 'players' empty to hide the board. Use Discord display names only, never real names.",
-  "title": "This week's top callers",
-  "updated": "",
-  "players": []
-}
