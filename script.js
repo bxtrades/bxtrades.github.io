@@ -65,7 +65,7 @@ const latest = VIDEOS[VIDEOS.length - 1];
 if (latestBox && latest) {
   const id = (latest.link.match(/video\/(\d+)/) || [])[1];
   latestBox.innerHTML = `
-    <div class="lt-frame">${id ? `<iframe src="https://www.tiktok.com/player/v1/${id}?rel=0&description=0&music_info=0" loading="lazy" allow="fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="Latest TikTok: ${latest.title}"></iframe>` : ""}</div>
+    <div class="lt-frame">${id ? `<blockquote class="tiktok-embed" cite="${latest.link}" data-video-id="${id}"><section><a href="${latest.link}" target="_blank" rel="noopener">${latest.title} on TikTok</a></section></blockquote>` : ""}</div>
     <div class="lt-text">
       <p class="lt-label">Latest on TikTok · Part ${VIDEOS.length}</p>
       <h3>${latest.title}</h3>
@@ -73,6 +73,7 @@ if (latestBox && latest) {
       <a class="btn" href="${latest.link}" target="_blank" rel="noopener">Watch on TikTok</a>
     </div>`;
   latestBox.hidden = false;
+  if (id) { const tt = document.createElement("script"); tt.src = "https://www.tiktok.com/embed.js"; tt.async = true; document.body.appendChild(tt); }
 }
 
 // --- Earlier videos (newest first, only 3 shown until "Show all") ---
@@ -789,31 +790,5 @@ if ("serviceWorker" in navigator) {
   }).observe(host, { childList: true, subtree: true });
 })();
 
-// --- Tap to play: TikTok videos open in a pop-up player, so visitors stay on the site ---
-(function videoPlayer() {
-  const list = document.getElementById("videos");
-  if (!list || !window.HTMLDialogElement) return;
-  const box = document.createElement("dialog");
-  box.className = "vplayer";
-  box.innerHTML = '<div class="vp-head"><span class="vp-title"></span><button type="button" class="vp-close" aria-label="Close video">✕</button></div>' +
-    '<div class="vp-frame"></div><a class="vp-out" target="_blank" rel="noopener">Open in TikTok →</a>';
-  document.body.appendChild(box);
-  const frame = box.querySelector(".vp-frame");
-  box.addEventListener("close", function () { frame.innerHTML = ""; });
-  box.querySelector(".vp-close").addEventListener("click", function () { box.close(); });
-  box.addEventListener("click", function (e) { if (e.target === box) box.close(); });
-  list.querySelectorAll(".watch").forEach(function (w) { w.textContent = "▶ Play"; });
-  list.addEventListener("click", function (e) {
-    const a = e.target.closest("a");
-    if (!a || e.ctrlKey || e.metaKey || e.shiftKey) return;
-    const m = a.href.match(/video\/(\d+)/);
-    if (!m) return;
-    e.preventDefault();
-    const h = a.querySelector("h4");
-    box.querySelector(".vp-title").textContent = h ? h.textContent : "";
-    box.querySelector(".vp-out").href = a.href;
-    frame.innerHTML = '<iframe src="https://www.tiktok.com/player/v1/' + m[1] + '?autoplay=1&rel=0&description=0&music_info=0"' +
-      ' allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="TikTok video"></iframe>';
-    box.showModal();
-  });
-})();
+// (The old pop-up player was removed: TikTok now blocks its direct player links, so the
+//  earlier videos open in TikTok in a new tab. The latest video above uses TikTok's own embed.)
