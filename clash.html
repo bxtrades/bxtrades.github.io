@@ -127,6 +127,16 @@ button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid
 .tools button:disabled{opacity:.4;cursor:default}
 .tools-gap{flex:1}
 .toggles{display:inline-flex;flex-wrap:wrap;gap:.9rem}
+.crowd{margin-top:.8rem;padding:.7rem .8rem;border:1px solid var(--line);border-radius:10px}
+.crowd p{margin:0}
+.crowd-head{font-weight:700}
+.crowd-bar{display:flex;height:10px;border-radius:99px;overflow:hidden;margin:.5rem 0;background:var(--line)}
+.crowd-bar span{display:block;height:100%;transition:width .4s}
+.cb-up{background:var(--up)}
+.cb-down{background:var(--down,#e5484d)}
+.crowd-sub{font-size:.9em;opacity:.8}
+.discord-cta{margin-top:.8rem;font-size:.95em}
+.discord-cta a{font-weight:700}
 canvas.drawing{cursor:crosshair;touch-action:none}
 .prac{display:flex;flex-wrap:wrap;gap:.6rem 1rem;margin:0 0 .9rem}
 .prac label{display:inline-flex;align-items:center;gap:.45rem;font-weight:700}
@@ -285,6 +295,12 @@ canvas.trading{touch-action:none}
     <h2 id="resTitle"></h2>
     <p id="resBody"></p>
     <p id="resWhen" class="when"></p>
+    <div class="crowd" id="resCrowd" hidden>
+      <p class="crowd-head" id="crowdHead"></p>
+      <div class="crowd-bar" aria-hidden="true"><span class="cb-up" id="crowdUp"></span><span class="cb-down" id="crowdDown"></span></div>
+      <p class="crowd-sub" id="crowdSub"></p>
+    </div>
+    <p class="discord-cta" id="resDiscord" hidden>Talk about today’s chart with other traders: <a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener">join BXT’s Community on Discord</a></p>
     <div class="row">
       <button class="btn" id="btnCopy">Share result</button>
       <button class="btn" id="btnNext" hidden>Next chart</button>
@@ -395,10 +411,14 @@ canvas.trading{touch-action:none}
 
   // ---------- dates ----------
   function pad(n){ return String(n).padStart(2, "0"); }
-  function todayKey(){ var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
+  // Everyone gets the same chart on the same day: the day turns over at UK midnight,
+  // wherever the player is, so the "today" leaderboard always compares the same chart.
+  var fmtUKDate = new Intl.DateTimeFormat("en-GB", { timeZone:"Europe/London", year:"numeric", month:"2-digit", day:"2-digit" });
+  function ukToday(){ var p = {}; fmtUKDate.formatToParts(new Date()).forEach(function(x){ p[x.type] = +x.value; }); return new Date(p.year, p.month - 1, p.day); }
+  function todayKey(){ var d = ukToday(); return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
   function parseKey(k){ var p = k.split("-").map(Number); return new Date(p[0], p[1]-1, p[2]); }
   function dayDiff(a, b){ return Math.round((b - a) / 86400000); }
-  function dayNumber(){ var d = new Date(); var t = new Date(d.getFullYear(), d.getMonth(), d.getDate()); return Math.max(1, dayDiff(LAUNCH, t) + 1); }
+  function dayNumber(){ var t = ukToday(); return Math.max(1, dayDiff(LAUNCH, t) + 1); }
 
   // ---------- random ----------
   function hashStr(s){ var h = 2166136261; for (var i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -805,10 +825,12 @@ canvas.trading{touch-action:none}
     $("btnCopy").hidden = mode !== "daily";
     $("btnNext").hidden = mode !== "practice";
     $("countdown").hidden = mode !== "daily";
+    $("resDiscord").hidden = mode !== "daily";
     $("shareBox").hidden = true;
+    renderCrowd();
     updateCountdown();
   }
-  function hideResult(){ $("result").hidden = true; hideExplain(); rpStop(); $("replayBar").hidden = true; }
+  function hideResult(){ $("result").hidden = true; $("resCrowd").hidden = true; hideExplain(); rpStop(); $("replayBar").hidden = true; }
 
   function startDaily(){
     stopAnim(); mode = "daily"; loadedDay = todayKey(); applyDifficulty("normal");
@@ -816,7 +838,7 @@ canvas.trading{touch-action:none}
     var rec = store.daily[loadedDay];
     if (playedToday(rec)){ guess = rec.guess; revealed = HID; finished = true; }
     else { guess = null; revealed = 0; finished = false; }
-    var d = new Date();
+    var d = ukToday();
     $("sub").textContent = "Chart #" + dayNumber() + ", " + d.toLocaleDateString("en-GB", { weekday:"long", day:"numeric", month:"long" });
     setModeButtons(); setButtons(); renderStats();
     if (finished) showResult(); else hideResult();
@@ -928,8 +950,7 @@ canvas.trading{touch-action:none}
   // ---------- countdown ----------
   function updateCountdown(){
     if (todayKey() !== loadedDay && mode === "daily"){ startDaily(); return; }
-    var now = new Date(), next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-    var mins = Math.max(0, Math.ceil((next - now) / 60000)), h = Math.floor(mins / 60), m = mins % 60;
+    var mins = Math.max(1, 1440 - hm(fmtUK, Date.now() / 1000)), h = Math.floor(mins / 60), m = mins % 60;
     $("countdown").textContent = "Next daily chart in " + (h ? h + "h " : "") + m + "m";
   }
   setInterval(updateCountdown, 30000);
@@ -1106,7 +1127,7 @@ canvas.trading{touch-action:none}
   ];
   var REF_MONDAY = new Date(2026, 10, 2);
   function weekInfo(){
-    var now = new Date(), d0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var d0 = ukToday();
     var mon = new Date(d0); mon.setDate(d0.getDate() - ((d0.getDay() + 6) % 7));
     var sun = new Date(mon); sun.setDate(mon.getDate() + 6);
     var k = function(d){ return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); };
@@ -1342,8 +1363,33 @@ canvas.trading{touch-action:none}
     return rows;
   }
 
+  // Community call: how everyone on the board called today's chart.
+  // Only shown after you've made your own call, so it can't sway your pick.
+  function renderCrowd(){
+    var box = $("resCrowd");
+    var mine = store.daily[loadedDay];
+    if (mode !== "daily" || !finished || !playedToday(mine) || !db || !loaded){ box.hidden = true; return; }
+    var up = 0, down = 0, right = 0, counted = false;
+    Object.keys(players).forEach(function(id){
+      var t = players[id].days[loadedDay];
+      if (!playedToday(t)) return;
+      if (id === uid) counted = true;
+      if (t.guess === "up") up++; else down++;
+      if (t.correct) right++;
+    });
+    if (!counted){ if (mine.guess === "up") up++; else down++; if (mine.correct) right++; }
+    var n = up + down;
+    if (n < 2){ box.hidden = true; return; }
+    var pu = Math.round(up / n * 100), pd = 100 - pu, pr = Math.round(right / n * 100);
+    $("crowdHead").textContent = "Community call: " + pu + "% higher, " + pd + "% lower";
+    $("crowdUp").style.width = pu + "%"; $("crowdDown").style.width = pd + "%";
+    $("crowdSub").textContent = n + " players today · " + pr + "% got it right" + (mine.correct ? (pr <= 40 ? " · you beat most of the crowd 🔥" : "") : "");
+    box.hidden = false;
+  }
+
   function renderBoard(){
     if (!db || !loaded) return;
+    renderCrowd();
     var rows = boardRows();
     lbList.textContent = "";
     var iPlayed = playedToday(store.daily[todayKey()]);
