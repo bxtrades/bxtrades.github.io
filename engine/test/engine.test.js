@@ -260,7 +260,15 @@ test("data loader lists only markets that have data, and reads JSON and CSV", as
   const loader = E.createDataLoader({ baseUrl: dir, fetchText: f => fs.promises.readFile(f, "utf8") });
   const markets = await loader.listMarkets();
   assert.deepEqual(markets.map(m => m.id).sort(), ["MNQ", "NQ"]);
-  assert.deepEqual(markets[0].timeframes, ["5m", "15m", "1h"]);
+  assert.deepEqual(markets[0].timeframes, ["5m", "10m", "15m", "30m", "1h", "2h", "4h"]);
+  assert.deepEqual(markets[0].builtFrom, { "10m": "5m", "30m": "15m", "2h": "1h", "4h": "1h" });
+  const five = (await loader.load("NQ", "5m")).sessions[0].candles, ten = (await loader.load("NQ", "10m")).sessions[0].candles;
+  assert.ok(ten.length >= 40 && ten.length <= 50);
+  const pair = five.filter(c => Math.floor(c.t / 600) === Math.floor(ten[1].t / 600));
+  assert.equal(ten[1].o, pair[0].o); assert.equal(ten[1].c, pair[pair.length - 1].c);
+  assert.equal(ten[1].h, Math.max(...pair.map(c => c.h))); assert.equal(ten[1].l, Math.min(...pair.map(c => c.l)));
+  assert.ok((await loader.load("NQ", "4h")).sessions[0].candles.length >= 15);
+  await assert.rejects(loader.load("NQ", "1m"), /No 1m data/);                // cannot be built from bigger candles
   const d = await loader.load("NQ", "5m");
   assert.ok(d.sessions.length > 50);
   const c = d.sessions[0].candles;

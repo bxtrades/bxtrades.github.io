@@ -1,0 +1,355 @@
+/* BXTrades chart  (window.BXChart)
+ *
+ * The drawing side of the replay: a candlestick chart you can drag, zoom and
+ * annotate. It knows nothing about trading. The engine (replay.js) stays pure
+ * logic; the page hands this file candles and lines to show.
+ *
+ *   var chart = BXChart.create(canvas, { onTool: function (name) {} });
+ *   chart.setFormat({ decimals: 2, tick: 0.25, pointSize: 1, pointName: "point" });
+ *   chart.setData(candles);                 // [{t,o,h,l,c}], call again as candles are revealed
+ *   chart.setLines([{ price, label, kind: "entry" | "stop" | "target" }]);
+ *   chart.setTool("cursor" | "line" | "hline" | "zone" | "measure" | "erase");
+ *   chart.undo(); chart.clearDrawings(); chart.resetView();
+ *
+ * Mouse / touch
+ *   drag the chart          move it (sideways and up/down)
+ *   wheel or pinch          zoom in and out around the pointer
+ *   drag the price scale    stretch or squash prices     (double-click it = back to auto)
+ *   drag the time scale     stretch or squash time
+ *   double-click the chart  reset the view
+ */
+(function (root) {
+  "use strict";
+
+  var BLUE = "#2f6fde";
+  var fmtTime = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  var fmtDay = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", day: "numeric", month: "short" });
+  var fmtFull = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+
+  function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
+  function nice(x) {
+    var p = Math.pow(10, Math.floor(Math.log10(x))), f = x / p;
+    return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+  }
+
+  function create(canvas, opts) {
+    opts = opts || {};
+    var g = canvas.getContext("2d");
+    var st = { candles: [], lines: [], drawings: [], tool: "cursor", barW: 9, right: 0, autoY: true, y0: 0, y1: 1,
+               hover: null, draft: null, fmt: { decimals: 2, tick: 0.01, pointSize: 1, pointName: "point" } };
+    var W = 0, H = 0, AX = 84, TX = 28, plotW = 0, plotH = 0, queued = false, fitted = false;
+    var ptrs = {}, drag = null;
+
+    /* ---------- coordinates ---------- */
+    function xOf(i) { return plotW - (st.right - i + 0.5) * st.barW; }
+    function iOf(x) { return st.right + 0.5 - (plotW - x) / st.barW; }
+    function yOf(p) { return plotH - (p - st.y0) / (st.y1 - st.y0) * plotH; }
+    function pOf(y) { return st.y0 + (plotH - y) / plotH * (st.y1 - st.y0); }
+    function price(v) { return v.toLocaleString("en-GB", { minimumFractionDigits: st.fmt.decimals, maximumFractionDigits: st.fmt.decimals }); }
+    function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+
+    function measureSize() {
+      var dpr = root.devicePixelRatio || 1;
+      W = canvas.clientWidth; H = canvas.clientHeight;
+      canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+      g.setTransform(dpr, 0, 0, dpr, 0, 0);
+      g.font = "600 13px " + (css("--mono") || "monospace");
+      var sample = st.candles.length ? st.candles[st.candles.length - 1].c : 0;
+      AX = Math.max(72, Math.ceil(g.measureText(price(sample)).width) + 26);
+      plotW = Math.max(50, W - AX); plotH = Math.max(50, H - TX);
+    }
+    function fit() {
+      measureSize();
+      var n = st.candles.length;
+      st.barW = clamp(plotW / 70, 4, 16);
+      st.right = n - 1 + 6;                    // a little empty space after the newest candle
+      st.autoY = true; fitted = true;
+    }
+    function autoRange() {
+      var a = Math.floor(iOf(0)) - 1, b = Math.ceil(iOf(plotW)) + 1, lo = Infinity, hi = -Infinity, k;
+      for (k = Math.max(0, a); k <= Math.min(st.candles.length - 1, b); k++) { lo = Math.min(lo, st.candles[k].l); hi = Math.max(hi, st.candles[k].h); }
+      if (lo === Infinity) st.candles.forEach(function (c) { lo = Math.min(lo, c.l); hi = Math.max(hi, c.h); });
+      if (lo === Infinity) { lo = 0; hi = 1; }
+      st.lines.forEach(function (l) { lo = Math.min(lo, l.price); hi = Math.max(hi, l.price); });
+      var pad = (hi - lo) * 0.1 || st.fmt.tick * 10;
+      st.y0 = lo - pad; st.y1 = hi + pad;
+    }
+
+    /* ---------- drawing ---------- */
+    function pill(x, y, text, bg, fg, alignRight) {
+      g.font = "600 12px " + css("--mono");
+      var w = Math.ceil(g.measureText(text).width) + 12, h = 20, left = alignRight ? x - w : x;
+      g.fillStyle = bg; g.beginPath();
+      if (g.roundRect) g.roundRect(left, y - h / 2, w, h, 4); else g.rect(left, y - h / 2, w, h);
+      g.fill();
+      g.fillStyle = fg; g.textAlign = "left"; g.textBaseline = "middle"; g.fillText(text, left + 6, y + 0.5);
+      return w;
+    }
+    function axisTag(p, bg, fg) {
+      var y = yOf(p);
+      if (y < -10 || y > plotH + 10) return;
+      g.fillStyle = bg; g.beginPath();
+      if (g.roundRect) g.roundRect(plotW + 1, y - 11, AX - 3, 22, 4); else g.rect(plotW + 1, y - 11, AX - 3, 22);
+      g.fill();
+      g.font = "600 13px " + css("--mono"); g.fillStyle = fg; g.textAlign = "left"; g.textBaseline = "middle";
+      g.fillText(price(p), plotW + 9, y + 0.5);
+    }
+    function hLine(p, colour, dash, width) {
+      var y = Math.round(yOf(p)) + 0.5;
+      g.strokeStyle = colour; g.lineWidth = width || 1; g.setLineDash(dash || []);
+      g.beginPath(); g.moveTo(0, y); g.lineTo(plotW, y); g.stroke(); g.setLineDash([]);
+    }
+    function measureText(a, b) {
+      var d = b.p - a.p, pts = d / st.fmt.pointSize, pct = a.p ? d / a.p * 100 : 0, bars = Math.round(Math.abs(b.i - a.i));
+      var sign = d >= 0 ? "+" : "−";
+      return sign + Math.abs(pts).toLocaleString("en-GB", { maximumFractionDigits: 2 }) + " " + st.fmt.pointName + "s  (" + sign + Math.abs(pct).toFixed(2) + "%)  ·  " + bars + " candle" + (bars === 1 ? "" : "s");
+    }
+    function drawOne(d, ghost) {
+      var x1, y1, x2, y2;
+      g.globalAlpha = ghost ? 0.7 : 1; g.lineWidth = 2; g.strokeStyle = BLUE; g.setLineDash([]);
+      if (d.type === "hline") { hLine(d.a.p, BLUE, [], 2); g.globalAlpha = 1; return; }
+      x1 = xOf(d.a.i); y1 = yOf(d.a.p); x2 = xOf(d.b.i); y2 = yOf(d.b.p);
+      if (d.type === "line") {
+        g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
+        g.fillStyle = BLUE; [[x1, y1], [x2, y2]].forEach(function (q) { g.beginPath(); g.arc(q[0], q[1], 3, 0, 6.3); g.fill(); });
+      } else if (d.type === "zone") {
+        g.fillStyle = "rgba(47,111,222,.14)"; g.fillRect(x1, y1, x2 - x1, y2 - y1);
+        g.lineWidth = 1.5; g.strokeRect(x1, y1, x2 - x1, y2 - y1);
+      } else if (d.type === "measure") {
+        var up = d.b.p >= d.a.p, col = css(up ? "--green" : "--red");
+        g.globalAlpha = (ghost ? 0.7 : 1) * 0.16; g.fillStyle = col; g.fillRect(x1, y1, x2 - x1, y2 - y1);
+        g.globalAlpha = ghost ? 0.7 : 1; g.strokeStyle = col; g.lineWidth = 1.5;
+        g.beginPath(); g.moveTo((x1 + x2) / 2, y1); g.lineTo((x1 + x2) / 2, y2); g.stroke();
+        var txt = measureText(d.a, d.b);
+        g.font = "600 12px " + css("--mono");
+        var w = g.measureText(txt).width + 12, cx = clamp((x1 + x2) / 2 - w / 2, 4, plotW - w - 4);
+        pill(cx, clamp(up ? y2 - 14 : y2 + 14, 12, plotH - 12), txt, col, "#fff");
+      }
+      g.globalAlpha = 1;
+    }
+    function draw() {
+      queued = false;
+      measureSize();
+      if (!fitted && st.candles.length) fit();
+      if (st.autoY) autoRange();
+      var ink = css("--ink"), muted = css("--muted"), rule = css("--rule"), card = css("--card"), paper = css("--paper"), green = css("--green"), red = css("--red");
+      var mono = css("--mono"), n = st.candles.length, k;
+      g.clearRect(0, 0, W, H);
+
+      // grid + price labels on round numbers
+      var step = Math.max(nice((st.y1 - st.y0) / Math.max(2, plotH / 52)), st.fmt.tick), labels = [];
+      for (var v = Math.ceil(st.y0 / step) * step; v <= st.y1; v += step) {
+        var gy = Math.round(yOf(v)) + 0.5;
+        g.strokeStyle = rule; g.globalAlpha = 0.6; g.lineWidth = 1; g.beginPath(); g.moveTo(0, gy); g.lineTo(plotW, gy); g.stroke(); g.globalAlpha = 1;
+        labels.push(v);
+      }
+      // time labels
+      var every = Math.max(1, Math.ceil(84 / st.barW)), times = [], lastDay = null;
+      for (k = Math.max(0, Math.ceil(iOf(0) / every) * every); k < n && xOf(k) <= plotW; k += every) {
+        var dt = new Date(st.candles[k].t * 1000), day = fmtDay.format(dt), isNewDay = day !== lastDay;
+        times.push({ x: xOf(k), text: isNewDay ? day + " " + fmtTime.format(dt) : fmtTime.format(dt), bold: isNewDay });
+        lastDay = day;
+        g.strokeStyle = rule; g.globalAlpha = 0.35; g.beginPath(); g.moveTo(Math.round(xOf(k)) + 0.5, 0); g.lineTo(Math.round(xOf(k)) + 0.5, plotH); g.stroke(); g.globalAlpha = 1;
+      }
+
+      g.save(); g.beginPath(); g.rect(0, 0, plotW, plotH); g.clip();
+      // candles
+      var bw = Math.max(1, Math.floor(st.barW * 0.7));
+      for (k = Math.max(0, Math.floor(iOf(0)) - 1); k < n && k <= Math.ceil(iOf(plotW)) + 1; k++) {
+        var c = st.candles[k], x = Math.round(xOf(k)), up = c.c >= c.o;
+        g.strokeStyle = g.fillStyle = up ? green : red; g.lineWidth = 1;
+        g.beginPath(); g.moveTo(x + 0.5, yOf(c.h)); g.lineTo(x + 0.5, yOf(c.l)); g.stroke();
+        var top = yOf(Math.max(c.o, c.c)), hgt = Math.max(1, Math.abs(yOf(c.o) - yOf(c.c)));
+        g.fillRect(x - Math.floor(bw / 2), top, bw, hgt);
+      }
+      st.drawings.forEach(function (d) { drawOne(d, false); });
+      if (st.draft) drawOne(st.draft, true);
+      // position / order lines, with a plain-English label on the left
+      var colours = { entry: ink, stop: red, target: green, order: BLUE };
+      st.lines.forEach(function (l) {
+        var col = colours[l.kind] || ink;
+        hLine(l.price, col, l.kind === "entry" ? [] : [6, 4], 1.5);
+        if (l.label) pill(6, clamp(yOf(l.price), 12, plotH - 12), l.label, col, l.kind === "entry" ? paper : "#fff");
+      });
+      // last price line
+      var last = n ? st.candles[n - 1] : null;
+      if (last) hLine(last.c, last.c >= last.o ? green : red, [2, 3], 1);
+      // crosshair
+      var hv = st.hover;
+      if (hv && hv.x <= plotW && hv.y <= plotH && !drag) {
+        g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([4, 4]);
+        g.beginPath(); g.moveTo(0, Math.round(hv.y) + 0.5); g.lineTo(plotW, Math.round(hv.y) + 0.5);
+        g.moveTo(Math.round(hv.x) + 0.5, 0); g.lineTo(Math.round(hv.x) + 0.5, plotH); g.stroke(); g.setLineDash([]);
+      }
+      g.restore();
+
+      // scales: solid panels so nothing shows through
+      g.fillStyle = card; g.fillRect(plotW, 0, AX, H); g.fillRect(0, plotH, W, TX);
+      g.strokeStyle = rule; g.lineWidth = 1; g.beginPath(); g.moveTo(plotW + 0.5, 0); g.lineTo(plotW + 0.5, plotH); g.moveTo(0, plotH + 0.5); g.lineTo(W, plotH + 0.5); g.stroke();
+      g.font = "500 13px " + mono; g.fillStyle = ink; g.textAlign = "left"; g.textBaseline = "middle";
+      // plain labels step aside for the coloured tags so numbers never sit on top of each other
+      var taken = st.lines.map(function (l) { return yOf(l.price); });
+      st.drawings.forEach(function (d) { if (d.type === "hline") taken.push(yOf(d.a.p)); });
+      if (n) taken.push(yOf(st.candles[n - 1].c));
+      if (st.hover && st.hover.x <= plotW && st.hover.y <= plotH && !drag) taken.push(st.hover.y);
+      labels.forEach(function (p) {
+        var y = yOf(p);
+        if (y > 9 && y < plotH - 6 && !taken.some(function (t) { return Math.abs(t - y) < 19; })) g.fillText(price(p), plotW + 9, y + 0.5);
+      });
+      g.textAlign = "center";
+      times.forEach(function (t) { if (t.x > 24 && t.x < plotW - 24) { g.font = (t.bold ? "600" : "500") + " 12px " + mono; g.fillStyle = t.bold ? ink : muted; g.fillText(t.text, t.x, plotH + TX / 2 + 1); } });
+      g.textAlign = "left";
+
+      // tags on the price scale: drawings, your levels, then the live price on top
+      st.drawings.forEach(function (d) { if (d.type === "hline") axisTag(d.a.p, BLUE, "#fff"); });
+      st.lines.forEach(function (l) { axisTag(l.price, colours[l.kind] || ink, l.kind === "entry" ? paper : "#fff"); });
+      if (last) axisTag(last.c, last.c >= last.o ? green : red, "#fff");
+      if (hv && hv.x <= plotW && hv.y <= plotH && !drag) {
+        axisTag(snap(pOf(hv.y)), muted, paper);
+        var hi = Math.round(iOf(hv.x));
+        if (hi >= 0 && hi < n) {
+          var label = fmtFull.format(new Date(st.candles[hi].t * 1000));
+          g.font = "600 12px " + mono;
+          var tw = g.measureText(label).width + 12;
+          pill(clamp(hv.x - tw / 2, 2, plotW - tw - 2), plotH + TX / 2, label, muted, paper);
+        }
+      }
+      if (!st.autoY) pill(plotW + 6, plotH + TX / 2, "Auto fit", ink, paper);   // click to hand the price scale back
+    }
+    function redraw() { if (!queued) { queued = true; (root.requestAnimationFrame || setTimeout)(draw, 16); } }
+
+    /* ---------- pointer handling ---------- */
+    function local(e) { var r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
+    function zone(p) { return p.x > plotW ? "price" : p.y > plotH ? "time" : "plot"; }
+    function snap(v) { var t = st.fmt.tick; return +(Math.round(v / t) * t).toFixed(st.fmt.decimals + 2); }
+    function point(p) { return { i: iOf(p.x), p: snap(pOf(p.y)) }; }
+    function limitRight() { st.right = clamp(st.right, 3, st.candles.length - 1 + plotW / st.barW - 3); }
+    function zoomX(f, atX) {
+      var a = iOf(atX);
+      st.barW = clamp(st.barW * f, 2, 60);
+      st.right = a - 0.5 + (plotW - atX) / st.barW;
+      limitRight();
+    }
+    function segDist(p, x1, y1, x2, y2) {
+      var dx = x2 - x1, dy = y2 - y1, len = dx * dx + dy * dy, t = len ? clamp(((p.x - x1) * dx + (p.y - y1) * dy) / len, 0, 1) : 0;
+      return Math.hypot(p.x - x1 - t * dx, p.y - y1 - t * dy);
+    }
+    function hit(p) {
+      for (var k = st.drawings.length - 1; k >= 0; k--) {
+        var d = st.drawings[k];
+        if (d.type === "hline") { if (Math.abs(p.y - yOf(d.a.p)) < 9) return k; continue; }
+        var x1 = xOf(d.a.i), y1 = yOf(d.a.p), x2 = xOf(d.b.i), y2 = yOf(d.b.p);
+        if (d.type === "line") { if (segDist(p, x1, y1, x2, y2) < 9) return k; }
+        else if (p.x >= Math.min(x1, x2) - 6 && p.x <= Math.max(x1, x2) + 6 && p.y >= Math.min(y1, y2) - 6 && p.y <= Math.max(y1, y2) + 6) return k;
+      }
+      return -1;
+    }
+    function setCursor(p) {
+      var z = zone(p);
+      canvas.style.cursor = z === "price" ? "ns-resize" : z === "time" ? "ew-resize" : st.tool === "cursor" ? (drag ? "grabbing" : "grab") : st.tool === "erase" ? "pointer" : "crosshair";
+    }
+    function setTool(name, quiet) { st.tool = name; st.draft = null; if (!quiet && opts.onTool) opts.onTool(name); redraw(); }
+
+    canvas.style.touchAction = "none";
+    canvas.addEventListener("pointerdown", function (e) {
+      var p = local(e), ids;
+      try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+      ptrs[e.pointerId] = p; ids = Object.keys(ptrs);
+      if (ids.length === 2) {
+        var a = ptrs[ids[0]], b = ptrs[ids[1]];
+        st.draft = null;
+        drag = { mode: "pinch", d: Math.hypot(a.x - b.x, a.y - b.y) || 1, barW: st.barW, x: (a.x + b.x) / 2 };
+        return;
+      }
+      var z = zone(p);
+      if (p.x > plotW && p.y > plotH) { st.autoY = true; redraw(); return; }   // the AUTO corner
+      if (z === "price") { st.autoY = false; drag = { mode: "scaleY", y: p.y, y0: st.y0, y1: st.y1 }; }
+      else if (z === "time") drag = { mode: "scaleX", x: p.x, barW: st.barW };
+      else if (st.tool === "cursor") drag = { mode: "pan", x: p.x, y: p.y, right: st.right, y0: st.y0, y1: st.y1 };
+      else if (st.tool === "hline") { st.drawings.push({ type: "hline", a: point(p) }); setTool("cursor"); }
+      else if (st.tool === "erase") { var k = hit(p); if (k >= 0) st.drawings.splice(k, 1); }
+      else { drag = { mode: "draw", x: p.x, y: p.y }; st.draft = { type: st.tool, a: point(p), b: point(p) }; }
+      setCursor(p); redraw();
+    });
+    canvas.addEventListener("pointermove", function (e) {
+      var p = local(e);
+      if (ptrs[e.pointerId]) ptrs[e.pointerId] = p;
+      st.hover = e.pointerType === "touch" && !drag ? null : p;
+      if (drag) {
+        if (drag.mode === "pinch") {
+          var ids = Object.keys(ptrs);
+          if (ids.length >= 2) {
+            var a = ptrs[ids[0]], b = ptrs[ids[1]], d = Math.hypot(a.x - b.x, a.y - b.y) || 1, old = st.barW;
+            st.barW = drag.barW; zoomX(d / drag.d, drag.x);
+            if (!isFinite(st.barW)) st.barW = old;
+          }
+        } else if (drag.mode === "pan") {
+          st.right = drag.right - (p.x - drag.x) / st.barW; limitRight();
+          if (st.autoY && Math.abs(p.y - drag.y) > 10) { st.autoY = false; drag.y = p.y; drag.y0 = st.y0; drag.y1 = st.y1; }
+          if (!st.autoY) { var dp = (p.y - drag.y) / plotH * (drag.y1 - drag.y0); st.y0 = drag.y0 + dp; st.y1 = drag.y1 + dp; }
+        } else if (drag.mode === "scaleY") {
+          var f = Math.exp((p.y - drag.y) * 0.006), mid = (drag.y0 + drag.y1) / 2, half = (drag.y1 - drag.y0) / 2 * f;
+          st.y0 = mid - half; st.y1 = mid + half;
+        } else if (drag.mode === "scaleX") {
+          st.barW = clamp(drag.barW * Math.exp((drag.x - p.x) * 0.006), 2, 60); limitRight();
+        } else if (drag.mode === "draw" && st.draft) st.draft.b = point(p);
+      }
+      setCursor(p); redraw();
+    });
+    function end(e) {
+      delete ptrs[e.pointerId];
+      if (drag && drag.mode === "draw" && st.draft) {
+        var p = local(e);
+        if (Math.hypot(p.x - drag.x, p.y - drag.y) > 5) { st.drawings.push(st.draft); st.draft = null; drag = null; setTool("cursor"); }
+        st.draft = null;
+      }
+      if (!Object.keys(ptrs).length || (drag && drag.mode === "pinch")) drag = null;
+      setCursor(local(e)); redraw();
+    }
+    canvas.addEventListener("pointerup", end);
+    canvas.addEventListener("pointercancel", end);
+    canvas.addEventListener("pointerleave", function () { st.hover = null; redraw(); });
+    canvas.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      var p = local(e), px = e.deltaMode === 1 ? 30 : 1;
+      if (zone(p) === "price") {
+        st.autoY = false;
+        var f = Math.exp(e.deltaY * px * 0.0015), mid = (st.y0 + st.y1) / 2, half = (st.y1 - st.y0) / 2 * f;
+        st.y0 = mid - half; st.y1 = mid + half;
+      } else if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+        st.right += (e.shiftKey ? e.deltaY : e.deltaX) * px / st.barW; limitRight();
+      } else zoomX(Math.exp(-e.deltaY * px * 0.0015), Math.min(p.x, plotW));
+      redraw();
+    }, { passive: false });
+    canvas.addEventListener("dblclick", function (e) {
+      if (zone(local(e)) === "price") st.autoY = true; else fit();
+      redraw();
+    });
+    if (root.ResizeObserver) new ResizeObserver(redraw).observe(canvas);
+    else root.addEventListener("resize", redraw);
+
+    return {
+      setFormat: function (f) { for (var k in f) st.fmt[k] = f[k]; redraw(); },
+      /* Pass reset = true when it is a different chart. Otherwise the view follows new candles
+         only while the newest one is on screen, so you can scroll back without being yanked forward. */
+      setData: function (candles, reset) {
+        var before = st.candles.length;
+        st.candles = candles || [];
+        if (reset || !fitted) { fitted = false; st.drawings = []; st.draft = null; }
+        else if (st.candles.length > before && st.right >= before - 1) st.right += st.candles.length - before;
+        redraw();
+      },
+      setLines: function (lines) { st.lines = (lines || []).filter(function (l) { return l && isFinite(l.price); }); redraw(); },
+      setTool: function (name) { setTool(name, true); },
+      getTool: function () { return st.tool; },
+      undo: function () { st.drawings.pop(); redraw(); },
+      clearDrawings: function () { st.drawings = []; st.draft = null; redraw(); },
+      drawings: function () { return st.drawings.slice(); },
+      resetView: function () { fit(); redraw(); },
+      view: function () { return { barWidth: st.barW, right: st.right, autoPrice: st.autoY, low: st.y0, high: st.y1 }; },
+      draw: draw
+    };
+  }
+
+  root.BXChart = { create: create };
+})(typeof self !== "undefined" ? self : this);

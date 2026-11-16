@@ -30,7 +30,13 @@
 .panel { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: .8rem .9rem; }
 .panel + .panel { margin-top: 1rem; }
 .panel h2 { font: 600 .74rem var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: .45rem; }
-#cv { width: 100%; height: 420px; display: block; }
+#cv { width: 100%; height: 470px; display: block; border-radius: 6px; user-select: none; -webkit-user-select: none; }
+@media (max-width: 600px) { #cv { height: 380px; } }
+.tools { display: flex; flex-wrap: wrap; gap: .35rem; margin-bottom: .5rem; }
+.tools button { font: 600 .82rem var(--sans); padding: .35rem .65rem; min-height: 36px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--ink); cursor: pointer; }
+.tools button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.tools .gap { flex: 1 1 auto; }
+.hint { font-size: .8rem; color: var(--muted); margin-top: .45rem; }
 dl.kv { display: grid; grid-template-columns: auto auto; gap: .15rem .8rem; font: .9rem var(--mono); }
 dl.kv dt { color: var(--muted); } dl.kv dd { text-align: right; }
 .up { color: var(--green); } .dn { color: var(--red); }
@@ -62,7 +68,20 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
     <div>
       <div class="panel">
         <h2 id="chartTitle">Chart</h2>
+        <div class="tools" role="toolbar" aria-label="Chart tools">
+          <button type="button" data-tool="cursor" aria-pressed="true" title="Drag to move the chart">Move</button>
+          <button type="button" data-tool="line" aria-pressed="false" title="Drag from one point to another">Trend line</button>
+          <button type="button" data-tool="hline" aria-pressed="false" title="Click a price to mark a level">Level</button>
+          <button type="button" data-tool="zone" aria-pressed="false" title="Drag a box over an area">Zone</button>
+          <button type="button" data-tool="measure" aria-pressed="false" title="Drag to measure points, % and candles">Measure</button>
+          <button type="button" data-tool="erase" aria-pressed="false" title="Click a drawing to delete it">Eraser</button>
+          <span class="gap"></span>
+          <button type="button" id="undoBtn">Undo</button>
+          <button type="button" id="clearBtn">Clear drawings</button>
+          <button type="button" id="resetBtn">Reset view</button>
+        </div>
         <canvas id="cv" role="img" aria-label="Candlestick chart of the replay"></canvas>
+        <p class="hint">Drag the chart to move it. Scroll or pinch to zoom. Drag the price scale on the right, or the time scale underneath, to stretch it. Double-click to reset.</p>
         <div class="row trade-row">
           <label><span id="sizeLbl">Size</span> <input id="size" type="number" inputmode="decimal"></label>
           <label><span id="slLbl">Stop (points)</span> <input id="sl" type="number" inputmode="decimal" min="0"></label>
@@ -89,11 +108,17 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
 
 <script src="/engine/instruments.js"></script>
 <script src="/engine/replay.js"></script>
+<script src="/engine/chart.js"></script>
 <script>
 (function () {
   var E = window.BXEngine, $ = function (id) { return document.getElementById(id); };
   var loader = E.createDataLoader({ baseUrl: "/engine/data/" });
-  var markets = [], cache = {}, S = null, timer = null;
+  var markets = [], cache = {}, S = null, timer = null, fresh = false;
+  var toolBtns = Array.prototype.slice.call(document.querySelectorAll(".tools [data-tool]"));
+  function showTool(name) { toolBtns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.tool === name)); }); }
+  var chart = window.BXChart.create($("cv"), { onTool: showTool });
+  toolBtns.forEach(function (b) { b.onclick = function () { chart.setTool(b.dataset.tool); showTool(b.dataset.tool); }; });
+  $("undoBtn").onclick = chart.undo; $("clearBtn").onclick = chart.clearDrawings; $("resetBtn").onclick = chart.resetView;
   var SYM = { USD: "$", GBP: "£", EUR: "€" };
 
   function cash(x, cur) {
@@ -118,7 +143,8 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
 
   function onMarket() {
     var m = markets.find(function (x) { return x.id === $("market").value; });
-    $("tf").innerHTML = m.timeframes.map(function (t) { return "<option>" + t + "</option>"; }).join("");
+    var long = { m: " minute", h: " hour", d: " day" };
+    $("tf").innerHTML = m.timeframes.map(function (t) { var n = parseInt(t, 10); return "<option value='" + t + "'>" + n + long[t.slice(-1)] + (n > 1 && t.slice(-1) !== "m" ? "s" : "") + "</option>"; }).join("");
     $("rules").value = m.type === "future" ? "futures50k" : "";
     newChart();
   }
@@ -128,7 +154,7 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
     (cache[key] ? Promise.resolve(cache[key]) : loader.load(id, tf).then(function (d) { return (cache[key] = d); })).then(function (d) {
       var ses = d.sessions[Math.floor(Math.random() * d.sessions.length)];
       var I = E.instruments.get(id), rules = E.PropRules.presets[$("rules").value] || null;
-      S = E.createSession({ instrument: id, candles: ses.candles, startIndex: Math.min(30, ses.candles.length - 1),
+      S = E.createSession({ instrument: id, candles: ses.candles, startIndex: Math.max(5, Math.min(30, Math.floor(ses.candles.length / 3))),
                             account: { currency: I.currency, balance: rules ? rules.startBalance : (I.type === "future" ? 50000 : 10000) }, propRules: rules });
       S.on("*", feed);
       $("feed").innerHTML = ""; say("");
@@ -136,7 +162,9 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
       $("sizeLbl").textContent = "Size (" + I.sizeUnit + ")";
       $("slLbl").textContent = "Stop (" + I.pointName + "s)"; $("tpLbl").textContent = "Target (" + I.pointName + "s)";
       $("ptsHead").textContent = I.pointName === "pip" ? "Pips" : "Points";
-      $("chartTitle").textContent = I.name + ", " + tf + " candles";
+      $("chartTitle").textContent = I.name + ", " + $("tf").selectedOptions[0].textContent + " candles, UK time";
+      chart.setFormat({ decimals: E.instruments.decimals(I.tickSize), tick: I.tickSize, pointSize: I.pointSize, pointName: I.pointName });
+      showTool("cursor"); chart.setTool("cursor"); fresh = true;
       render();
     }).catch(function (e) { say("Could not load the chart: " + e.message); });
   }
@@ -214,41 +242,18 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
     draw();
   }
   function draw() {
-    var cv = $("cv"), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
-    cv.width = W * dpr; cv.height = H * dpr;
-    var g = cv.getContext("2d"), css = getComputedStyle(document.documentElement);
-    var col = function (n) { return css.getPropertyValue(n).trim(); };
-    g.scale(dpr, dpr); g.clearRect(0, 0, W, H);
-    var all = S.candles.length, vis = S.visible(), p = S.position();
-    var lo = Infinity, hi = -Infinity;
-    vis.forEach(function (c) { lo = Math.min(lo, c.l); hi = Math.max(hi, c.h); });
-    [p && p.avgPrice, p && p.sl, p && p.tp].forEach(function (v) { if (v != null && v) { lo = Math.min(lo, v); hi = Math.max(hi, v); } });
-    var pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
-    var R = 64, cw = (W - R) / all, y = function (v) { return H - 8 - (v - lo) / (hi - lo) * (H - 16); };
-    g.font = "11px " + col("--mono"); g.textBaseline = "middle";
-    for (var k = 0; k <= 4; k++) {
-      var v = lo + (hi - lo) * k / 4;
-      g.strokeStyle = col("--rule"); g.lineWidth = 1; g.beginPath(); g.moveTo(0, y(v)); g.lineTo(W - R, y(v)); g.stroke();
-      g.fillStyle = col("--muted"); g.fillText(px(v), W - R + 6, y(v));
-    }
-    vis.forEach(function (c, n) {
-      var x = n * cw + cw / 2, up = c.c >= c.o;
-      g.strokeStyle = g.fillStyle = col(up ? "--green" : "--red");
-      g.beginPath(); g.moveTo(x, y(c.h)); g.lineTo(x, y(c.l)); g.stroke();
-      var top = y(Math.max(c.o, c.c)), h = Math.max(1, Math.abs(y(c.o) - y(c.c)));
-      g.fillRect(x - Math.max(1, cw * 0.32), top, Math.max(2, cw * 0.64), h);
-    });
-    function line(v, colour, label, dash) {
-      g.strokeStyle = g.fillStyle = colour; g.setLineDash(dash || []); g.beginPath(); g.moveTo(0, y(v)); g.lineTo(W - R, y(v)); g.stroke(); g.setLineDash([]);
-      g.fillText(label, 4, y(v) - 8);
-    }
+    var p = S.position(), cur = S.currency, lines = [];
+    function at(level) { return cash(S.pointsToMoney(p.dir * (level - p.avgPrice) / S.instrument.pointSize, p.size), cur); }
     if (p) {
-      line(p.avgPrice, col("--ink"), "entry " + px(p.avgPrice));
-      if (p.sl != null) line(p.sl, col("--red"), "stop " + px(p.sl), [5, 4]);
-      if (p.tp != null) line(p.tp, col("--green"), "target " + px(p.tp), [5, 4]);
+      lines.push({ kind: "entry", price: p.avgPrice, label: (p.dir > 0 ? "Long " : "Short ") + p.size + "  ·  " + cash(p.unrealized, cur) });
+      if (p.sl != null) lines.push({ kind: "stop", price: p.sl, label: "Stop  ·  " + at(p.sl) });
+      if (p.tp != null) lines.push({ kind: "target", price: p.tp, label: "Target  ·  +" + at(p.tp) });
     }
+    S.openOrders().forEach(function (o) { lines.push({ kind: "order", price: o.price, label: o.side + " " + o.type + " " + o.size }); });
+    chart.setLines(lines);
+    chart.setData(S.visible(), fresh);
+    fresh = false;
   }
-  window.addEventListener("resize", function () { if (S) draw(); });
 })();
 </script>
 </body>

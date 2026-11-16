@@ -94,6 +94,22 @@
       return [p[col.t], p[col.o], p[col.h], p[col.l], p[col.c], col.v >= 0 ? p[col.v] : 0];
     }));
   }
+  /* "5m" -> 300, "1h" -> 3600, "1d" -> 86400 */
+  function timeframeSeconds(tf) {
+    var m = /^(\d+)\s*(m|h|d)$/i.exec(String(tf));
+    if (!m) throw new Error("Unknown timeframe: " + tf);
+    return +m[1] * { m: 60, h: 3600, d: 86400 }[m[2].toLowerCase()];
+  }
+  /* Builds bigger candles out of smaller ones (5m -> 10m, 1h -> 4h). Buckets line up with the clock. */
+  function aggregate(candles, seconds) {
+    var out = [], cur = null, key = null;
+    candles.forEach(function (c) {
+      var b = Math.floor(c.t / seconds);
+      if (b !== key) { key = b; cur = { t: c.t, o: c.o, h: c.h, l: c.l, c: c.c, v: c.v || 0 }; out.push(cur); }
+      else { if (c.h > cur.h) cur.h = c.h; if (c.l < cur.l) cur.l = c.l; cur.c = c.c; cur.v += c.v || 0; }
+    });
+    return out;
+  }
   /* Turns a data file (JSON or CSV text) into { sessions: [{ id, candles }] }. */
   function parseData(text, name) {
     var s = String(text).trim();
@@ -126,13 +142,32 @@
       while (e && e.sameAs && hops++ < 5) e = m[e.sameAs];
       return e && e.timeframes && Object.keys(e.timeframes).length ? e : null;
     }
+    /* Timeframes with no file of their own are built from a smaller one that divides into
+       them (at most 4 candles into 1, so there are still enough candles to replay). */
+    var wanted = o.derive === false ? [] : (o.derive || ["1m", "2m", "3m", "5m", "10m", "15m", "30m", "1h", "2h", "4h", "1d"]);
+    function plan(e) {
+      var files = Object.keys(e.timeframes), map = {};
+      files.forEach(function (tf) { map[tf] = { base: tf, derived: false }; });
+      wanted.forEach(function (tf) {
+        if (map[tf]) return;
+        var sec = timeframeSeconds(tf), best = null;
+        files.forEach(function (b) {
+          var bs = timeframeSeconds(b);
+          if (sec % bs === 0 && sec / bs <= 4 && (!best || bs > timeframeSeconds(best))) best = b;
+        });
+        if (best) map[tf] = { base: best, derived: true };
+      });
+      return map;
+    }
+    function sorted(map) { return Object.keys(map).sort(function (a, b) { return timeframeSeconds(a) - timeframeSeconds(b); }); }
     return {
       /* Only markets that have BOTH a profile and data. */
       listMarkets: function () {
         return index().then(function (m) {
           return Object.keys(m).filter(function (id) { return Inst.has(id) && resolve(m, id); }).map(function (id) {
-            var p = Inst.get(id);
-            return { id: id, name: p.name, type: p.type, timeframes: Object.keys(resolve(m, id).timeframes), instrument: p };
+            var p = Inst.get(id), map = plan(resolve(m, id)), tfs = sorted(map);
+            return { id: id, name: p.name, type: p.type, timeframes: tfs, instrument: p,
+                     builtFrom: tfs.reduce(function (acc, tf) { if (map[tf].derived) acc[tf] = map[tf].base; return acc; }, {}) };
           });
         });
       },
@@ -140,10 +175,17 @@
         return index().then(function (m) {
           var e = resolve(m, id);
           if (!e) throw new Error("No data for " + id);
-          var file = e.timeframes[timeframe];
-          if (!file) throw new Error("No " + timeframe + " data for " + id);
+          var how = plan(e)[timeframe];
+          if (!how) throw new Error("No " + timeframe + " data for " + id);
+          var file = e.timeframes[how.base];
           return Promise.resolve(fetchText(base + file)).then(function (t) {
             var d = parseData(t, file);
+            if (how.derived) {
+              var sec = timeframeSeconds(timeframe);
+              d.sessions.forEach(function (x) { x.candles = aggregate(x.candles, sec); });
+              d.builtFrom = how.base;
+            }
+            d.interval = timeframeSeconds(timeframe);
             d.instrument = id; d.timeframe = timeframe;
             return d;
           });
@@ -689,13 +731,14 @@
   };
 
   return {
-    version: "1.0.0",
+    version: "1.1.0",
     instruments: Inst,
     createSession: function (opts) { return new Session(opts); },
     Session: Session,
     PropRules: PropRules,
     createDataLoader: createDataLoader,
     parseCSV: parseCSV, parseData: parseData, normaliseCandles: normaliseCandles,
+    aggregate: aggregate, timeframeSeconds: timeframeSeconds,
     convert: convert, DEFAULT_FX: DEFAULT_FX
   };
 });
