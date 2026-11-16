@@ -135,21 +135,21 @@ html { scroll-padding-top: 76px; }
 .facts { border-top: 2px solid var(--ink); }
 .facts div { display: flex; justify-content: space-between; gap: 1rem; padding: .7rem 0; border-bottom: 1px solid var(--rule); }
 .facts dt { color: var(--muted); font-size: .92rem; }
-.facts dd { font-family: var(--mono); font-weight: 500; text-align: right; }
+.facts dd { font-weight: 600; text-align: right; }
 
 .roadmap-title { margin-top: 3.5rem; }
 .roadmap { list-style: none; counter-reset: step; margin-top: 1rem; }
 .roadmap li {
-  counter-increment: step; display: grid; grid-template-columns: 3rem 1fr auto; gap: 1rem; align-items: baseline;
+  display: grid; grid-template-columns: 1.6rem 1fr auto; gap: 1rem; align-items: baseline;
   padding: .8rem 0; border-bottom: 1px solid var(--rule);
 }
-.roadmap li::before { content: counter(step, decimal-leading-zero); font-family: var(--mono); color: var(--muted); font-size: .85rem; }
+.roadmap li::before { content: ""; width: .55rem; height: .55rem; border: 1.5px solid var(--muted); border-radius: 50%; align-self: center; justify-self: center; }
 .roadmap li span { font-weight: 600; }
 .roadmap li small { color: var(--muted); font-size: .88rem; }
-.roadmap li.done span { text-decoration: line-through; text-decoration-thickness: 2px; color: var(--muted); }
-.roadmap li.done::after { content: "done"; font-family: var(--mono); font-size: .75rem; color: var(--green); }
+.roadmap li.done::before { content: "✓"; width: auto; height: auto; border: 0; color: var(--green); font-weight: 700; font-size: 1rem; }
+.roadmap li.now::before { background: var(--hi); border-color: var(--ink); }
 .roadmap li.now span { -webkit-box-decoration-break: clone; box-decoration-break: clone; background: linear-gradient(transparent 55%, var(--hi) 55%, var(--hi) 92%, transparent 92%); }
-.roadmap li.now::after { content: "← bx is here"; font-family: var(--mono); font-size: .75rem; }
+.roadmap li.now::after { content: "where I am now"; font-size: .8rem; color: var(--muted); font-style: italic; }
 .roadmap li > span, .roadmap li > small { grid-column: 2; justify-self: start; }
 .roadmap li { row-gap: .1rem; }
 .roadmap li > small { grid-row: 2; }
@@ -278,7 +278,7 @@ footer { max-width: 1120px; margin: 0 auto; padding: 2.5rem 24px 3rem; border-to
 .setup-grid { grid-template-columns: 1.4fr 1fr; align-items: start; }
 .photo { border: 1px solid var(--ink); background: var(--card); padding: .7rem; }
 .photo img { width: 100%; height: auto; display: block; }
-.photo figcaption { font-family: var(--mono); font-size: .75rem; color: var(--muted); padding-top: .6rem; }
+.photo figcaption { font-size: .85rem; font-style: italic; color: var(--muted); padding-top: .6rem; }
 
 /* ===== PHONES & TABLETS ===== */
 @media (max-width: 900px) {
