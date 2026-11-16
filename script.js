@@ -59,13 +59,17 @@ async function copyText(text, btn, label) {
   setTimeout(() => { btn.textContent = label; }, 2000);
 }
 
-// --- Latest TikTok: the newest video in VIDEOS (the last line) plays right on the page ---
+// --- Latest TikTok: the newest video in VIDEOS (the last line) gets a big card at the top of the videos ---
 const latestBox = document.getElementById("latest-tt");
 const latest = VIDEOS[VIDEOS.length - 1];
 if (latestBox && latest) {
-  const id = (latest.link.match(/video\/(\d+)/) || [])[1];
   latestBox.innerHTML = `
-    <div class="lt-frame">${id ? `<blockquote class="tiktok-embed" cite="${latest.link}" data-video-id="${id}"><section><a href="${latest.link}" target="_blank" rel="noopener">${latest.title} on TikTok</a></section></blockquote>` : ""}</div>
+    <a class="lt-cover" href="${latest.link}" target="_blank" rel="noopener" aria-label="Watch ${latest.title} on TikTok">
+      <span class="lt-series">Trading Made Simple</span>
+      <span class="lt-num">${VIDEOS.length}</span>
+      <span class="lt-title">${latest.title}</span>
+      <span class="lt-play">▶ Watch on TikTok</span>
+    </a>
     <div class="lt-text">
       <p class="lt-label">Latest on TikTok · Part ${VIDEOS.length}</p>
       <h3>${latest.title}</h3>
@@ -73,7 +77,6 @@ if (latestBox && latest) {
       <a class="btn" href="${latest.link}" target="_blank" rel="noopener">Watch on TikTok</a>
     </div>`;
   latestBox.hidden = false;
-  if (id) { const tt = document.createElement("script"); tt.src = "https://www.tiktok.com/embed.js"; tt.async = true; document.body.appendChild(tt); }
 }
 
 // --- Earlier videos (newest first, only 3 shown until "Show all") ---
@@ -791,4 +794,4 @@ if ("serviceWorker" in navigator) {
 })();
 
 // (The old pop-up player was removed: TikTok now blocks its direct player links, so the
-//  earlier videos open in TikTok in a new tab. The latest video above uses TikTok's own embed.)
+//  earlier videos open in TikTok in a new tab. TikTok's embeds are unreliable, so the latest video is a cover card that opens TikTok.)
