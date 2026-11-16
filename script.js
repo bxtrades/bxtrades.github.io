@@ -524,12 +524,93 @@ function drawWidgets() {
 drawWidgets();
 window.addEventListener("themechange", drawWidgets);
 
-// --- Hero: live Discord member count next to TikTok followers ---
+// --- Live Discord numbers: hero, banner and floating bar (one request for the whole page) ---
+// Anything with data-dc="members" or data-dc="online" gets filled in. If Discord doesn't answer,
+// the text already in the HTML (like "150+") just stays.
 const heroDc = document.getElementById("hero-dc");
-if (heroDc) fetch("https://discord.com/api/v9/invites/6UCdDEGptX?with_counts=true")
+if (heroDc || document.querySelector("[data-dc]")) fetch("https://discord.com/api/v9/invites/6UCdDEGptX?with_counts=true")
   .then(r => r.ok ? r.json() : Promise.reject())
-  .then(d => { if (d.approximate_member_count) { document.getElementById("hero-dc-n").textContent = d.approximate_member_count.toLocaleString(); heroDc.hidden = false; } })
+  .then(d => {
+    const members = d.approximate_member_count, online = d.approximate_presence_count;
+    if (!members) return;
+    if (heroDc) { document.getElementById("hero-dc-n").textContent = members.toLocaleString(); heroDc.hidden = false; }
+    document.querySelectorAll('[data-dc="members"]').forEach(el => { el.textContent = members.toLocaleString(); });
+    if (online) {
+      document.querySelectorAll('[data-dc="online"]').forEach(el => { el.textContent = online.toLocaleString(); });
+      document.querySelectorAll("[data-dc-online-wrap]").forEach(el => { el.hidden = false; });
+      const sub = document.querySelector("[data-dc-float-sub]");
+      if (sub) sub.textContent = members.toLocaleString() + " members · " + online.toLocaleString() + " online now";
+    }
+  })
   .catch(() => {});
+
+// --- Floating "Join the Discord" bar ---
+// Slides in once you scroll past the Discord banner, hides again while the Community
+// section or the footer is on screen (no point showing it twice), and stays hidden
+// for the rest of the visit if you tap ✕.
+(function () {
+  const bar = document.getElementById("dc-float");
+  const band = document.querySelector(".dc-band");
+  if (!bar || !band || !("IntersectionObserver" in window)) return;
+  let dismissed = false;
+  try { dismissed = sessionStorage.getItem("bxt-dc-float") === "x"; } catch (e) {}
+  if (dismissed) return;
+  bar.hidden = false;
+  const inView = new Set();
+  let pastBand = false;
+  function update() { bar.classList.toggle("show", pastBand && inView.size === 0 && !dismissed); }
+  new IntersectionObserver(es => es.forEach(e => {
+    pastBand = !e.isIntersecting && e.boundingClientRect.top < 0; update();
+  })).observe(band);
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    e.isIntersecting ? inView.add(e.target) : inView.delete(e.target); update();
+  }));
+  document.querySelectorAll("#community, footer").forEach(el => io.observe(el));
+  document.getElementById("dc-float-x").addEventListener("click", () => {
+    dismissed = true; update();
+    try { sessionStorage.setItem("bxt-dc-float", "x"); } catch (e) {}
+  });
+})();
+
+// --- Candle Clash leaderboard ---
+// Reads data/candle-clash.json. To update it, open that file on GitHub, change the
+// names and scores, and commit. If the "players" list is empty the board stays hidden.
+(function () {
+  const board = document.getElementById("clash-board");
+  if (!board) return;
+  fetch("/data/candle-clash.json", { cache: "no-cache" })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(d => {
+      const players = (d.players || []).filter(p => p && p.name)
+        .sort((a, b) => (b.correct || 0) - (a.correct || 0) || (a.played || 0) - (b.played || 0))
+        .slice(0, 10);
+      if (!players.length) return;
+      if (d.title) document.getElementById("cb-title").textContent = d.title;
+      if (d.updated) {
+        const when = new Date(d.updated + "T12:00:00");
+        document.getElementById("cb-updated").textContent = "Updated " +
+          (isNaN(when) ? d.updated : when.toLocaleDateString(undefined, { day: "numeric", month: "long" })) + ".";
+      }
+      const list = document.getElementById("cb-list");
+      players.forEach(p => {
+        const li = document.createElement("li");
+        const name = document.createElement("span");
+        name.textContent = p.name;
+        const score = document.createElement("span");
+        score.className = "cb-score";
+        score.textContent = (p.correct || 0) + " right";
+        if (p.played) {
+          const of = document.createElement("small");
+          of.textContent = " / " + p.played;
+          score.appendChild(of);
+        }
+        li.append(name, score);
+        list.appendChild(li);
+      });
+      board.hidden = false;
+    })
+    .catch(() => {});
+})();
 
 // --- Footer year + close mobile menu after tapping a link ---
 const yearEl = document.getElementById("year");
