@@ -256,5 +256,32 @@
   newsTick(); setInterval(newsTick, 1000);
   </script>
   <script src="script.js"></script>
+<script src="/share.js"></script>
+<script>
+(function () {
+  if (!window.BXShare) return;
+  var ICONS = ["🌏", "🇬🇧", "🗽"];
+  var m = BXShare.mount({
+    name: "sessions",
+    after: document.getElementById("countdown"),
+    label: "Share my session times",
+    text: function () {
+      var cards = document.querySelectorAll("#sessions .sess");
+      if (!cards.length) return null;
+      var tz = document.getElementById("tz-name").textContent;
+      var lines = Array.prototype.map.call(cards, function (c, i) {
+        var hrs = (c.querySelector("p.mono") || {}).textContent || "";
+        return (ICONS[i] || "•") + " " + c.querySelector("h3").textContent + " " + hrs.replace(" your time", "");
+      });
+      var cd = document.querySelector("#countdown b");
+      var wait = cd ? cd.textContent.replace(/\s*\d+s$/, "") : "";
+      return "🕐 The trading day in my time (" + tz + ")\n" + lines.join("\n") + "\n" +
+        (wait ? "⏳ New York opens in " + wait + "\n" : "") +
+        "Check yours 👉 bxtrades.com/sessions";
+    }
+  });
+  setInterval(m.refresh, 30000);
+})();
+</script>
 </body>
 </html>

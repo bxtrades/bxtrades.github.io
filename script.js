@@ -427,7 +427,7 @@ function vote(side) {
   showPick(side, false);
   document.getElementById("streak").textContent = streakText();
 }
-if (document.getElementById("lock")) {
+if (document.getElementById("lock") && document.getElementById("vote-msg")) {
   let lastKey = null;
   const tickClash = () => {
     const now = new Date(), r = clashRound(now);

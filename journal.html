@@ -526,5 +526,32 @@ details.custom input[type=text]{background:var(--surface)}
 })();
 </script>
 <script>if("serviceWorker" in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){});});</script>
+<script src="/share.js"></script>
+<script>
+(function () {
+  if (!window.BXShare) return;
+  var NAMES = { all: "backtest journal", backtest: "backtests", paper: "paper trades", live: "live / eval trades" };
+  function fmtR(x) { return (x > 0 ? "+" : x < 0 ? "−" : "") + Math.abs(Math.round(x * 100) / 100) + "R"; }
+  BXShare.mount({
+    name: "journal",
+    after: document.getElementById("statsArea"),
+    label: "Share my stats",
+    text: function () {
+      var all = JSON.parse(localStorage.getItem("bxt-journal-v1") || "[]");
+      var f = document.querySelector("#filter button[aria-pressed='true']"), fv = f ? f.dataset.v : "all";
+      var list = all.filter(function (t) { return typeof t.r === "number" && (fv === "all" || t.mode === fv); })
+        .sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+      if (!list.length) return null;
+      var total = 0, peak = 0, dd = 0, wins = 0;
+      list.forEach(function (t) { total += t.r; if (total > peak) peak = total; if (peak - total > dd) dd = peak - total; if (t.r > 0) wins++; });
+      return "📓 My " + NAMES[fv] + "\n" +
+        list.length + " trade" + (list.length === 1 ? "" : "s") + " · " + Math.round(wins / list.length * 100) + "% wins · " + fmtR(total) + "\n" +
+        "Last " + Math.min(10, list.length) + ": " + BXShare.dots(list.slice(-10).map(function (t) { return t.r; })) + "\n" +
+        "Average " + fmtR(total / list.length) + " a trade · biggest drawdown " + fmtR(-dd) + "\n" +
+        "Journal yours free 👉 bxtrades.com/journal";
+    }
+  });
+})();
+</script>
 </body>
 </html>

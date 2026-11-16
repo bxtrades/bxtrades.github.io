@@ -286,7 +286,7 @@ canvas.trading{touch-action:none}
     <p id="resBody"></p>
     <p id="resWhen" class="when"></p>
     <div class="row">
-      <button class="btn" id="btnCopy">Copy result</button>
+      <button class="btn" id="btnCopy">Share result</button>
       <button class="btn" id="btnNext" hidden>Next chart</button>
       <button class="btn ghost" id="btnExplain" hidden>Explain this chart</button>
       <span class="countdown" id="countdown"></span>
@@ -873,19 +873,54 @@ canvas.trading{touch-action:none}
   }
 
   // ---------- sharing ----------
+  // The hidden candles as coloured squares, 10 per row: 🟩 closed up, 🟥 closed down
+  function candleGrid(){
+    var rows = [], row = "";
+    for (var i = VIS; i < N; i++){
+      var k = chart[i];
+      row += k.c >= k.o ? "🟩" : "🟥";
+      if ((i - VIS + 1) % 10 === 0 || i === N - 1){ rows.push(row); row = ""; }
+    }
+    return rows.join("\n");
+  }
+  // Your last 7 daily charts: ✅ right, ❌ wrong, ⬛ not played
+  function lastSeven(){
+    var out = "", played = 0, d = parseKey(todayKey());
+    for (var i = 6; i >= 0; i--){
+      var day = new Date(d.getFullYear(), d.getMonth(), d.getDate() - i);
+      var rec = store.daily[day.getFullYear() + "-" + pad(day.getMonth()+1) + "-" + pad(day.getDate())];
+      if (rec){ played++; out += rec.correct ? "✅" : "❌"; } else out += "⬛";
+    }
+    return played > 1 ? out : "";
+  }
   function shareText(){
     var o = outcome(), s = dailyStats();
-    return "Candle Clash #" + dayNumber() + " (NQ " + WINDOWS[winIdx].f + ")\n" +
+    var rate = s.played ? Math.round(s.wins / s.played * 100) : 0;
+    var week = lastSeven();
+    return "🕯️ Candle Clash #" + dayNumber() + " · NQ " + WINDOWS[winIdx].f + "\n" +
       (guess === "up" ? "▲ Higher " : "▼ Lower ") + (o.correct ? "✅" : "❌") +
-      " (" + (o.move > 0 ? "+" : "−") + pts(o.move) + " pts)\n" +
-      "Streak: " + s.streak + (s.streak > 0 ? " 🔥" : "") + "\nbxtrades.com/clash";
+      " " + (o.move > 0 ? "+" : "−") + pts(o.move) + " pts\n\n" +
+      candleGrid() + "\n\n" +
+      (week ? "Last 7: " + week + "\n" : "") +
+      (s.streak > 0 ? "🔥 Streak " + s.streak : "Streak 0") +
+      (s.played > 1 ? " · " + rate + "% right (" + s.played + " played)" : "") + "\n" +
+      "Can you beat me? 👉 bxtrades.com/clash";
   }
   $("btnCopy").addEventListener("click", function(){
     var t = shareText(), b = $("btnCopy");
     function fallback(){ var box = $("shareBox"); box.value = t; box.hidden = false; box.focus(); box.select(); b.textContent = "Copy the text below"; }
+    function reset(label){ b.textContent = label; setTimeout(function(){ b.textContent = "Share result"; }, 2200); }
+    if (window.BXShare){
+      BXShare.share(t, "clash", function(state){
+        if (state === "copied") reset("Copied, now paste it");
+        else if (state === "shared") reset("Shared");
+        else if (state === "manual") fallback();
+      });
+      return;
+    }
     try {
       if (navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(t).then(function(){ b.textContent = "Copied"; setTimeout(function(){ b.textContent = "Copy result"; }, 1800); }, fallback);
+        navigator.clipboard.writeText(t).then(function(){ reset("Copied"); }, fallback);
       } else fallback();
     } catch (e) { fallback(); }
   });
@@ -1431,5 +1466,6 @@ canvas.trading{touch-action:none}
   renderBadges(); renderWeekly(); renderBreakdown();
 })();
 </script>
+<script src="/share.js"></script>
 </body>
 </html>

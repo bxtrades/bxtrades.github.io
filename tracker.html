@@ -147,5 +147,32 @@
   </footer>
 
   <script src="script.js"></script>
+<script src="/share.js"></script>
+<script>
+(function () {
+  if (!window.BXShare) return;
+  function money(n) { return (n < 0 ? "−$" : "$") + Math.round(Math.abs(n)).toLocaleString("en-US"); }
+  BXShare.mount({
+    name: "tracker",
+    after: document.getElementById("stats"),
+    label: "Share my progress",
+    text: function () {
+      var T = JSON.parse(localStorage.getItem("bxt-eval-tracker-v1") || "null");
+      if (!T || !T.account || !T.trades || !T.trades.length) return null;
+      var A = T.account, trades = T.trades.slice().sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : 0; });
+      var pnl = trades.reduce(function (s, t) { return s + t.result; }, 0);
+      var wins = trades.filter(function (t) { return t.result > 0; }).length;
+      var prog = A.target ? Math.max(0, Math.min(100, Math.round(pnl / A.target * 100))) : 0;
+      var failed = pnl <= -A.maxLoss, size = A.start >= 1000 ? Math.round(A.start / 1000) + "K " : "";
+      var status = failed ? "💀 Drawdown hit, time for a new attempt" : prog >= 100 ? "✅ Target hit!" : prog + "% to target";
+      return "📈 My " + size + "eval progress\n" +
+        BXShare.bar(prog) + " " + status + "\n" +
+        "Last " + Math.min(10, trades.length) + ": " + BXShare.dots(trades.slice(-10).map(function (t) { return t.result; })) + "\n" +
+        "P&L " + (pnl > 0 ? "+" : "") + money(pnl) + " · " + Math.round(wins / trades.length * 100) + "% wins · " + trades.length + " trade" + (trades.length === 1 ? "" : "s") + "\n" +
+        "Track yours free 👉 bxtrades.com/tracker";
+    }
+  });
+})();
+</script>
 </body>
 </html>

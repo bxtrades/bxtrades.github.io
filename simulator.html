@@ -523,5 +523,29 @@ select.sel { width: 100%; min-height: 44px; border: 1px solid var(--rule); backg
   buildSizes(); fill(); run();
 })();
 </script>
+<script src="/share.js"></script>
+<script>
+(function () {
+  if (!window.BXShare) return;
+  function $(id) { return document.getElementById(id); }
+  BXShare.mount({
+    name: "simulator",
+    after: document.querySelector(".sim-out .stat-row"),
+    label: "Share my pass chance",
+    text: function () {
+      var pct = $("passPct").textContent.trim();
+      if (!/\d/.test(pct)) return null;
+      var firm = $("firm").options[$("firm").selectedIndex], size = document.querySelector("#sizes button[aria-pressed='true']");
+      var n = pct.charAt(0) === "<" ? 0 : parseFloat(pct);
+      return "🎯 My eval pass chance: " + pct + "\n" +
+        BXShare.bar(n) + "\n" +
+        (firm ? firm.text : "Prop firm") + (size ? " " + size.textContent : "") + " · $" + $("risk").value + " risk · " + $("win").value + "% wins · " + $("rr").value + "R\n" +
+        "⏱️ Typical pass: " + $("sDays").textContent + "\n" +
+        "💥 Losing streak to expect: " + $("sStreak").textContent + "\n" +
+        "Test yours free 👉 bxtrades.com/simulator";
+    }
+  });
+})();
+</script>
 </body>
 </html>

@@ -715,5 +715,28 @@ tr.pick td:first-child{box-shadow:inset 3px 0 0 var(--accent)}
 })();
 </script>
 <script>if("serviceWorker" in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){});});</script>
+<script src="/share.js"></script>
+<script>
+(function () {
+  if (!window.BXShare) return;
+  function $(id) { return document.getElementById(id); }
+  BXShare.mount({
+    name: "prop-calculator",
+    after: document.querySelector(".results .stats"),
+    label: "Share my position size",
+    text: function () {
+      var lives = parseInt($("lives").textContent, 10), c = $("contracts").textContent.trim();
+      if (!isFinite(lives) || !c || c === "0") return null;
+      var firm = $("firm").options[$("firm").selectedIndex], size = document.querySelector("#sizes button[aria-pressed='true']");
+      var reds = new Array(Math.min(lives, 10) + 1).join("🟥") + (lives > 10 ? " +" + (lives - 10) : "");
+      return "📐 My prop firm sizing\n" +
+        (firm ? firm.text : "Prop firm") + (size ? " " + size.textContent : "") + " · " + $("stop").value + " " + $("stopUnitLabel").textContent + " stop\n" +
+        "➡️ " + c + " " + $("contractsUnit").textContent + "\n" +
+        "🕯️ Full losses before the account fails: " + lives + "\n" + reds + "\n" +
+        "Size yours free 👉 bxtrades.com/prop-calculator";
+    }
+  });
+})();
+</script>
 </body>
 </html>
