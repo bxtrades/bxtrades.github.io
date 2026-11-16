@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://bxtrades.com/</loc></url>
-  <url><loc>https://bxtrades.com/tracker.html</loc></url>
-  <url><loc>https://bxtrades.com/prop-calculator.html</loc></url>
-  <url><loc>https://bxtrades.com/simulator.html</loc></url>
-  <url><loc>https://bxtrades.com/journal.html</loc></url>
-  <url><loc>https://bxtrades.com/sessions.html</loc></url>
-  <url><loc>https://bxtrades.com/glossary.html</loc></url>
-  <url><loc>https://bxtrades.com/links.html</loc></url>
-  <url><loc>https://bxtrades.com/privacy.html</loc></url>
-  <url><loc>https://bxtrades.com/media.html</loc></url>
+  <url><loc>https://bxtrades.com/tracker</loc></url>
+  <url><loc>https://bxtrades.com/prop-calculator</loc></url>
+  <url><loc>https://bxtrades.com/simulator</loc></url>
+  <url><loc>https://bxtrades.com/journal</loc></url>
+  <url><loc>https://bxtrades.com/sessions</loc></url>
+  <url><loc>https://bxtrades.com/glossary</loc></url>
+  <url><loc>https://bxtrades.com/links</loc></url>
+  <url><loc>https://bxtrades.com/privacy</loc></url>
+  <url><loc>https://bxtrades.com/media</loc></url>
 </urlset>

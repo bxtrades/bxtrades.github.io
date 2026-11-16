@@ -2,10 +2,10 @@
 // Pages: try the network first (so updates show straight away), fall back to the saved copy.
 // Files like CSS, JS and images: show the saved copy instantly, refresh it in the background.
 // Change VERSION whenever you want every visitor to drop their old saved copies.
-const VERSION = "bxt-v4";
+const VERSION = "bxt-v5";
 const CORE = [
-  "/", "/index.html", "/tracker.html", "/prop-calculator.html", "/journal.html",
-  "/sessions.html", "/glossary.html", "/links.html", "/privacy.html", "/404.html",
+  "/", "/tracker", "/prop-calculator", "/journal",
+  "/sessions", "/glossary", "/links", "/privacy", "/404.html",
   "/style.css", "/tools.css", "/script.js", "/manifest.webmanifest",
   "/images/icon-192.png", "/images/apple-touch-icon.png"
 ];
@@ -34,7 +34,7 @@ self.addEventListener("fetch", e => {
       fetch(req)
         .then(res => { const copy = res.clone(); caches.open(VERSION).then(c => c.put(req, copy)); return res; })
         .catch(() => caches.match(req, { ignoreSearch: true })
-          .then(hit => hit || caches.match("/index.html")))
+          .then(hit => hit || caches.match("/")))
     );
     return;
   }

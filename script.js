@@ -600,12 +600,12 @@ if ("serviceWorker" in navigator) {
 
   // Tool cards on the home page, matched by link.
   const TOOL_PICS = {
-    "tracker.html": "eval-tracker",
-    "prop-calculator.html": "risk-calculator",
-    "journal.html": "backtest-journal",
-    "sessions.html": "session-clock",
-    "glossary.html": "glossary",
-    "simulator.html": "pass-simulator"
+    "/tracker": "eval-tracker",
+    "/prop-calculator": "risk-calculator",
+    "/journal": "backtest-journal",
+    "/sessions": "session-clock",
+    "/glossary": "glossary",
+    "/simulator": "pass-simulator"
   };
   const tools = document.querySelector("#tools .episodes");
   if (tools) {
