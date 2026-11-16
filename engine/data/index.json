@@ -1,0 +1,14 @@
+{
+  "markets": {
+    "NQ": {
+      "timeframes": {
+        "5m": "NQ/5m.json",
+        "15m": "NQ/15m.json",
+        "1h": "NQ/1h.json"
+      }
+    },
+    "MNQ": {
+      "sameAs": "NQ"
+    }
+  }
+}

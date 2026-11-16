@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Replay engine demo | BXTrades</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<script>try{var t=localStorage.getItem("bxt-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+<style>
+/* Test bench for the engine. The page only draws and passes clicks on:
+   every number on it comes from window.BXEngine. */
+.wrap { max-width: 1180px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+.wrap h1 { font-family: var(--serif); font-size: 1.6rem; line-height: 1.2; }
+.wrap .sub { color: var(--muted); font-size: .92rem; margin: .25rem 0 1rem; }
+.row { display: flex; flex-wrap: wrap; gap: .6rem; align-items: end; }
+.row label { display: flex; flex-direction: column; font-size: .72rem; color: var(--muted); font-family: var(--mono); text-transform: uppercase; letter-spacing: .04em; gap: .2rem; }
+.row select, .row input { font: 500 .95rem var(--mono); padding: .45rem .5rem; border: 1px solid var(--rule); border-radius: 6px; background: var(--card); color: var(--ink); min-height: 40px; }
+.row input { width: 6.5rem; }
+.b { font: 600 .92rem var(--sans); padding: .5rem .9rem; min-height: 40px; border: 1px solid var(--ink); border-radius: 6px; background: var(--card); color: var(--ink); cursor: pointer; }
+.b:disabled { opacity: .4; cursor: not-allowed; }
+.b.buy { background: var(--green); border-color: var(--green); color: #fff; }
+.b.sell { background: var(--red); border-color: var(--red); color: #fff; }
+.grid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); margin-top: 1rem; }
+@media (min-width: 940px) { .grid { grid-template-columns: minmax(0, 1fr) 330px; align-items: start; } }
+.panel { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: .8rem .9rem; }
+.panel + .panel { margin-top: 1rem; }
+.panel h2 { font: 600 .74rem var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: .45rem; }
+#cv { width: 100%; height: 420px; display: block; }
+dl.kv { display: grid; grid-template-columns: auto auto; gap: .15rem .8rem; font: .9rem var(--mono); }
+dl.kv dt { color: var(--muted); } dl.kv dd { text-align: right; }
+.up { color: var(--green); } .dn { color: var(--red); }
+#msg { min-height: 1.5rem; font-size: .9rem; margin-top: .6rem; color: var(--red); }
+table.t { width: 100%; border-collapse: collapse; font: .82rem var(--mono); }
+table.t th, table.t td { text-align: right; padding: .25rem .3rem; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+table.t th:first-child, table.t td:first-child { text-align: left; }
+.scroll { overflow-x: auto; }
+#feed { font: .8rem var(--mono); max-height: 170px; overflow-y: auto; color: var(--body-ink); }
+#feed div { padding: .12rem 0; border-bottom: 1px dotted var(--rule); }
+.trade-row { margin-top: .7rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Replay engine demo</h1>
+  <p class="sub">A test bench for the trading engine. Pick a market, step through real candles and place practice trades. <a href="/">Back to BXTrades</a></p>
+
+  <div class="row">
+    <label>Market <select id="market"></select></label>
+    <label>Chart <select id="tf"></select></label>
+    <label>Rules <select id="rules"></select></label>
+    <button class="b" id="newBtn" type="button">New chart</button>
+    <button class="b" id="stepBtn" type="button">Next candle</button>
+    <button class="b" id="playBtn" type="button">Play</button>
+  </div>
+
+  <div class="grid">
+    <div>
+      <div class="panel">
+        <h2 id="chartTitle">Chart</h2>
+        <canvas id="cv" role="img" aria-label="Candlestick chart of the replay"></canvas>
+        <div class="row trade-row">
+          <label><span id="sizeLbl">Size</span> <input id="size" type="number" inputmode="decimal"></label>
+          <label><span id="slLbl">Stop (points)</span> <input id="sl" type="number" inputmode="decimal" min="0"></label>
+          <label><span id="tpLbl">Target (points)</span> <input id="tp" type="number" inputmode="decimal" min="0"></label>
+          <button class="b buy" id="buyBtn" type="button">Buy</button>
+          <button class="b sell" id="sellBtn" type="button">Sell</button>
+          <button class="b" id="closeBtn" type="button">Close</button>
+        </div>
+        <p id="msg" role="status" aria-live="polite"></p>
+      </div>
+      <div class="panel">
+        <h2>Trade log</h2>
+        <div class="scroll"><table class="t"><thead><tr><th>Side</th><th>Size</th><th>Entry</th><th>Exit</th><th id="ptsHead">Points</th><th>Net</th><th>Why</th></tr></thead><tbody id="log"></tbody></table></div>
+      </div>
+    </div>
+    <div>
+      <div class="panel"><h2>Account</h2><dl class="kv" id="acct"></dl></div>
+      <div class="panel"><h2>Position</h2><dl class="kv" id="posn"></dl></div>
+      <div class="panel" id="propPanel"><h2>Prop rules</h2><dl class="kv" id="prop"></dl></div>
+      <div class="panel"><h2>What just happened</h2><div id="feed"></div></div>
+    </div>
+  </div>
+</div>
+
+<script src="/engine/instruments.js"></script>
+<script src="/engine/replay.js"></script>
+<script>
+(function () {
+  var E = window.BXEngine, $ = function (id) { return document.getElementById(id); };
+  var loader = E.createDataLoader({ baseUrl: "/engine/data/" });
+  var markets = [], cache = {}, S = null, timer = null;
+  var SYM = { USD: "$", GBP: "£", EUR: "€" };
+
+  function cash(x, cur) {
+    var s = Math.abs(x).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (x < 0 ? "−" : "") + (SYM[cur] || cur + " ") + s;
+  }
+  function px(x) { return x.toFixed(E.instruments.decimals(S.instrument.tickSize)); }
+  function cls(x) { return x > 0 ? "up" : x < 0 ? "dn" : ""; }
+  function kv(el, rows) {
+    el.innerHTML = rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd class='" + (r[2] || "") + "'>" + r[1] + "</dd>"; }).join("");
+  }
+  function say(t) { $("msg").textContent = t || ""; }
+
+  /* ---------- set-up ---------- */
+  loader.listMarkets().then(function (list) {
+    markets = list;
+    $("market").innerHTML = list.map(function (m) { return "<option value='" + m.id + "'>" + m.id + " · " + m.name + "</option>"; }).join("");
+    var presets = E.PropRules.presets, names = { futures50k: "Futures 50k (end-of-day trailing)", futures50kIntradayTrail: "Futures 50k (intraday trailing)", futures50kStatic: "Futures 50k (static)", forex100k: "Forex/CFD 100k challenge" };
+    $("rules").innerHTML = "<option value=''>None (plain account)</option>" + Object.keys(presets).map(function (k) { return "<option value='" + k + "'>" + (names[k] || k) + "</option>"; }).join("");
+    onMarket();
+  }).catch(function (e) { say("Could not load the market list: " + e.message); });
+
+  function onMarket() {
+    var m = markets.find(function (x) { return x.id === $("market").value; });
+    $("tf").innerHTML = m.timeframes.map(function (t) { return "<option>" + t + "</option>"; }).join("");
+    $("rules").value = m.type === "future" ? "futures50k" : "";
+    newChart();
+  }
+  function newChart() {
+    stop();
+    var id = $("market").value, tf = $("tf").value, key = id + "|" + tf;
+    (cache[key] ? Promise.resolve(cache[key]) : loader.load(id, tf).then(function (d) { return (cache[key] = d); })).then(function (d) {
+      var ses = d.sessions[Math.floor(Math.random() * d.sessions.length)];
+      var I = E.instruments.get(id), rules = E.PropRules.presets[$("rules").value] || null;
+      S = E.createSession({ instrument: id, candles: ses.candles, startIndex: Math.min(30, ses.candles.length - 1),
+                            account: { currency: I.currency, balance: rules ? rules.startBalance : (I.type === "future" ? 50000 : 10000) }, propRules: rules });
+      S.on("*", feed);
+      $("feed").innerHTML = ""; say("");
+      $("size").value = I.minSize; $("size").step = I.sizeStep; $("size").min = I.minSize;
+      $("sizeLbl").textContent = "Size (" + I.sizeUnit + ")";
+      $("slLbl").textContent = "Stop (" + I.pointName + "s)"; $("tpLbl").textContent = "Target (" + I.pointName + "s)";
+      $("ptsHead").textContent = I.pointName === "pip" ? "Pips" : "Points";
+      $("chartTitle").textContent = I.name + ", " + tf + " candles";
+      render();
+    }).catch(function (e) { say("Could not load the chart: " + e.message); });
+  }
+
+  /* ---------- actions ---------- */
+  function trade(side) {
+    if (!S) return;
+    var I = S.instrument, q = S.quote(), dir = side === "buy" ? 1 : -1, ref = dir > 0 ? q.ask : q.bid;
+    var slP = parseFloat($("sl").value), tpP = parseFloat($("tp").value);
+    var r = S.placeOrder({ side: side, type: "market", size: parseFloat($("size").value),
+                           sl: slP > 0 ? ref - dir * slP * I.pointSize : null, tp: tpP > 0 ? ref + dir * tpP * I.pointSize : null });
+    say(r.ok ? "" : r.error);
+    render();
+  }
+  function step() {
+    if (!S || S.isDone()) { stop(); return; }
+    S.step(); render();
+    if (S.isDone()) { stop(); say("End of this chart. Press New chart for another."); }
+  }
+  function stop() { if (timer) { clearInterval(timer); timer = null; } $("playBtn").textContent = "Play"; }
+  $("market").onchange = onMarket; $("tf").onchange = newChart; $("rules").onchange = newChart; $("newBtn").onclick = newChart;
+  $("stepBtn").onclick = step;
+  $("playBtn").onclick = function () { if (timer) return stop(); timer = setInterval(step, 600); $("playBtn").textContent = "Pause"; };
+  $("buyBtn").onclick = function () { trade("buy"); }; $("sellBtn").onclick = function () { trade("sell"); };
+  $("closeBtn").onclick = function () { var r = S.close(); say(r.ok ? "" : r.error); render(); };
+
+  function feed(e) {
+    var cur = S.currency, t = null;
+    if (e.type === "fill") t = (e.side === "buy" ? "Bought " : "Sold ") + e.size + " at " + px(e.price) + (e.reason !== "market" ? " (" + e.reason + ")" : "");
+    else if (e.type === "trade") t = "Trade closed: " + cash(e.trade.netPnl, cur);
+    else if (e.type === "orderRejected") t = "Refused: " + e.reason;
+    else if (e.type === "marginCall") t = "Margin call: equity is down to " + Math.round(e.marginLevel) + "% of the margin in use";
+    else if (e.type === "stopOut") t = "Stopped out: the broker closed the position";
+    else if (e.type === "financing") t = "Overnight financing: " + cash(-e.amount, cur);
+    else if (e.type === "propStatus") t = e.status === "passed" ? "Evaluation PASSED" : e.status === "failed" ? "Account FAILED (" + e.reason + ")" : (e.dayLocked ? "Daily loss limit hit: locked for today" : null);
+    else if (e.type === "dayRollover") t = "New trading day";
+    if (!t) return;
+    var d = document.createElement("div"); d.textContent = t;
+    $("feed").insertBefore(d, $("feed").firstChild);
+  }
+
+  /* ---------- drawing ---------- */
+  function render() {
+    if (!S) return;
+    var a = S.account(), p = S.position(), cur = a.currency, q = S.quote(), I = S.instrument;
+    kv($("acct"), [
+      ["Balance", cash(a.balance, cur)], ["Equity", cash(a.equity, cur)], ["Open profit", cash(a.unrealized, cur), cls(a.unrealized)],
+      ["Margin in use", cash(a.usedMargin, cur)], ["Free margin", cash(a.freeMargin, cur)],
+      ["Margin level", a.marginLevel == null ? "n/a" : Math.round(a.marginLevel) + "%"],
+      ["Commission paid", cash(a.fees.commission, cur)], ["Spread paid", cash(a.fees.spread, cur)], ["Financing paid", cash(a.fees.financing, cur)],
+      ["Bid / ask", px(q.bid) + " / " + px(q.ask)], ["Candles left", S.remaining()]
+    ]);
+    kv($("posn"), p ? [
+      ["Side", p.side, p.dir > 0 ? "up" : "dn"], ["Size", p.size + " " + I.sizeUnit], ["Average price", px(p.avgPrice)],
+      [I.pointName === "pip" ? "Pips" : "Points", p.points.toFixed(1), cls(p.points)], ["Profit", cash(p.unrealized, cur), cls(p.unrealized)],
+      ["Stop loss", p.sl == null ? "none" : px(p.sl)], ["Take profit", p.tp == null ? "none" : px(p.tp)]
+    ] : [["Flat", "no open position"]]);
+    var r = S.propStatus();
+    $("propPanel").style.display = r ? "" : "none";
+    if (r) kv($("prop"), [
+      ["Status", r.status + (r.dayLocked ? " (locked today)" : ""), r.status === "passed" ? "up" : r.status === "failed" ? "dn" : ""],
+      ["Profit", cash(r.profit, cur), cls(r.profit)], ["Still needed", r.toTarget == null ? "n/a" : cash(r.toTarget, cur)],
+      ["Fail below", r.drawdownFloor == null ? "n/a" : cash(r.drawdownFloor, cur)], ["Room left", r.drawdownRoom == null ? "n/a" : cash(r.drawdownRoom, cur)],
+      ["Daily limit at", r.dailyLossFloor == null ? "n/a" : cash(r.dailyLossFloor, cur)],
+      ["Max size", r.maxSize == null ? "n/a" : r.maxSize + " " + I.sizeUnit], ["Days traded", r.tradingDays + (r.minTradingDays ? " of " + r.minTradingDays : "")]
+    ]);
+    $("log").innerHTML = S.trades.slice().reverse().map(function (t) {
+      return "<tr><td>" + t.side + "</td><td>" + t.size + "</td><td>" + px(t.entryPrice) + "</td><td>" + px(t.exitPrice) + "</td><td class='" + cls(t.points) + "'>" +
+             t.points.toFixed(1) + "</td><td class='" + cls(t.netPnl) + "'>" + cash(t.netPnl, cur) + "</td><td>" + t.reason + "</td></tr>";
+    }).join("") || "<tr><td colspan='7'>No closed trades yet</td></tr>";
+    var lock = S.locked(), dis = !!lock || false;
+    $("buyBtn").disabled = $("sellBtn").disabled = dis; $("closeBtn").disabled = !p;
+    $("stepBtn").disabled = $("playBtn").disabled = S.isDone();
+    if (lock && !$("msg").textContent) say("Trading is locked: " + lock);
+    draw();
+  }
+  function draw() {
+    var cv = $("cv"), dpr = window.devicePixelRatio || 1, W = cv.clientWidth, H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    var g = cv.getContext("2d"), css = getComputedStyle(document.documentElement);
+    var col = function (n) { return css.getPropertyValue(n).trim(); };
+    g.scale(dpr, dpr); g.clearRect(0, 0, W, H);
+    var all = S.candles.length, vis = S.visible(), p = S.position();
+    var lo = Infinity, hi = -Infinity;
+    vis.forEach(function (c) { lo = Math.min(lo, c.l); hi = Math.max(hi, c.h); });
+    [p && p.avgPrice, p && p.sl, p && p.tp].forEach(function (v) { if (v != null && v) { lo = Math.min(lo, v); hi = Math.max(hi, v); } });
+    var pad = (hi - lo) * 0.08 || 1; lo -= pad; hi += pad;
+    var R = 64, cw = (W - R) / all, y = function (v) { return H - 8 - (v - lo) / (hi - lo) * (H - 16); };
+    g.font = "11px " + col("--mono"); g.textBaseline = "middle";
+    for (var k = 0; k <= 4; k++) {
+      var v = lo + (hi - lo) * k / 4;
+      g.strokeStyle = col("--rule"); g.lineWidth = 1; g.beginPath(); g.moveTo(0, y(v)); g.lineTo(W - R, y(v)); g.stroke();
+      g.fillStyle = col("--muted"); g.fillText(px(v), W - R + 6, y(v));
+    }
+    vis.forEach(function (c, n) {
+      var x = n * cw + cw / 2, up = c.c >= c.o;
+      g.strokeStyle = g.fillStyle = col(up ? "--green" : "--red");
+      g.beginPath(); g.moveTo(x, y(c.h)); g.lineTo(x, y(c.l)); g.stroke();
+      var top = y(Math.max(c.o, c.c)), h = Math.max(1, Math.abs(y(c.o) - y(c.c)));
+      g.fillRect(x - Math.max(1, cw * 0.32), top, Math.max(2, cw * 0.64), h);
+    });
+    function line(v, colour, label, dash) {
+      g.strokeStyle = g.fillStyle = colour; g.setLineDash(dash || []); g.beginPath(); g.moveTo(0, y(v)); g.lineTo(W - R, y(v)); g.stroke(); g.setLineDash([]);
+      g.fillText(label, 4, y(v) - 8);
+    }
+    if (p) {
+      line(p.avgPrice, col("--ink"), "entry " + px(p.avgPrice));
+      if (p.sl != null) line(p.sl, col("--red"), "stop " + px(p.sl), [5, 4]);
+      if (p.tp != null) line(p.tp, col("--green"), "target " + px(p.tp), [5, 4]);
+    }
+  }
+  window.addEventListener("resize", function () { if (S) draw(); });
+})();
+</script>
+</body>
+</html>
