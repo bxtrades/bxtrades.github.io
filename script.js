@@ -18,7 +18,8 @@ const VIDEOS = [
   { title: "Fair value gaps",               desc: "The gaps a fast move leaves behind, and why price often comes back to fill them.",                link: "https://www.tiktok.com/@bxtrades_/video/7699208707934145824" },
   { title: "Trading sessions",              desc: "Asia, London, New York: when each session runs and why the time of day changes how price moves.", link: "https://www.tiktok.com/@bxtrades_/video/7700027724538055958" },
   { title: "Risk to reward",                desc: "How much you risk versus how much you aim to make, and why you can lose more trades than you win and still come out ahead.", link: "https://www.tiktok.com/@bxtrades_/video/7708205611623795990" },
-  { title: "Leverage",                      desc: "Trading a bigger position than your account could pay for, and why it makes your losses grow just as fast as your wins.", link: "https://www.tiktok.com/@bxtrades_/video/7708366449433201942" }
+  { title: "Leverage",                      desc: "Trading a bigger position than your account could pay for, and why it makes your losses grow just as fast as your wins.", link: "https://www.tiktok.com/@bxtrades_/video/7708366449433201942" },
+  { title: "Prop firms vs a live account",  desc: "Trading a prop firm account versus trading your own money: how they differ, and which one you'd pick.", link: "https://www.tiktok.com/@bxtrades_/video/7708756144600190230" }
 ];
 
 // Your backtests. Add a new one by copying a line and changing it.
@@ -58,10 +59,27 @@ async function copyText(text, btn, label) {
   setTimeout(() => { btn.textContent = label; }, 2000);
 }
 
-// --- Videos (newest first, only 3 shown until "Show all") ---
+// --- Latest TikTok: the newest video in VIDEOS (the last line) plays right on the page ---
+const latestBox = document.getElementById("latest-tt");
+const latest = VIDEOS[VIDEOS.length - 1];
+if (latestBox && latest) {
+  const id = (latest.link.match(/video\/(\d+)/) || [])[1];
+  latestBox.innerHTML = `
+    <div class="lt-frame">${id ? `<iframe src="https://www.tiktok.com/player/v1/${id}?rel=0&description=0&music_info=0" loading="lazy" allow="fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="Latest TikTok: ${latest.title}"></iframe>` : ""}</div>
+    <div class="lt-text">
+      <p class="lt-label">Latest on TikTok · Part ${VIDEOS.length}</p>
+      <h3>${latest.title}</h3>
+      <p>${latest.desc}</p>
+      <a class="btn" href="${latest.link}" target="_blank" rel="noopener">Watch on TikTok</a>
+    </div>`;
+  latestBox.hidden = false;
+}
+
+// --- Earlier videos (newest first, only 3 shown until "Show all") ---
 const videoList = document.getElementById("videos");
 if (videoList) {
-  videoList.innerHTML = VIDEOS.map((v, i) => ({ v, n: i + 1 })).reverse().map(({ v, n }, k) => `
+  const earlier = latestBox ? VIDEOS.slice(0, -1) : VIDEOS;
+  videoList.innerHTML = earlier.map((v, i) => ({ v, n: i + 1 })).reverse().map(({ v, n }, k) => `
   <li${k >= 3 ? ' class="extra" hidden' : ""}><a href="${v.link}" target="_blank" rel="noopener">
     <span class="poster" aria-hidden="true">${v.thumb ? `<img src="${v.thumb}" alt="" loading="lazy" decoding="async">` : String(n).padStart(2, "0")}</span>
     <h4>${v.title}</h4>
@@ -69,14 +87,15 @@ if (videoList) {
     <span class="watch">Watch →</span>
   </a></li>`).join("");
   const more = document.getElementById("show-videos");
-  if (more && VIDEOS.length > 3) {
+  const label = `Show all ${earlier.length} ${latestBox ? "earlier " : ""}videos`;
+  if (more && earlier.length > 3) {
     more.hidden = false;
-    more.textContent = `Show all ${VIDEOS.length} videos`;
+    more.textContent = label;
     more.addEventListener("click", () => {
       const open = more.dataset.open === "1";
       videoList.querySelectorAll(".extra").forEach(li => li.hidden = open);
       more.dataset.open = open ? "" : "1";
-      more.textContent = open ? `Show all ${VIDEOS.length} videos` : "Show fewer";
+      more.textContent = open ? label : "Show fewer";
     });
   }
 }
