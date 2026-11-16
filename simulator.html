@@ -96,22 +96,22 @@ select.sel { width: 100%; min-height: 44px; border: 1px solid var(--rule); backg
 <!-- ===== TOP BAR (same on every page) ===== -->
 <div class="topbar">
 <header class="bar">
-<a href="index.html" class="logo">BXTrades <span>by Boris</span></a>
+<a href="/" class="logo">BXTrades <span>by Boris</span></a>
 <nav class="links" aria-label="Main">
-<a href="index.html#about">About</a>
-<a href="index.html#series">Videos</a>
-<a href="index.html#backtests">Backtests</a>
-<a href="index.html#tools">Tools</a>
-<a href="index.html#community">Community</a>
+<a href="/#about">About</a>
+<a href="/#series">Videos</a>
+<a href="/#backtests">Backtests</a>
+<a href="/#tools">Tools</a>
+<a href="/#community">Community</a>
 </nav>
-<a class="nav-deal" href="index.html#deal">40% off evals</a>
+<a class="nav-deal" href="/#deal">40% off evals</a>
 <button class="theme-btn" type="button" aria-label="Switch dark mode" title="Dark / light mode" onclick="(function(){var r=document.documentElement,d=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',d);try{localStorage.setItem('bxt-theme',d)}catch(e){}document.querySelectorAll('meta[name=theme-color]').forEach(function(m){m.content=d==='dark'?'#161719':'#f3efe6'});window.dispatchEvent(new Event('themechange'))})()"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg></button>
 <button class="menu-btn" aria-label="Open menu" onclick="document.body.classList.toggle('menu-open')">Menu</button>
 </header>
 </div>
 
 <main class="page">
-<a class="back-link" href="index.html#tools">← Back to the tools</a>
+<a class="back-link" href="/#tools">← Back to the tools</a>
 <p class="kicker">Free tool · 10,000 evaluations in a second</p>
 <h1 class="page-title">Eval pass simulator</h1>
 <p class="lead">Pick a prop firm, enter how you trade, and this plays out 10,000 imaginary evaluations under the firm's rules. It's like crash-testing your plan thousands of times before you pay for a real attempt.</p>
@@ -242,8 +242,8 @@ select.sel { width: 100%; min-height: 44px; border: 1px solid var(--rule); backg
 <a href="journal.html">Backtest journal</a>
 <a href="sessions.html">Session clock</a>
 <a href="glossary.html">Glossary</a>
-<a href="index.html#faq">FAQ</a>
-<a href="index.html#deal">TradersScale 40% off</a>
+<a href="/#faq">FAQ</a>
+<a href="/#deal">TradersScale 40% off</a>
 <a href="media.html">Media kit</a>
 <a href="privacy.html">Privacy</a>
 </div>
