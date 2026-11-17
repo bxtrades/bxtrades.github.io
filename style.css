@@ -661,3 +661,24 @@ footer { max-width: 1200px; margin: 0 auto; padding: 2.5rem 24px 3rem; border-to
   .latest-tt { grid-template-columns: 1fr; gap: 1.2rem; }
   .lt-cover { width: min(100%, 260px); aspect-ratio: auto; min-height: 300px; }
 }
+
+/* ===== FREE TOOLS: landscape app-window cards ===== */
+/* Deliberately unlike the tall dark video posters: a light screenshot of the real tool in a little browser frame. */
+.episodes.tool-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.6rem 1.4rem; border-top: 0; }
+.episodes.tool-grid li { display: flex; }
+.episodes.tool-grid a { display: flex; flex-direction: column; gap: .35rem; width: 100%; padding: 0 0 1.1rem; border: 1.5px solid var(--ink);
+  background: var(--card); box-shadow: 4px 4px 0 var(--ink); transition: transform .12s, box-shadow .12s; }
+.episodes.tool-grid a:hover { background: var(--card); transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
+.episodes.tool-grid a:focus-visible { outline: 3px solid var(--hi); outline-offset: 3px; }
+.tool-shot { display: block; border-bottom: 1.5px solid var(--ink); background: var(--paper-2); margin-bottom: .45rem; }
+.tool-bar { display: flex; align-items: center; gap: 5px; padding: 6px 10px; border-bottom: 1px solid var(--rule); font: .72rem var(--mono); color: var(--muted); }
+.tool-bar i { width: 9px; height: 9px; border-radius: 50%; background: var(--rule); flex: none; }
+.tool-bar i:nth-child(1) { background: var(--red); } .tool-bar i:nth-child(2) { background: var(--hi); } .tool-bar i:nth-child(3) { background: var(--green); }
+.tool-bar span { margin-left: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tool-shot img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top left; }
+.episodes.tool-grid .ep { padding: 0 1rem; font: 600 .72rem var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.episodes.tool-grid h4 { padding: 0 1rem; }
+.episodes.tool-grid p { padding: 0 1rem; }
+.episodes.tool-grid .watch { padding: .35rem 1rem 0; margin-top: auto; font-weight: 600; }
+:root[data-theme="dark"] .tool-shot img { filter: brightness(.9); }
+@media (max-width: 640px) { .episodes.tool-grid { grid-template-columns: 1fr; gap: 1.3rem; } }

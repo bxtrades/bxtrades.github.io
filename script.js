@@ -723,24 +723,7 @@ if ("serviceWorker" in navigator) {
     if (file) p.innerHTML = '<img src="images/videos/' + (/\.\w+$/.test(file) ? file : file + '.webp') + '" alt="" loading="lazy" decoding="async">';
   });
 
-  // Tool cards on the home page, matched by link.
-  const TOOL_PICS = {
-    "/tracker": "eval-tracker",
-    "/prop-calculator": "risk-calculator",
-    "/journal": "backtest-journal",
-    "/sessions": "session-clock",
-    "/glossary": "glossary",
-    "/simulator": "pass-simulator"
-  };
-  const tools = document.querySelector("#tools .episodes");
-  if (tools) {
-    tools.classList.add("with-posters", "tool-pics");
-    tools.querySelectorAll("a").forEach(function (a) {
-      const file = TOOL_PICS[a.getAttribute("href")];
-      const ep = a.querySelector(".ep");
-      if (file && ep) ep.outerHTML = '<span class="poster" aria-hidden="true"><img src="images/tools/' + file + '.webp" alt="" loading="lazy" decoding="async"></span>';
-    });
-  }
+  // Tool cards on the home page now carry their own screenshots in index.html (images/tools/shots).
 
   // Glossary diagrams, added under each definition.
   const GLOSS_PICS = {
