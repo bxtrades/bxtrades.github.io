@@ -165,53 +165,18 @@
     </div>
   </section>
 
-  <!-- ===== TRADING MADE SIMPLE ===== -->
-  <section id="series" class="section">
-    <header><h2>Trading Made Simple</h2><p>My TikTok series. One idea per video, explained like I'd explain it to a mate.</p></header>
-    <div class="body">
-      <div class="latest-tt" id="latest-tt" hidden><!-- filled by script.js from the last video in VIDEOS --></div>
-      <h3 class="earlier-title">Earlier episodes</h3>
-      <ol class="episodes with-posters" id="videos"><!-- filled by script.js --></ol>
-      <div class="row-actions">
-        <a class="btn" href="/videos">See all videos →</a>
-        <a class="text-link" href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">@bxtrades_ on TikTok →</a>
-        <a class="text-link" href="/glossary">Stuck on a word? Glossary →</a>
-      </div>
-    </div>
-  </section>
 
-  <!-- ===== BACKTESTS ===== -->
-  <section id="backtests" class="section">
-    <header><h2>My backtests</h2><p>Pages straight out of my journal, annotations and all. Tap one to see it full size.</p></header>
-    <div class="body">
-      <div class="bt-stats" id="bt-stats"><!-- worked out by script.js from your backtests --></div>
-      <div class="bt-tools" role="group" aria-label="Filter backtests">
-        <button class="chip-btn" type="button" data-filter="all" aria-pressed="true">All</button>
-        <button class="chip-btn" type="button" data-filter="win" aria-pressed="false">Wins</button>
-        <button class="chip-btn" type="button" data-filter="loss" aria-pressed="false">Losses</button>
-      </div>
-      <div class="backtests" id="backtest-list" data-more-href="/backtests"><!-- filled by script.js --></div>
-      <a class="btn bt-more" id="bt-more" href="/backtests" hidden>See all backtests →</a>
-      <p class="small" style="margin-top:1.2rem">Backtests are replayed on past data, not live trades, and they're shared for education only, not as trade signals or financial advice. I'll keep adding the losing days too.</p>
-    </div>
-  </section>
 
-  <!-- ===== FREE TOOLS ===== -->
-  <section id="tools" class="section">
-    <header><h2>Free tools</h2><p>Things I built for myself and the Discord. They work on your phone, and your data stays in your browser.</p></header>
-    <div class="body">
-      <ol class="episodes tool-grid">
-        <li><a href="/tracker"><span class="tool-shot"><span class="tool-bar" aria-hidden="true"><i></i><i></i><i></i><span>bxtrades.com/tracker</span></span><img src="images/tools/shots/tracker.webp" alt="" width="960" height="600" loading="lazy" decoding="async"></span><span class="ep">Tool 01</span><h4>Eval tracker</h4><p>Set your own account size, target and drawdown, log trades, and watch your progress towards passing.</p><span class="watch">Open →</span></a></li>
-        <li><a href="/prop-calculator"><span class="tool-shot"><span class="tool-bar" aria-hidden="true"><i></i><i></i><i></i><span>bxtrades.com/prop-calculator</span></span><img src="images/tools/shots/prop-calculator.webp" alt="" width="960" height="600" loading="lazy" decoding="async"></span><span class="ep">Tool 02</span><h4>Prop firm risk calculator</h4><p>Pick a firm and account size, enter your stop, and see how many contracts to trade and how many losses you can take before the account fails. Plus a points-to-dollars converter.</p><span class="watch">Open →</span></a></li>
-        <li><a href="/journal"><span class="tool-shot"><span class="tool-bar" aria-hidden="true"><i></i><i></i><i></i><span>bxtrades.com/journal</span></span><img src="images/tools/shots/journal.webp" alt="" width="960" height="600" loading="lazy" decoding="async"></span><span class="ep">Tool 03</span><h4>Backtesting journal</h4><p>Log trades, tick off your EXPO checklist, and your win rate, average R and equity curve fill themselves in.</p><span class="watch">Open →</span></a></li>
-        <li><a href="/sessions"><span class="tool-shot"><span class="tool-bar" aria-hidden="true"><i></i><i></i><i></i><span>bxtrades.com/sessions</span></span><img src="images/tools/shots/sessions.webp" alt="" width="960" height="600" loading="lazy" decoding="async"></span><span class="ep">Tool 04</span><h4>Market session clock</h4><p>Which sessions are open right now, the countdown to the New York open, and a warning on big news days like CPI and FOMC.</p><span class="watch">Open →</span></a></li>
-      </ol>
-      <p class="see-all"><a class="btn" href="/tools">See all 8 free tools →</a></p>
 
-      <div class="install" id="install" hidden>
-        <p><strong>Use the tools like an app.</strong> Add BXTrades to your home screen and the tracker, calculator and journal open in one tap, even with no signal.</p>
-        <button class="btn small-btn" id="install-btn" type="button">Install as an app</button>
-        <p class="small" id="install-msg" role="status"></p>
+  <!-- ===== EXPLORE: every big section has its own page ===== -->
+  <section class="section" aria-labelledby="explore-title">
+    <header><h2 id="explore-title">Explore</h2><p>Videos, backtests, tools and the community each have their own page.</p></header>
+    <div class="body">
+      <div class="explore-grid">
+        <a href="/videos"><span class="eyebrow">Videos</span><h3>Trading Made Simple</h3><p>Every episode of my TikTok series. One idea per video, in plain English.</p><span class="go">Watch →</span></a>
+        <a href="/backtests"><span class="eyebrow">Backtests</span><h3>My backtests</h3><p>Pages straight out of my journal, with my win rate and average R.</p><span class="go">See them →</span></a>
+        <a href="/tools"><span class="eyebrow">Free tools</span><h3>8 free trading tools</h3><p>Eval tracker, risk calculator, journal, replay simulator and more.</p><span class="go">Open tools →</span></a>
+        <a href="/community"><span class="eyebrow">Community</span><h3>BXT's Community</h3><p>My free Discord and Candle Clash, the daily NQ chart game.</p><span class="go">Join in →</span></a>
       </div>
 
       <div class="deal" id="deal">

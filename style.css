@@ -690,3 +690,13 @@ footer { max-width: 1200px; margin: 0 auto; padding: 2.5rem 24px 3rem; border-to
 .crumb:hover { color: var(--ink); text-decoration: underline; }
 .links a[aria-current="page"] { color: var(--ink); text-decoration: underline; text-underline-offset: 6px; text-decoration-thickness: 2px; }
 .see-all { margin: 1.4rem 0 2.2rem; }
+
+/* ===== HOMEPAGE EXPLORE CARDS ===== */
+.explore-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem; margin-bottom: 2.4rem; }
+.explore-grid a { display: flex; flex-direction: column; gap: .35rem; padding: 1.2rem 1.3rem; border: 1.5px solid var(--ink); background: var(--card); color: var(--ink);
+  text-decoration: none; box-shadow: 4px 4px 0 var(--ink); transition: transform .12s, box-shadow .12s; }
+.explore-grid a:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
+.explore-grid h3 { margin: 0; }
+.explore-grid p { color: var(--muted); font-size: .93rem; margin: 0; }
+.explore-grid .go { margin-top: auto; padding-top: .5rem; font: 600 .85rem var(--mono); }
+@media (max-width: 640px) { .explore-grid { grid-template-columns: 1fr; } }
