@@ -292,7 +292,15 @@
         if (y > 9 && y < plotH - 6 && !taken.some(function (t) { return Math.abs(t - y) < 19; })) g.fillText(price(p), plotW + 9, y + 0.5);
       });
       g.textAlign = "center";
-      times.forEach(function (t) { if (t.x > 24 && t.x < plotW - 24) { g.font = (t.bold ? "600" : "500") + " 12px " + mono; g.fillStyle = t.bold ? ink : muted; g.fillText(t.text, t.x, plotH + TX / 2 + 1); } });
+      var lastR = -1e9;   // skip a label that would overlap the one before it (e.g. two new days close together)
+      times.forEach(function (t) {
+        if (t.x <= 24 || t.x >= plotW - 24) return;
+        g.font = (t.bold ? "600" : "500") + " 12px " + mono;
+        var w = g.measureText(t.text).width;
+        if (t.x - w / 2 < lastR + 8) return;
+        g.fillStyle = t.bold ? ink : muted; g.fillText(t.text, t.x, plotH + TX / 2 + 1);
+        lastR = t.x + w / 2;
+      });
       g.textAlign = "left";
 
       // tags on the price scale: drawings, your levels, then the live price on top

@@ -278,7 +278,7 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
 </footer>
 <script src="/engine/instruments.js?v=9"></script>
 <script src="/engine/replay.js?v=9"></script>
-<script src="/engine/chart.js?v=9"></script>
+<script src="/engine/chart.js?v=10"></script>
 <script>
 (function () {
   var E = window.BXEngine, $ = function (id) { return document.getElementById(id); };
@@ -316,7 +316,11 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
   function say(t) { $("msg").textContent = t || ""; }
   function tfName(sec) { return sec % 86400 === 0 ? sec / 86400 + "d" : sec % 3600 === 0 ? sec / 3600 + "h" : sec / 60 + "m"; }
   function market() { return markets.find(function (x) { return x.id === $("market").value; }); }
-  function baseOf(t) { return market().builtFrom[t] || t; }
+  /* Every timeframe replays the same candles, like TradingView: the replay always runs on the
+     smallest timeframe that has its own file, and bigger timeframes are built from it. Candles
+     from before the replay starts come from all the files, so 1h and 4h still show history. */
+  function nativeTfs() { var m = market(); return m.timeframes.filter(function (t) { return !m.builtFrom[t]; }); }
+  function baseOf() { return nativeTfs()[0]; }
 
   /* ---------- chart + tools ---------- */
   var toolBtns = Array.prototype.slice.call(document.querySelectorAll(".side [data-tool]"));
@@ -368,28 +372,59 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
   function showTf() {
     Array.prototype.forEach.call($("tfs").children, function (b) {
       b.setAttribute("aria-pressed", String(b.dataset.tf === tf));
-      b.className = baseOf(b.dataset.tf) === base ? "" : "other";
-      b.title = baseOf(b.dataset.tf) === base ? "Same replay, different candle size" : "Opens a new chart";
+      b.className = "";
+      b.title = "Same replay, different candle size";
     });
-    var same = market().timeframes.filter(function (t) { return baseOf(t) === base; });
-    $("hint").textContent = "This replay runs on " + base + " data. " + (same.length > 1 ? "Switch between " + same.join(", ") + " and you keep your place; " : "") +
-      "the greyed timeframes open a new chart. Space = play, arrow keys = step. Drag the chart to move it, scroll to zoom, drag the price scale to stretch it. Drawing tools are down the left of the chart. Click a drawing to select it, then drag it or its round grab points to adjust it. A selected long or short position can be sent straight to the order panel.";
+    $("hint").textContent = "Switch timeframe any time: you keep your place in the replay and your drawings stay where you put them. " +
+      "Space = play, arrow keys = step. Drag the chart to move it, scroll to zoom, drag the price scale to stretch it. Drawing tools are down the left of the chart. Click a drawing to select it, then drag it or its round grab points to adjust it. A selected long or short position can be sent straight to the order panel.";
   }
   function setTf(t) {
-    if (S && baseOf(t) === base) { tf = t; fillSkip(); showTf(); render("regroup"); }
-    else { tf = t; newChart(); }
+    tf = t;
+    if (S) { fillSkip(); showTf(); render("regroup"); }
+    else newChart();
   }
   function fillSkip() {
     var tfSec = E.timeframeSeconds(tf), opts = [1, 2, 3, 4, 6, 12, 24, 48].filter(function (n) { return n * baseSec <= 86400; });
     $("skip").innerHTML = opts.map(function (n) { return "<option value='" + n + "'>" + tfName(n * baseSec) + "</option>"; }).join("");
     $("skip").value = String(Math.max(1, tfSec / baseSec));
   }
+  /* All the native files for a market, loaded once. */
+  function loadAll(id) {
+    if (cache[id]) return cache[id];
+    var tfs = nativeTfs();
+    return (cache[id] = Promise.all(tfs.map(function (t) { return loader.load(id, t); })).then(function (list) {
+      var files = {}; tfs.forEach(function (t, k) { files[t] = list[k]; });
+      return { files: files, hist: {} };
+    }).catch(function (e) { delete cache[id]; throw e; }));
+  }
+  /* Every full candle of this size we can build from any file, sorted by time. A bucket only counts
+     when one file has all of it, so there are no half-built candles. */
+  function history(all, sec) {
+    if (all.hist[sec]) return all.hist[sec];
+    var by = {};
+    Object.keys(all.files).sort(function (a, b) { return E.timeframeSeconds(a) - E.timeframeSeconds(b); }).forEach(function (t) {
+      var fs = E.timeframeSeconds(t), need = sec / fs;
+      if (fs > sec || sec % fs) return;
+      all.files[t].sessions.forEach(function (x) {
+        var cnt = {};
+        x.candles.forEach(function (c) { var b = Math.floor(c.t / sec) * sec; cnt[b] = (cnt[b] || 0) + 1; });
+        E.aggregate(x.candles, sec).forEach(function (c) {
+          var b = Math.floor(c.t / sec) * sec;
+          if (cnt[b] === need) by[b] = { t: b, o: c.o, h: c.h, l: c.l, c: c.c, v: c.v };   // bigger files win
+        });
+      });
+    });
+    return (all.hist[sec] = Object.keys(by).map(Number).sort(function (a, b) { return a - b; }).map(function (b) { return by[b]; }));
+  }
+  var all = null, sesStart = 0;
   function newChart() {
     stop();
-    var id = $("market").value, key;
-    base = baseOf(tf); baseSec = E.timeframeSeconds(base); key = id + "|" + base;
-    (cache[key] ? Promise.resolve(cache[key]) : loader.load(id, base).then(function (d) { return (cache[key] = d); })).then(function (d) {
-      var ses = d.sessions[Math.floor(Math.random() * d.sessions.length)];
+    var id = $("market").value;
+    base = baseOf(); baseSec = E.timeframeSeconds(base);
+    loadAll(id).then(function (a) {
+      all = a;
+      var d = a.files[base], ses = d.sessions[Math.floor(Math.random() * d.sessions.length)];
+      sesStart = ses.candles[0].t;
       var I = E.instruments.get(id), rules = E.PropRules.presets[$("rules").value] || null;
       S = E.createSession({ instrument: id, candles: ses.candles, startIndex: Math.max(5, Math.floor(ses.candles.length / 3)),
                             account: { currency: I.currency, balance: rules ? rules.startBalance : (I.type === "future" ? 50000 : 10000) }, propRules: rules });
@@ -403,6 +438,13 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
       showTool("cursor"); chart.setTool("cursor"); moneyFmt();
       fillSkip(); showTf(); render("reset");
     }).catch(function (e) { say("Could not load the chart: " + e.message); });
+  }
+  /* What the chart shows: history from before the replay, then the replay so far, in the chosen candle size. */
+  function candlesFor(tfSec) {
+    var cut = Math.floor(sesStart / tfSec) * tfSec, past = history(all, tfSec), k = past.length;
+    while (k > 0 && past[k - 1].t >= cut) k--;
+    var now = E.aggregate(S.visible(), tfSec).map(function (c) { var b = Math.floor(c.t / tfSec) * tfSec; return { t: b, o: c.o, h: c.h, l: c.l, c: c.c, v: c.v }; });
+    return past.slice(Math.max(0, k - 400), k).concat(now);
   }
 
   /* ---------- replay controls ---------- */
@@ -588,7 +630,7 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
     S.openOrders().forEach(function (o) { lines.push({ kind: "order", price: o.price, label: o.side + " " + o.type + " " + o.size }); });
     chart.setLines(lines);
     chart.setMarkers(S.log.filter(function (e) { return e.type === "fill"; }).map(function (e) { return { t: e.time, price: e.price, side: e.side }; }));
-    chart.setData(tfSec > baseSec ? E.aggregate(S.visible(), tfSec) : S.visible(), mode, tfSec);
+    chart.setData(candlesFor(tfSec), mode, tfSec);
   }
 })();
 </script>
