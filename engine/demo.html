@@ -31,7 +31,16 @@ select, input[type=number] { font: 500 .92rem var(--mono); padding: .4rem .5rem;
 @media (min-width: 1000px) { .app { grid-template-columns: minmax(0, 1fr) 318px; align-items: start; } }
 .panel { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: .7rem .8rem; }
 .panel + .panel { margin-top: .8rem; }
-.panel h2 { font: 600 .72rem var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: .45rem; }
+/* Every section gets a header strip with a coloured edge, so the page reads as separate blocks:
+   chart (ink), trading (green), account (blue), prop rules (yellow), log (grey). */
+.panel { --sec: var(--ink); border-left: 5px solid var(--sec); padding-top: 0; }
+.panel.c-trade { --sec: var(--green); } .panel.c-acct { --sec: #2f6fde; } .panel.c-prop { --sec: var(--hi); } .panel.c-log { --sec: var(--muted); }
+.ph { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; margin: 0 -.8rem .7rem; padding: .55rem .8rem; background: var(--paper-2); border-bottom: 1px solid var(--rule); border-radius: 0 9px 0 0; }
+.ph h2 { font: 700 1rem/1.2 var(--sans); color: var(--ink); margin: 0; }
+.ph p { font-size: .8rem; color: var(--muted); margin: 0; }
+.ph .ph-r { margin-left: auto; }
+.panel + .panel { margin-top: 1rem; }
+.colhead { font: 600 .72rem var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 .4rem .2rem; }
 .chartbox { position: relative; }
 #cv { width: 100%; height: 560px; display: block; border-radius: 6px; user-select: none; -webkit-user-select: none; }
 @media (max-width: 999px) { #cv { height: 420px; } }
@@ -39,7 +48,10 @@ select, input[type=number] { font: 500 .92rem var(--mono); padding: .4rem .5rem;
 .tools button { font: 600 .8rem var(--sans); padding: .3rem .6rem; min-height: 34px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--ink); cursor: pointer; }
 .tools button:disabled { opacity: .4; cursor: not-allowed; }
 .tools button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.tools .gap { flex: 1 1 auto; }
+.tools { gap: .5rem; }
+.tg { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; padding: .3rem .4rem; border: 1px solid var(--rule); border-radius: 8px; background: var(--card); }
+.tg-l { font: 600 .68rem var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 .15rem 0 .1rem; }
+.tools button.go { background: var(--green); color: #fff; border-color: var(--green); }
 /* the replay bar: sits under the chart like a video player's controls, so it never hides a candle */
 .rb { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; justify-content: center; margin: .5rem auto 0; width: fit-content; max-width: 100%;
       background: var(--card); border: 1px solid var(--ink); border-radius: 10px; padding: .35rem .6rem; }
@@ -87,7 +99,7 @@ dl.kv .big { font-size: 1.05rem; font-weight: 600; }
 .tabs { display: flex; gap: .3rem; align-items: center; flex-wrap: wrap; margin-bottom: .4rem; }
 .tabs button { font: 600 .78rem var(--mono); text-transform: uppercase; letter-spacing: .04em; padding: .35rem .6rem; min-height: 34px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--muted); cursor: pointer; }
 .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); }
-.tabs .sum { margin-left: auto; font: .82rem var(--mono); color: var(--body-ink); }
+.ph .sum { font: .82rem var(--mono); color: var(--body-ink); }
 table.t { width: 100%; border-collapse: collapse; font: .82rem var(--mono); }
 table.t th, table.t td { text-align: right; padding: .28rem .35rem; border-bottom: 1px solid var(--rule); white-space: nowrap; }
 table.t th { color: var(--muted); font-weight: 500; }
@@ -111,26 +123,33 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
   <div class="app">
     <div>
       <div class="panel">
+        <div class="ph"><h2>Chart</h2><p>Draw, zoom and step through the candles</p></div>
         <div class="tools" role="toolbar" aria-label="Chart tools">
-          <button type="button" data-tool="cursor" aria-pressed="true" title="Drag to move the chart">Move</button>
-          <button type="button" data-tool="line" aria-pressed="false" title="Drag from one point to another">Trend line</button>
-          <button type="button" data-tool="hline" aria-pressed="false" title="Click a price to mark a level">Level</button>
-          <button type="button" data-tool="zone" aria-pressed="false" title="Drag a box over an area">Zone</button>
-          <button type="button" data-tool="measure" aria-pressed="false" title="Drag to measure points, % and candles">Measure</button>
-          <button type="button" data-tool="long" aria-pressed="false" title="Click where you would buy">Long position</button>
-          <button type="button" data-tool="short" aria-pressed="false" title="Click where you would sell">Short position</button>
-          <button type="button" data-tool="fib" aria-pressed="false" title="Drag from the start of a move to the end">Fib / EQ</button>
-          <button type="button" data-tool="erase" aria-pressed="false" title="Click a drawing to delete it">Eraser</button>
-          <span class="gap"></span>
-          <button type="button" id="tradeTool" hidden title="Send this long or short setup to the order panel as a real order">Place this trade</button>
-          <button type="button" id="delBtn" disabled title="Delete the selected drawing (Delete key)">Delete selected</button>
-          <button type="button" id="undoBtn">Undo</button>
-          <button type="button" id="clearBtn">Clear drawings</button>
-          <button type="button" id="resetBtn">Reset view</button>
+          <div class="tg" role="group" aria-labelledby="tg1"><span class="tg-l" id="tg1">Draw</span>
+            <button type="button" data-tool="cursor" aria-pressed="true" title="Drag to move the chart, or select a drawing">Move</button>
+            <button type="button" data-tool="line" aria-pressed="false" title="Drag from one point to another">Trend line</button>
+            <button type="button" data-tool="hline" aria-pressed="false" title="Click a price to mark a level">Level</button>
+            <button type="button" data-tool="zone" aria-pressed="false" title="Drag a box over an area">Zone</button>
+            <button type="button" data-tool="fib" aria-pressed="false" title="Drag from the start of a move to the end">Fib / EQ</button>
+            <button type="button" data-tool="measure" aria-pressed="false" title="Drag to measure points, % and candles">Measure</button>
+          </div>
+          <div class="tg" role="group" aria-labelledby="tg2"><span class="tg-l" id="tg2">Plan a trade</span>
+            <button type="button" data-tool="long" aria-pressed="false" title="Click where you would buy">Long position</button>
+            <button type="button" data-tool="short" aria-pressed="false" title="Click where you would sell">Short position</button>
+            <button type="button" id="tradeTool" class="go" hidden title="Send this long or short setup to the order panel as a real order">Place this trade</button>
+          </div>
+          <div class="tg" role="group" aria-labelledby="tg3"><span class="tg-l" id="tg3">Edit</span>
+            <button type="button" data-tool="erase" aria-pressed="false" title="Click a drawing to delete it">Eraser</button>
+            <button type="button" id="delBtn" disabled title="Delete the selected drawing (Delete key)">Delete selected</button>
+            <button type="button" id="undoBtn">Undo</button>
+            <button type="button" id="clearBtn">Clear all</button>
+            <button type="button" id="resetBtn" title="Fit the chart back to the screen">Reset view</button>
+          </div>
         </div>
         <div class="chartbox">
           <canvas id="cv" role="img" aria-label="Candlestick chart of the replay"></canvas>
           <div class="rb" role="group" aria-label="Replay controls">
+            <span class="tg-l">Replay</span>
             <button type="button" id="backBtn" aria-label="Rewind one step" title="Rewind (left arrow)"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
             <button type="button" id="playBtn" class="play" aria-label="Play" title="Play or pause (space)"><svg viewBox="0 0 24 24" id="playIcon"><path d="M7 4v16l13-8z"/></svg></button>
             <button type="button" id="stepBtn" aria-label="Forward one step" title="Forward (right arrow)"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
@@ -143,20 +162,20 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
         <p class="hint" id="hint"></p>
       </div>
 
-      <div class="panel">
+      <div class="panel c-log">
+        <div class="ph"><h2>Your trades</h2><p>Open position, waiting orders and closed trades</p><span class="sum ph-r" id="sum"></span></div>
         <div class="tabs" role="tablist">
           <button type="button" role="tab" data-tab="pos" aria-selected="true">Positions</button>
           <button type="button" role="tab" data-tab="ord" aria-selected="false">Orders</button>
           <button type="button" role="tab" data-tab="his" aria-selected="false">History</button>
-          <span class="sum" id="sum"></span>
         </div>
         <div class="scroll"><table class="t" id="tbl"></table></div>
       </div>
     </div>
 
     <div>
-      <div class="panel ticket">
-        <h2>Order</h2>
+      <div class="panel ticket c-trade">
+        <div class="ph"><h2>Place a trade</h2><p>Buy or sell at the current price, or set an order</p></div>
         <div class="quick">
           <button type="button" class="sell" id="sellBtn">Sell<b id="bid">–</b></button>
           <button type="button" class="buy" id="buyBtn">Buy<b id="ask">–</b></button>
@@ -173,16 +192,16 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
         <div class="rr"><span>Risk : reward</span><span id="rr">–</span></div>
         <p id="msg" role="status" aria-live="polite"></p>
       </div>
-      <div class="panel"><h2>Account</h2><div id="acct"></div></div>
-      <div class="panel" id="propPanel"><h2>Prop rules</h2><div id="prop"></div></div>
-      <div class="panel"><h2>What just happened</h2><div id="feed"></div></div>
+      <div class="panel c-acct"><div class="ph"><h2>Account</h2><p>Your money right now</p></div><div id="acct"></div></div>
+      <div class="panel c-prop" id="propPanel"><div class="ph"><h2>Prop rules</h2><p>How close you are to passing or failing</p></div><div id="prop"></div></div>
+      <div class="panel c-log"><div class="ph"><h2>What just happened</h2><p>Newest first</p></div><div id="feed"></div></div>
     </div>
   </div>
 </div>
 
-<script src="/engine/instruments.js?v=6"></script>
-<script src="/engine/replay.js?v=6"></script>
-<script src="/engine/chart.js?v=6"></script>
+<script src="/engine/instruments.js?v=7"></script>
+<script src="/engine/replay.js?v=7"></script>
+<script src="/engine/chart.js?v=7"></script>
 <script>
 (function () {
   var E = window.BXEngine, $ = function (id) { return document.getElementById(id); };

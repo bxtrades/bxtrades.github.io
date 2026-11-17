@@ -208,6 +208,23 @@ td.pickcell input,th.pickcell input{width:20px; height:20px; accent-color:var(--
 .rowbtn{font:inherit; font-size:.82rem; font-weight:600; background:var(--soft); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:5px 9px; cursor:pointer}
 .rowbtn.rm{color:var(--loss)}
 tr.chosen td{background:var(--soft)}
+/* Sections: coloured top edge, numbered header, and a jump bar that follows you down the page */
+.jump{position:sticky; top:var(--tb,60px); z-index:15; display:flex; gap:6px; flex-wrap:wrap; align-items:center; padding:8px 0; margin-top:14px; background:var(--bg); border-bottom:1px solid var(--line)}
+.jump span{font-size:.8rem; color:var(--muted); font-weight:600; margin-right:2px}
+.jump a{display:inline-flex; align-items:center; gap:6px; text-decoration:none; font-weight:600; font-size:.9rem; padding:7px 12px; border-radius:999px; border:1px solid var(--line); background:var(--surface); min-height:38px}
+.jump a b{display:inline-grid; place-items:center; width:20px; height:20px; border-radius:50%; font-size:.75rem; background:var(--soft)}
+.jump a[aria-current="true"]{background:var(--ink); color:var(--surface); border-color:var(--ink)}
+.jump a[aria-current="true"] b{background:var(--surface); color:var(--ink)}
+@media (max-width:560px){ .jump{flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none} .jump span{display:none} .jump a{flex:1 0 auto; justify-content:center; font-size:.85rem; padding:6px 10px} }
+.sec{--sec:var(--ink); border-top:6px solid var(--sec) !important; scroll-margin-top:calc(var(--tb,60px) + 64px)}
+.sec.c1{--sec:var(--gain)} .sec.c2{--sec:#2f6fde} .sec.c3{--sec:var(--amber, #d4af37)}
+.sechead{display:flex; gap:12px; align-items:flex-start; margin:-20px -20px 16px; padding:14px 20px; background:var(--soft); border-bottom:1px solid var(--line)}
+.sechead .num{flex:none; display:grid; place-items:center; width:32px; height:32px; border-radius:50%; background:var(--sec); color:#fff; font-weight:800; font-size:1rem}
+.sechead h2{margin:0 !important; font-size:1.3rem}
+.sechead p{margin:2px 0 0; font-size:.88rem; color:var(--muted)}
+.grp{grid-column:1 / -1; display:flex; align-items:center; gap:10px; margin:10px 0 0; font-size:.78rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+.grp::after{content:""; flex:1; height:1px; background:var(--line)}
+.grp:first-child{margin-top:0}
 .linkbtn{font:inherit; font-size:.85rem; background:none; border:0; color:var(--accent); cursor:pointer; padding:0; text-decoration:underline}
 </style>
 <link rel="stylesheet" href="tools.css">
@@ -254,9 +271,16 @@ tr.chosen td{background:var(--soft)}
     <p class="lead">Set up your own checklist, log each trade and tick off your setup. Your stats build themselves, so you can see what’s actually working.</p>
   </header>
 
+  <nav class="jump" aria-label="Jump to a section">
+    <span>Jump to</span>
+    <a href="#add-trade" data-sec="add-trade"><b>1</b>Add a trade</a>
+    <a href="#stats" data-sec="stats"><b>2</b>Your stats</a>
+    <a href="#trade-log" data-sec="trade-log"><b>3</b>Trade log</a>
+  </nav>
+
   <div class="layout">
-    <section class="panel" aria-label="Add a trade" style="border-top:1px solid var(--line)">
-      <h2>Add a trade</h2>
+    <section class="panel sec c1" id="add-trade" aria-labelledby="h-add">
+      <div class="sechead"><span class="num">1</span><div><h2 id="h-add">Add a trade</h2><p>Log a trade in a few taps. Only direction and result are needed.</p></div></div>
       <details class="custom" id="custom">
         <summary>Settings: your checklist, question and markets</summary>
         <div class="fields">
@@ -280,6 +304,7 @@ tr.chosen td{background:var(--soft)}
       <p class="tip" id="tip" hidden><strong>Quick start:</strong> pick Long or Short, tap your result, press Save. Everything else is optional and you can fill it in later with Edit.</p>
       <div class="editing" id="editing" hidden><span>Editing a saved trade</span><button class="linkbtn" id="cancelEdit" type="button">Cancel</button></div>
       <div class="fields">
+        <h3 class="grp">The trade</h3>
         <div class="f full"><span style="font-size:.88rem;font-weight:600">Direction</span>
           <div class="seg" id="dir" role="group" aria-label="Direction"><button type="button" data-v="Long">Long</button><button type="button" data-v="Short">Short</button></div>
         </div>
@@ -300,6 +325,7 @@ tr.chosen td{background:var(--soft)}
             <output id="cOut" aria-live="polite"></output>
           </details>
         </div>
+        <h3 class="grp">Details</h3>
         <label class="f">Date<input type="date" id="date"></label>
         <label class="f">Instrument
           <select id="inst"></select>
@@ -313,6 +339,7 @@ tr.chosen td{background:var(--soft)}
         <label class="f full" id="usdWrap">Result in $ <span class="hint" style="display:inline;margin:0">(optional: also adds it to your <a href="/tracker">eval tracker</a>)</span>
           <input type="number" id="usd" step="1" inputmode="decimal" placeholder="e.g. 400 or -200">
         </label>
+        <h3 class="grp">How it went</h3>
         <div class="f full"><span id="qLabel" style="font-size:.88rem;font-weight:600">Did you follow your plan?</span>
           <div class="seg" id="aligned" role="group" aria-labelledby="qLabel"><button type="button" data-v="yes">Yes</button><button type="button" data-v="no">No</button><button type="button" data-v="">Skip</button></div>
         </div>
@@ -321,6 +348,7 @@ tr.chosen td{background:var(--soft)}
           <div class="checks" id="checks"></div>
         </fieldset>
         <label class="f full">Notes<textarea id="notes" placeholder="What did you see? What would you do differently?"></textarea></label>
+        <h3 class="grp">Screenshots and links</h3>
         <div class="f full">
           <span style="font-size:.88rem;font-weight:600">Screenshots <span class="hint" style="display:inline;margin:0;font-weight:400">(optional, up to 6)</span></span>
           <div class="drop" id="drop">
@@ -341,7 +369,8 @@ tr.chosen td{background:var(--soft)}
       <p class="hint">−1R is a full stop-out, 0 is breakeven, +2R means you made twice what you risked. Press Enter in the result box to save quickly.</p>
     </section>
 
-    <section class="panel" aria-label="Your stats" style="border-top:1px solid var(--line)">
+    <section class="panel sec c2" id="stats" aria-labelledby="h-stats">
+      <div class="sechead"><span class="num">2</span><div><h2 id="h-stats">Your stats</h2><p>Builds itself from your trades. Pick which trades to include.</p></div></div>
       <div class="filter" id="filter" role="group" aria-label="Show trades">
         <button data-v="all">All trades</button><button data-v="backtest">Backtest</button><button data-v="paper">Paper</button><button data-v="live">Live / eval</button>
       </div>
@@ -349,8 +378,8 @@ tr.chosen td{background:var(--soft)}
     </section>
   </div>
 
-  <section class="panel" style="margin-top:18px; border-top:1px solid var(--line)" aria-label="Trade log">
-    <h2>Trade log</h2>
+  <section class="panel sec c3" id="trade-log" style="margin-top:18px" aria-labelledby="h-log">
+    <div class="sechead"><span class="num">3</span><div><h2 id="h-log">Trade log</h2><p>Every trade you’ve saved. Edit, delete, view screenshots and back up.</p></div></div>
     <div class="logtools" id="logtools" hidden><input type="text" id="find" placeholder="Search notes, setup or market" aria-label="Search your trades"><span class="muted" id="count" style="font-size:.88rem"></span></div>
     <div class="selbar" id="selbar" hidden><span id="selCount"></span><button class="btn danger small" type="button" id="delSel">Delete selected</button><button class="btn ghost small" type="button" id="clearSel">Cancel</button></div>
     <div id="log"></div>
@@ -681,7 +710,7 @@ tr.chosen td{background:var(--soft)}
     });
     showFormThumbs();
     toggleUsd(); render();
-    document.querySelector('section[aria-label="Add a trade"]').scrollIntoView({ behavior:"smooth", block:"start" });
+    $("add-trade").scrollIntoView({ behavior:"smooth", block:"start" });
   }
 
   function sorted(list){ return list.slice().sort(function(a,b){ return a.date<b.date?-1:a.date>b.date?1:(a.id<b.id?-1:1); }); }
@@ -901,6 +930,18 @@ tr.chosen td{background:var(--soft)}
   });
 
   render();
+  // Keep the jump bar just under the site's top bar, and light up the section you're looking at
+  function topbarHeight(){ var tb = document.querySelector(".topbar"); document.documentElement.style.setProperty("--tb", (tb ? tb.offsetHeight : 0) + "px"); }
+  topbarHeight(); window.addEventListener("resize", topbarHeight);
+  if(window.IntersectionObserver){
+    var seen = {};
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){ seen[e.target.id] = e.isIntersecting ? e.intersectionRect.height : 0; });
+      var best = Object.keys(seen).sort(function(a, b){ return seen[b] - seen[a]; })[0];
+      Array.prototype.forEach.call(document.querySelectorAll(".jump a"), function(a){ a.setAttribute("aria-current", String(a.dataset.sec === best && seen[best] > 0)); });
+    }, { threshold: [0, .1, .25, .5, .75, 1] });
+    ["add-trade", "stats", "trade-log"].forEach(function(id){ io.observe($(id)); });
+  }
   // Remove screenshots no trade uses any more (e.g. the tab closed before Undo ran out)
   setTimeout(function(){
     IMG.keys().then(function(keys){
