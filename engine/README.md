@@ -7,7 +7,7 @@
 | `chart.js` | The chart for pages: drag, zoom, price scale, drawing tools. `window.BXChart` (page code, kept out of the engine) |
 | `data/index.json` | The list of markets that have candle data |
 | `data/NQ/*.json` | Real NQ candles (5m, 15m, 1h). 10m, 30m, 2h and 4h are built from these automatically |
-| `demo.html` | Test page: bxtrades.com/engine/demo |
+| `demo.html` | Old address, forwards to the live page bxtrades.com/replay (`/replay.html`) |
 | `test/engine.test.js` | Checks. Run `node --test engine/test/engine.test.js` |
 
 ## Add a market
