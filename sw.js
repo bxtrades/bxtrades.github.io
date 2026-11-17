@@ -2,10 +2,11 @@
 // Pages: try the network first (so updates show straight away), fall back to the saved copy.
 // Files like CSS, JS and images: show the saved copy instantly, refresh it in the background.
 // Change VERSION whenever you want every visitor to drop their old saved copies.
-const VERSION = "bxt-v13";
+const VERSION = "bxt-v14";
 const CORE = [
   "/", "/tracker", "/prop-calculator", "/journal",
   "/sessions", "/glossary", "/cheatsheet", "/links", "/privacy", "/404.html",
+  "/videos", "/backtests", "/tools", "/community", "/replay",
   "/style.css", "/tools.css", "/script.js", "/share.js", "/manifest.webmanifest",
   "/images/icon-192.png", "/images/apple-touch-icon.png"
 ];

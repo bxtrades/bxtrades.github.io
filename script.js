@@ -79,12 +79,13 @@ if (latestBox && latest) {
   latestBox.hidden = false;
 }
 
-// --- Earlier videos (newest first, only 3 shown until "Show all") ---
+// --- Earlier videos (newest first). The homepage shows 3 and links to /videos; /videos (data-all) shows every one ---
 const videoList = document.getElementById("videos");
 if (videoList) {
+  const showAll = videoList.hasAttribute("data-all");
   const earlier = latestBox ? VIDEOS.slice(0, -1) : VIDEOS;
   videoList.innerHTML = earlier.map((v, i) => ({ v, n: i + 1 })).reverse().map(({ v, n }, k) => `
-  <li${k >= 3 ? ' class="extra" hidden' : ""}><a href="${v.link}" target="_blank" rel="noopener">
+  <li${k >= 3 && !showAll ? ' class="extra" hidden' : ""}><a href="${v.link}" target="_blank" rel="noopener">
     <span class="poster" aria-hidden="true">${v.thumb ? `<img src="${v.thumb}" alt="" loading="lazy" decoding="async">` : String(n).padStart(2, "0")}</span>
     <h4>${v.title}</h4>
     <p>${v.desc}</p>
@@ -121,7 +122,8 @@ if (btList) {
     ["Latest", BACKTESTS.length ? BACKTESTS[0].date.replace(/^\w+ /, "") : "–"]
   ].map(([l, v]) => `<div><span>${l}</span><b>${v}</b></div>`).join("");
 
-  const PAGE = 4;
+  // Homepage: 4 backtests and a link to /backtests (data-more-href). /backtests: 12 at a time (data-page).
+  const PAGE = parseInt(btList.dataset.page, 10) || 4, moreHref = btList.dataset.moreHref;
   let filter = "all", shown = PAGE;
   const moreBtn = document.getElementById("bt-more");
   function renderBacktests() {
@@ -133,14 +135,14 @@ if (btList) {
         <span class="bt-note">${b.note}</span>
       </button>`).join("") || `<p class="small">No ${filter === "win" ? "wins" : "losses"} logged yet.</p>`;
     moreBtn.hidden = list.length <= shown;
-    moreBtn.textContent = `Show more backtests (${list.length - shown} more)`;
+    moreBtn.textContent = moreHref ? `See all ${BACKTESTS.length} backtests →` : `Show more backtests (${list.length - shown} more)`;
   }
   document.querySelectorAll(".bt-tools .chip-btn").forEach(btn => btn.addEventListener("click", () => {
     filter = btn.dataset.filter; shown = PAGE;
     document.querySelectorAll(".bt-tools .chip-btn").forEach(x => x.setAttribute("aria-pressed", x === btn));
     renderBacktests();
   }));
-  moreBtn.addEventListener("click", () => { shown += PAGE; renderBacktests(); });
+  if (!moreHref) moreBtn.addEventListener("click", () => { shown += PAGE; renderBacktests(); });
   renderBacktests();
 
   const lb = document.getElementById("lightbox");

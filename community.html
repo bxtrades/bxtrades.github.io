@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BXT's Community | BXTrades</title>
+  <meta name="description" content="BXT's Community is my free Discord: chart chat, a ping when I go live, and Candle Clash, a daily NQ chart game with a live leaderboard.">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="BXTrades">
+  <meta property="og:title" content="BXT's Community | BXTrades">
+  <meta property="og:description" content="BXT's Community is my free Discord: chart chat, a ping when I go live, and Candle Clash, a daily NQ chart game with a live leaderboard.">
+  <meta property="og:image" content="https://bxtrades.com/images/og-home.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="BXTrades by Boris: learning to trade futures, and writing it all down">
+  <meta property="og:url" content="https://bxtrades.com/community">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://bxtrades.com/images/og-home.jpg">
+  <link rel="icon" href="/images/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="/images/favicon-48.png" sizes="48x48" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="apple-touch-icon" href="/images/apple-touch-icon.png">
+  <meta name="theme-color" content="#f3efe6">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="BXTrades">
+  <script>try{var t=localStorage.getItem("bxt-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
+  <link rel="canonical" href="https://bxtrades.com/community">
+  <script data-goatcounter="https://bxtrades.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</head>
+<body id="top" class="subpage">
+  <!-- ===== TOP BAR (same on every page) ===== -->
+  <div class="topbar">
+    <header class="bar">
+      <a href="/" class="logo">BXTrades <span>by Boris</span></a>
+      <nav class="links" aria-label="Main">
+        <a href="/#about">About</a>
+        <a href="/videos">Videos</a>
+        <a href="/backtests">Backtests</a>
+        <a href="/tools">Tools</a>
+        <a href="/community" aria-current="page">Community</a>
+      </nav>
+      <a class="nav-discord" href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener" data-goatcounter-click="nav-discord-community" data-goatcounter-title="Top bar: Discord"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 4h16v12H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Discord</span></a>
+      <a class="nav-deal" href="/#deal">40% off evals</a>
+      <button class="theme-btn" type="button" aria-label="Switch dark mode" title="Dark / light mode" onclick="(function(){var r=document.documentElement,d=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',d);try{localStorage.setItem('bxt-theme',d)}catch(e){}document.querySelectorAll('meta[name=theme-color]').forEach(function(m){m.content=d==='dark'?'#161719':'#f3efe6'});window.dispatchEvent(new Event('themechange'))})()"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg></button>
+      <button class="menu-btn" aria-label="Open menu" onclick="document.body.classList.toggle('menu-open')">Menu</button>
+    </header>
+  </div>
+
+  <main>
+  <section id="community" class="section">
+    <header><a class="crumb" href="/">← Home</a><h1>BXT's Community</h1><p>My free Discord. We talk charts, I post when I go live, and we play a daily game.</p></header>
+    <div class="body">
+      <div class="grid two">
+        <div class="discord-box">
+          <p class="eyebrow">Discord · free</p>
+          <h3>What's in there</h3>
+          <p class="dc-count" id="dc-count" hidden><span><b id="dc-members">–</b> members</span><span class="dc-online"><b id="dc-online">–</b> online now</span></p>
+          <ul class="ticks">
+            <li>A reminder for <strong>Candle Clash</strong> every weekday, so you don't lose your streak</li>
+            <li>A <strong>ping when I go live</strong> on TikTok</li>
+            <li>Post your charts and get a second opinion</li>
+            <li>Ask the "stupid" questions. Everyone here started at zero</li>
+            <li>Share your eval progress and keep each other accountable</li>
+          </ul>
+          <a class="btn primary full" href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener" data-goatcounter-click="community-discord" data-goatcounter-title="Community: Discord">Join BXT's Community</a>
+          <p class="safe-note">Free to join. Nobody from BXTrades will ever DM you asking for money or to invest.</p>
+        </div>
+        <div class="game">
+        <p class="eyebrow">Daily game · free, no sign-up</p>
+        <h3>Candle Clash</h3>
+        <p>One <strong>real NQ chart</strong> a day with the last 20 candles hidden. Call it: does price finish <span class="green">higher</span> or <span class="red">lower</span>? Get it right to build your streak and climb the leaderboard.</p>
+        <a class="btn primary full" href="/clash" data-goatcounter-click="home-play-clash" data-goatcounter-title="Home: Play Candle Clash">Play today's chart →</a>
+        <p class="small" id="clash-today" style="margin-top:.8rem" hidden></p>
+        </div>
+      </div>
+
+      <div class="how-clash" aria-label="How Candle Clash works">
+        <div><b>1 · look at the chart</b>A real stretch of NQ futures. Mark your levels with the drawing tools if you like.</div>
+        <div><b>2 · make one call</b>Higher or lower once the hidden 20 candles play out? One go per day, no take-backs.</div>
+        <div><b>3 · watch the reveal</b>Right calls build your streak. Pick a name once and you're on the leaderboard.</div>
+      </div>
+
+      <div class="clash-board" id="clash-board" hidden>
+        <p class="eyebrow">Candle Clash leaderboard · live</p>
+        <h3 id="cb-title">Longest streaks right now</h3>
+        <ol id="cb-list"></ol>
+        <p class="small" style="margin-top:.8rem"><span id="cb-updated"></span> <a href="/clash">Play today's chart to get on the board →</a></p>
+      </div>
+    </div>
+  </section>
+  </main>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="footer-links">
+      <a href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">TikTok</a>
+      <a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener">Discord</a>
+      <a href="/tracker">Eval tracker</a>
+      <a href="/prop-calculator">Prop calculator</a>
+      <a href="/simulator">Pass simulator</a>
+      <a href="/journal">Backtest journal</a>
+      <a href="/replay">Replay simulator</a>
+      <a href="/sessions">Session clock</a>
+      <a href="/glossary">Glossary</a>
+      <a href="/cheatsheet">Cheat sheet</a>
+      <a href="/clash">Candle Clash</a>
+      <a href="/#faq">FAQ</a>
+      <a href="/#deal">TradersScale 40% off</a>
+      <a href="/media">Media kit</a>
+      <a href="/privacy">Privacy</a>
+    </div>
+    <p class="not-broker"><strong>Not a broker.</strong> BXTrades is my personal education page. I'm not a broker or investment firm, I never manage anyone's money, and I'll never DM you asking you to invest.</p>
+    <p class="contact">Brand deals, collabs or questions: <a href="mailto:bxtrades1@gmail.com">bxtrades1@gmail.com</a> · <a href="/media">Media kit</a></p>
+    <p class="disclaimer"><strong>Disclaimer:</strong> All content on this site is for educational and entertainment purposes only and is not financial advice. I am not a financial adviser. Results shown are from a paper (simulated) trading account or backtests. Trading futures carries a high risk of loss and is not suitable for everyone. Past performance does not guarantee future results.</p>
+    <p class="mono small">© <span id="year"></span> BXTrades · <span id="updated"></span></p>
+  </footer>
+
+  <div class="dc-float" id="dc-float" hidden>
+    <a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener" data-goatcounter-click="float-discord" data-goatcounter-title="Floating bar: Discord">Join the free Discord<small data-dc-float-sub>Candle Clash · live pings · chart chat</small></a>
+    <button type="button" aria-label="Hide" id="dc-float-x">✕</button>
+  </div>
+
+  <dialog id="lightbox" aria-label="Backtest full size">
+    <button class="lb-close" type="button" onclick="this.closest('dialog').close()">Close ✕</button>
+    <img id="lb-img" alt="">
+    <p id="lb-cap" class="small"></p>
+    <div class="share-row">
+      <button class="share-btn" type="button" id="lb-copy">Copy link</button>
+      <a class="share-btn" id="lb-wa" target="_blank" rel="noopener">Share on WhatsApp</a>
+      <button class="share-btn" type="button" id="lb-share" hidden>Share…</button>
+    </div>
+  </dialog>
+
+  <script src="/clash-config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

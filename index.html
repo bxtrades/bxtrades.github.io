@@ -47,10 +47,10 @@
       <a href="#top" class="logo">BXTrades <span>by Boris</span></a>
       <nav class="links" aria-label="Main">
         <a href="#about">About</a>
-        <a href="#series">Videos</a>
-        <a href="#community">Community</a>
-        <a href="#backtests">Backtests</a>
-        <a href="#tools">Tools</a>
+        <a href="/videos">Videos</a>
+        <a href="/backtests">Backtests</a>
+        <a href="/tools">Tools</a>
+        <a href="/community">Community</a>
       </nav>
       <a class="nav-discord" href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener" data-goatcounter-click="nav-discord-index" data-goatcounter-title="Top bar: Discord"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 4h16v12H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Discord</span></a>
       <a class="nav-deal" href="#deal">40% off evals</a>
@@ -173,52 +173,9 @@
       <h3 class="earlier-title">Earlier episodes</h3>
       <ol class="episodes with-posters" id="videos"><!-- filled by script.js --></ol>
       <div class="row-actions">
-        <button class="btn" type="button" id="show-videos" hidden>Show all videos</button>
+        <a class="btn" href="/videos">See all videos →</a>
         <a class="text-link" href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">@bxtrades_ on TikTok →</a>
         <a class="text-link" href="/glossary">Stuck on a word? Glossary →</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ===== COMMUNITY ===== -->
-  <section id="community" class="section">
-    <header><h2>BXT's Community</h2><p>My free Discord. We talk charts, I post when I go live, and we play a daily game.</p></header>
-    <div class="body">
-      <div class="grid two">
-        <div class="discord-box">
-          <p class="eyebrow">Discord · free</p>
-          <h3>What's in there</h3>
-          <p class="dc-count" id="dc-count" hidden><span><b id="dc-members">–</b> members</span><span class="dc-online"><b id="dc-online">–</b> online now</span></p>
-          <ul class="ticks">
-            <li>A reminder for <strong>Candle Clash</strong> every weekday, so you don't lose your streak</li>
-            <li>A <strong>ping when I go live</strong> on TikTok</li>
-            <li>Post your charts and get a second opinion</li>
-            <li>Ask the "stupid" questions. Everyone here started at zero</li>
-            <li>Share your eval progress and keep each other accountable</li>
-          </ul>
-          <a class="btn primary full" href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener" data-goatcounter-click="community-discord" data-goatcounter-title="Community: Discord">Join BXT's Community</a>
-          <p class="safe-note">Free to join. Nobody from BXTrades will ever DM you asking for money or to invest.</p>
-        </div>
-        <div class="game">
-        <p class="eyebrow">Daily game · free, no sign-up</p>
-        <h3>Candle Clash</h3>
-        <p>One <strong>real NQ chart</strong> a day with the last 20 candles hidden. Call it: does price finish <span class="green">higher</span> or <span class="red">lower</span>? Get it right to build your streak and climb the leaderboard.</p>
-        <a class="btn primary full" href="/clash" data-goatcounter-click="home-play-clash" data-goatcounter-title="Home: Play Candle Clash">Play today's chart →</a>
-        <p class="small" id="clash-today" style="margin-top:.8rem" hidden></p>
-        </div>
-      </div>
-
-      <div class="how-clash" aria-label="How Candle Clash works">
-        <div><b>1 · look at the chart</b>A real stretch of NQ futures. Mark your levels with the drawing tools if you like.</div>
-        <div><b>2 · make one call</b>Higher or lower once the hidden 20 candles play out? One go per day, no take-backs.</div>
-        <div><b>3 · watch the reveal</b>Right calls build your streak. Pick a name once and you're on the leaderboard.</div>
-      </div>
-
-      <div class="clash-board" id="clash-board" hidden>
-        <p class="eyebrow">Candle Clash leaderboard · live</p>
-        <h3 id="cb-title">Longest streaks right now</h3>
-        <ol id="cb-list"></ol>
-        <p class="small" style="margin-top:.8rem"><span id="cb-updated"></span> <a href="/clash">Play today's chart to get on the board →</a></p>
       </div>
     </div>
   </section>
@@ -233,8 +190,8 @@
         <button class="chip-btn" type="button" data-filter="win" aria-pressed="false">Wins</button>
         <button class="chip-btn" type="button" data-filter="loss" aria-pressed="false">Losses</button>
       </div>
-      <div class="backtests" id="backtest-list"><!-- filled by script.js --></div>
-      <button class="btn bt-more" type="button" id="bt-more" hidden>Show more backtests</button>
+      <div class="backtests" id="backtest-list" data-more-href="/backtests"><!-- filled by script.js --></div>
+      <a class="btn bt-more" id="bt-more" href="/backtests" hidden>See all backtests →</a>
       <p class="small" style="margin-top:1.2rem">Backtests are replayed on past data, not live trades, and they're shared for education only, not as trade signals or financial advice. I'll keep adding the losing days too.</p>
     </div>
   </section>
@@ -248,11 +205,8 @@
         <li><a href="/prop-calculator"><span class="tool-shot"><span class="tool-bar" aria-hidden="true"><i></i><i></i><i></i><span>bxtrades.com/prop-calculator</span></span><img src="images/tools/shots/prop-calculator.webp" alt="" width="960" height="600" loading="lazy" decoding="async"></span><span class="ep">Tool 02</span><h4>Prop firm risk calculator</h4><p>Pick a firm and account size, enter your stop, and see how many contracts to trade and how many losses you can take before the account fails. Plus a points-to-dollars converter.</p><span class="watch">Open →</span></a></li>
         <li><a href="/journal"><span class="tool-shot"><span class="tool-bar" aria-hidden="true"><i></i><i></i><i></i><span>bxtrades.com/journal</span></span><img src="images/tools/shots/journal.webp" alt="" width="960" height="600" loading="lazy" decoding="async"></span><span class="ep">Tool 03</span><h4>Backtesting journal</h4><p>Log trades, tick off your EXPO checklist, and your win rate, average R and equity curve fill themselves in.</p><span class="watch">Open →</span></a></li>
         <li><a href="/sessions"><span class="tool-shot"><span class="tool-bar" aria-hidden="true"><i></i><i></i><i></i><span>bxtrades.com/sessions</span></span><img src="images/tools/shots/sessions.webp" alt="" width="960" height="600" loading="lazy" decoding="async"></span><span class="ep">Tool 04</span><h4>Market session clock</h4><p>Which sessions are open right now, the countdown to the New York open, and a warning on big news days like CPI and FOMC.</p><span class="watch">Open →</span></a></li>
-        <li><a href="/glossary"><span class="tool-shot"><span class="tool-bar" aria-hidden="true"><i></i><i></i><i></i><span>bxtrades.com/glossary</span></span><img src="images/tools/shots/glossary.webp" alt="" width="960" height="600" loading="lazy" decoding="async"></span><span class="ep">Tool 05</span><h4>Trading glossary</h4><p>Every term from my videos and annotations in plain English: FVGs, SMT, AMD, liquidity sweeps, R and more.</p><span class="watch">Open →</span></a></li>
-        <li><a href="/simulator"><span class="tool-shot"><span class="tool-bar" aria-hidden="true"><i></i><i></i><i></i><span>bxtrades.com/simulator</span></span><img src="images/tools/shots/simulator.webp" alt="" width="960" height="600" loading="lazy" decoding="async"></span><span class="ep">Tool 06</span><h4>Eval pass simulator</h4><p>Pick a prop firm, enter your win rate, R and risk, and see how often you'd pass across 10,000 simulated evaluations, plus what changing your risk would do.</p><span class="watch">Open →</span></a></li>
-        <li><a href="/cheatsheet"><span class="tool-shot"><span class="tool-bar" aria-hidden="true"><i></i><i></i><i></i><span>bxtrades.com/cheatsheet</span></span><img src="images/tools/shots/cheatsheet.webp" alt="" width="960" height="600" loading="lazy" decoding="async"></span><span class="ep">Tool 07</span><h4>Free cheat sheet</h4><p>Everything from Trading Made Simple on one printable page: candles, sessions, liquidity, FVGs, contract values and the risk rules I follow. Save it as a PDF or stick it by your desk.</p><span class="watch">Open →</span></a></li>
-        <li><a href="/replay"><span class="tool-shot"><span class="tool-bar" aria-hidden="true"><i></i><i></i><i></i><span>bxtrades.com/replay</span></span><img src="images/tools/shots/replay.webp" alt="" width="960" height="600" loading="lazy" decoding="async"></span><span class="ep">Tool 08</span><h4>Trade replay simulator</h4><p>Step through real NQ charts candle by candle, draw your levels, place practice trades and see how you'd do against prop firm rules.</p><span class="watch">Open →</span></a></li>
       </ol>
+      <p class="see-all"><a class="btn" href="/tools">See all 8 free tools →</a></p>
 
       <div class="install" id="install" hidden>
         <p><strong>Use the tools like an app.</strong> Add BXTrades to your home screen and the tracker, calculator and journal open in one tap, even with no signal.</p>
