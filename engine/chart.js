@@ -9,7 +9,7 @@
  *   chart.setData(candles, mode, seconds);  // [{t,o,h,l,c}], call again as candles are revealed
  *   chart.setMarkers([{ t, price, side: "buy" | "sell" }]);
  *   chart.setLines([{ price, label, kind: "entry" | "stop" | "target" }]);
- *   chart.setTool("cursor" | "line" | "hline" | "zone" | "measure" | "long" | "short" | "fib" | "erase");
+ *   chart.setTool("cursor" | "line" | "hline" | "vline" | "zone" | "measure" | "long" | "short" | "fib" | "erase");
  *   chart.undo(); chart.clearDrawings(); chart.removeSelected(); chart.resetView();
  *
  * Editing drawings (with the Move tool): click one to select it, drag it to move it, drag a round
@@ -131,6 +131,10 @@
       var x1, y1, x2, y2;
       g.globalAlpha = ghost ? 0.7 : 1; g.lineWidth = 2; g.strokeStyle = BLUE; g.setLineDash([]);
       if (d.type === "hline") { hLine(d.a.p, BLUE, [], 2); g.globalAlpha = 1; return; }
+      if (d.type === "vline") {
+        var vx = Math.round(xT(d.a.t)) + 0.5;
+        g.beginPath(); g.moveTo(vx, 0); g.lineTo(vx, plotH); g.stroke(); g.globalAlpha = 1; return;
+      }
       if (d.type === "long" || d.type === "short") { drawPosition(d, ghost); g.globalAlpha = 1; return; }
       if (d.type === "fib") { drawFib(d, ghost); g.globalAlpha = 1; return; }
       x1 = xT(d.a.t); y1 = yOf(d.a.p); x2 = xT(d.b.t); y2 = yOf(d.b.p);
@@ -269,7 +273,8 @@
       if (hv && hv.x <= plotW && hv.y <= plotH && !drag) {
         g.strokeStyle = muted; g.lineWidth = 1; g.setLineDash([4, 4]);
         g.beginPath(); g.moveTo(0, Math.round(hv.y) + 0.5); g.lineTo(plotW, Math.round(hv.y) + 0.5);
-        g.moveTo(Math.round(hv.x) + 0.5, 0); g.lineTo(Math.round(hv.x) + 0.5, plotH); g.stroke(); g.setLineDash([]);
+        var cx = Math.round(xOf(snapI(iOf(hv.x)))) + 0.5;           // vertical line locks onto the candle under the pointer
+        g.moveTo(cx, 0); g.lineTo(cx, plotH); g.stroke(); g.setLineDash([]);
       }
       g.restore();
 
@@ -291,7 +296,18 @@
       g.textAlign = "left";
 
       // tags on the price scale: drawings, your levels, then the live price on top
-      st.drawings.forEach(function (d) { if (d.type === "hline") axisTag(d.a.p, BLUE, "#fff"); });
+      st.drawings.forEach(function (d) {
+        if (d.type === "hline") axisTag(d.a.p, BLUE, "#fff");
+        if (d.type === "vline") {                                  // its date and time on the time scale
+          var vx = xT(d.a.t);
+          if (vx > 0 && vx < plotW) {
+            var vl = fmtFull.format(new Date(Math.round(d.a.t) * 1000));
+            g.font = "600 12px " + mono;
+            var vw = g.measureText(vl).width + 12;
+            pill(clamp(vx - vw / 2, 2, plotW - vw - 2), plotH + TX / 2, vl, BLUE, "#fff");
+          }
+        }
+      });
       st.lines.forEach(function (l) { axisTag(l.price, colours[l.kind] || ink, l.kind === "entry" ? paper : "#fff"); });
       if (last) axisTag(last.c, last.c >= last.o ? green : red, "#fff");
       if (hv && hv.x <= plotW && hv.y <= plotH && !drag) {
@@ -301,7 +317,7 @@
           var label = fmtFull.format(new Date(st.candles[hi].t * 1000));
           g.font = "600 12px " + mono;
           var tw = g.measureText(label).width + 12;
-          pill(clamp(hv.x - tw / 2, 2, plotW - tw - 2), plotH + TX / 2, label, muted, paper);
+          pill(clamp(xOf(hi) - tw / 2, 2, plotW - tw - 2), plotH + TX / 2, label, muted, paper);
         }
       }
       if (!st.autoY) pill(plotW + 6, plotH + TX / 2, "Auto fit", ink, paper);   // click to hand the price scale back
@@ -312,7 +328,9 @@
     function local(e) { var r = canvas.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
     function zone(p) { return p.x > plotW ? "price" : p.y > plotH ? "time" : "plot"; }
     function snap(v) { var t = st.fmt.tick; return +(Math.round(v / t) * t).toFixed(st.fmt.decimals + 2); }
-    function point(p) { return { t: tAt(iOf(p.x)), p: snap(pOf(p.y)) }; }
+    /* Time snaps to the nearest candle, like TradingView: points sit exactly on a candle, never between two. */
+    function snapI(i) { return Math.round(i); }
+    function point(p) { return { t: tAt(snapI(iOf(p.x))), p: snap(pOf(p.y)) }; }
     function limitRight() { st.right = clamp(st.right, 3, st.candles.length - 1 + plotW / st.barW - 3); }
     function zoomX(f, atX) {
       var a = iOf(atX);
@@ -328,6 +346,7 @@
       for (var k = st.drawings.length - 1; k >= 0; k--) {
         var d = st.drawings[k];
         if (d.type === "hline") { if (Math.abs(p.y - yOf(d.a.p)) < 9) return k; continue; }
+        if (d.type === "vline") { if (Math.abs(p.x - xT(d.a.t)) < 9) return k; continue; }
         if (d.type === "long" || d.type === "short") {
           var lx = xT(d.a.t), rx = Math.max(xT(d.b.t), lx + 12), ty = Math.min(yOf(d.s.p), yOf(d.g.p)), by = Math.max(yOf(d.s.p), yOf(d.g.p));
           if (p.x >= lx - 6 && p.x <= rx + 6 && p.y >= ty - 6 && p.y <= by + 6) return k;
@@ -348,6 +367,7 @@
     /* The grab points of a drawing. Dragging one calls its set() with the new {t, p}. */
     function handles(d) {
       if (d.type === "hline") return [{ x: plotW / 2, y: yOf(d.a.p), set: function (q) { d.a.p = q.p; } }];
+      if (d.type === "vline") return [{ x: xT(d.a.t), y: plotH / 2, set: function (q) { d.a.t = q.t; } }];
       if (d.type === "long" || d.type === "short") {
         var u = d.type === "long" ? 1 : -1, tk = st.fmt.tick, xl = xT(d.a.t);
         return [
@@ -409,10 +429,11 @@
       else if (st.tool === "long" || st.tool === "short") {
         var q0 = point(p), u0 = st.tool === "long" ? 1 : -1;
         var risk0 = Math.max(snap((st.y1 - st.y0) * 0.06), st.fmt.tick * 4);
-        st.drawings.push({ type: st.tool, a: q0, b: { t: tAt(iOf(p.x) + Math.max(8, Math.round(120 / st.barW))), p: q0.p },
+        st.drawings.push({ type: st.tool, a: q0, b: { t: tAt(snapI(iOf(p.x)) + Math.max(8, Math.round(120 / st.barW))), p: q0.p },
                            s: { p: snap(q0.p - u0 * risk0) }, g: { p: snap(q0.p + u0 * 2 * risk0) } });
         st.sel = st.drawings.length - 1; setTool("cursor"); if (opts.onSelect) opts.onSelect(true);
       }
+      else if (st.tool === "vline") { st.drawings.push({ type: "vline", a: point(p) }); st.sel = st.drawings.length - 1; setTool("cursor"); if (opts.onSelect) opts.onSelect(true); }
       else if (st.tool === "hline") { st.drawings.push({ type: "hline", a: point(p) }); st.sel = st.drawings.length - 1; setTool("cursor"); if (opts.onSelect) opts.onSelect(true); }
       else if (st.tool === "erase") { var k = hit(p); if (k >= 0) { st.drawings.splice(k, 1); st.sel = -1; } }
       else { drag = { mode: "draw", x: p.x, y: p.y }; st.draft = { type: st.tool, a: point(p), b: point(p) }; }
@@ -442,7 +463,7 @@
         } else if (drag.mode === "draw" && st.draft) st.draft.b = point(p);
         else if (drag.mode === "handle") drag.h.set(point(p));
         else if (drag.mode === "moveDraw" && st.drawings[st.sel]) {
-          var dsel = st.drawings[st.sel], di = iOf(p.x) - drag.i, dpr = pOf(p.y) - drag.p;
+          var dsel = st.drawings[st.sel], di = Math.round(iOf(p.x) - drag.i), dpr = pOf(p.y) - drag.p;   // whole candles at a time
           ["a", "b", "s", "g"].forEach(function (key) {
             if (drag.orig[key]) dsel[key] = { t: drag.orig[key].t != null ? tAt(iAt(drag.orig[key].t) + di) : undefined, p: snap(drag.orig[key].p + dpr) };
           });

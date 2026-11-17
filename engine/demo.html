@@ -144,6 +144,7 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
             <button type="button" data-tool="cursor" aria-pressed="true" data-tip="Move / select" aria-label="Move / select"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3l12 8-5.5 1.5L10 18z"/></svg></button>
             <button type="button" data-tool="line" aria-pressed="false" data-tip="Trend line" aria-label="Trend line"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19L19 5"/><circle cx="5" cy="19" r="1.8"/><circle cx="19" cy="5" r="1.8"/></svg></button>
             <button type="button" data-tool="hline" aria-pressed="false" data-tip="Horizontal level" aria-label="Horizontal level"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18"/><circle cx="12" cy="12" r="1.8"/></svg></button>
+            <button type="button" data-tool="vline" aria-pressed="false" data-tip="Vertical line" aria-label="Vertical line"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18"/><circle cx="12" cy="12" r="1.8"/></svg></button>
             <button type="button" data-tool="zone" aria-pressed="false" data-tip="Zone (box)" aria-label="Zone (box)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="10" rx="1"/></svg></button>
             <button type="button" data-tool="fib" aria-pressed="false" data-tip="Fib / equilibrium" aria-label="Fib / equilibrium"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M4 9h16M4 15h16M4 19h16"/><path d="M4 12h16" stroke-width="2.6"/></svg></button>
             <button type="button" data-tool="measure" aria-pressed="false" data-tip="Measure" aria-label="Measure"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17L17 3l4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/></svg></button>
@@ -214,9 +215,9 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
   </div>
 </div>
 
-<script src="/engine/instruments.js?v=8"></script>
-<script src="/engine/replay.js?v=8"></script>
-<script src="/engine/chart.js?v=8"></script>
+<script src="/engine/instruments.js?v=9"></script>
+<script src="/engine/replay.js?v=9"></script>
+<script src="/engine/chart.js?v=9"></script>
 <script>
 (function () {
   var E = window.BXEngine, $ = function (id) { return document.getElementById(id); };
@@ -258,7 +259,7 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
 
   /* ---------- chart + tools ---------- */
   var toolBtns = Array.prototype.slice.call(document.querySelectorAll(".side [data-tool]"));
-  var HELP = { line: "Trend line: drag from one point to another", hline: "Level: click a price", zone: "Zone: drag a box over an area",
+  var HELP = { line: "Trend line: drag from one point to another", hline: "Level: click a price", vline: "Vertical line: click a candle to mark a time", zone: "Zone: drag a box over an area",
                fib: "Fib / EQ: drag from the start of the move to the end", measure: "Measure: drag between two points",
                long: "Long position: click where you would buy", short: "Short position: click where you would sell", erase: "Eraser: click a drawing to delete it" };
   function showTool(name) {
