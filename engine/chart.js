@@ -9,7 +9,7 @@
  *   chart.setData(candles, mode, seconds);  // [{t,o,h,l,c}], call again as candles are revealed
  *   chart.setMarkers([{ t, price, side: "buy" | "sell" }]);
  *   chart.setLines([{ price, label, kind: "entry" | "stop" | "target" }]);
- *   chart.setTool("cursor" | "line" | "hline" | "zone" | "measure" | "erase");
+ *   chart.setTool("cursor" | "line" | "hline" | "zone" | "measure" | "long" | "short" | "fib" | "erase");
  *   chart.undo(); chart.clearDrawings(); chart.removeSelected(); chart.resetView();
  *
  * Editing drawings (with the Move tool): click one to select it, drag it to move it, drag a round
@@ -131,6 +131,8 @@
       var x1, y1, x2, y2;
       g.globalAlpha = ghost ? 0.7 : 1; g.lineWidth = 2; g.strokeStyle = BLUE; g.setLineDash([]);
       if (d.type === "hline") { hLine(d.a.p, BLUE, [], 2); g.globalAlpha = 1; return; }
+      if (d.type === "long" || d.type === "short") { drawPosition(d, ghost); g.globalAlpha = 1; return; }
+      if (d.type === "fib") { drawFib(d, ghost); g.globalAlpha = 1; return; }
       x1 = xT(d.a.t); y1 = yOf(d.a.p); x2 = xT(d.b.t); y2 = yOf(d.b.p);
       if (d.type === "line") {
         g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y2); g.stroke();
@@ -149,6 +151,61 @@
         pill(cx, clamp(up ? y2 - 14 : y2 + 14, 12, plotH - 12), txt, col, "#fff");
       }
       g.globalAlpha = 1;
+    }
+    function pts(diff) { return Math.abs(diff) / st.fmt.pointSize; }
+    function ptsText(diff) {
+      var n = pts(diff);
+      return n.toLocaleString("en-GB", { maximumFractionDigits: st.fmt.pointName === "pip" ? 1 : 2 }) + " " + st.fmt.pointName + (n === 1 ? "" : "s");
+    }
+    /* Long / short position tool: entry line, green target box, red stop box, like TradingView. */
+    function drawPosition(d, ghost) {
+      var xl = xT(d.a.t), xr = Math.max(xT(d.b.t), xl + 12), ye = yOf(d.a.p), ys = yOf(d.s.p), yg = yOf(d.g.p);
+      var green = css("--green"), red = css("--red"), ink = css("--ink"), a = ghost ? 0.7 : 1;
+      g.globalAlpha = 0.2 * a; g.fillStyle = green; g.fillRect(xl, Math.min(ye, yg), xr - xl, Math.abs(yg - ye));
+      g.fillStyle = red; g.fillRect(xl, Math.min(ye, ys), xr - xl, Math.abs(ys - ye));
+      g.globalAlpha = a; g.lineWidth = 1; g.setLineDash([]);
+      g.strokeStyle = green; g.strokeRect(xl + 0.5, Math.min(ye, yg) + 0.5, xr - xl - 1, Math.abs(yg - ye) - 1);
+      g.strokeStyle = red; g.strokeRect(xl + 0.5, Math.min(ye, ys) + 0.5, xr - xl - 1, Math.abs(ys - ye) - 1);
+      g.strokeStyle = ink; g.lineWidth = 2; g.beginPath(); g.moveTo(xl, ye); g.lineTo(xr, ye); g.stroke();
+      var risk = Math.abs(d.a.p - d.s.p), reward = Math.abs(d.g.p - d.a.p), money = st.fmt.money;
+      function pct(x) { return (x / d.a.p * 100).toFixed(2) + "%"; }
+      function lab(text, y, bg) {
+        g.font = "600 12px " + css("--mono");
+        var w = g.measureText(text).width + 12, cx = clamp((xl + xr) / 2 - w / 2, 4, plotW - w - 4);
+        pill(cx, clamp(y, 12, plotH - 12), text, bg, "#fff");
+      }
+      var away = function (y) { return y + (y < ye ? -13 : 13); };
+      lab("Target  " + ptsText(reward) + " (" + pct(reward) + ")" + (money ? "  " + money(pts(reward)) : ""), away(yg), green);
+      lab("Stop  " + ptsText(risk) + " (" + pct(risk) + ")" + (money ? "  " + money(-pts(risk)) : ""), away(ys), red);
+      lab((d.type === "long" ? "Long" : "Short") + "  ·  R:R " + (risk ? (reward / risk).toFixed(2) : "–"), ye + (yg < ye ? 13 : -13), ink);
+      g.globalAlpha = 1;
+    }
+    var FIB = [0, 0.236, 0.382, 0.5, 0.618, 0.705, 0.786, 1];
+    function fibPrice(d, r) { return d.b.p + (d.a.p - d.b.p) * r; }
+    /* Fib retracement from point A to point B. 0 sits at B, 1 at A, 0.5 is equilibrium (EQ):
+       the half nearer the high is premium, the half nearer the low is discount. Lines run on to the right. */
+    function drawFib(d, ghost) {
+      var xa = xT(d.a.t), xb = xT(d.b.t), xl = Math.min(xa, xb), xr = plotW, a = ghost ? 0.7 : 1, muted = css("--muted"), ink = css("--ink");
+      var hi = Math.max(d.a.p, d.b.p), lo = Math.min(d.a.p, d.b.p), eq = (hi + lo) / 2;
+      g.globalAlpha = 0.07 * a;
+      g.fillStyle = css("--red"); g.fillRect(xl, yOf(hi), xr - xl, yOf(eq) - yOf(hi));
+      g.fillStyle = css("--green"); g.fillRect(xl, yOf(eq), xr - xl, yOf(lo) - yOf(eq));
+      g.globalAlpha = 0.12 * a; g.fillStyle = BLUE;                                  // the 0.618 to 0.786 pocket (OTE)
+      var o1 = yOf(fibPrice(d, 0.618)), o2 = yOf(fibPrice(d, 0.786));
+      g.fillRect(xl, Math.min(o1, o2), xr - xl, Math.abs(o2 - o1));
+      g.globalAlpha = a; g.font = "500 11px " + css("--mono"); g.textBaseline = "bottom"; g.textAlign = "left";
+      FIB.forEach(function (r) {
+        var p = fibPrice(d, r), y = Math.round(yOf(p)) + 0.5, isEq = r === 0.5, edge = r === 0 || r === 1;
+        g.strokeStyle = isEq ? ink : edge ? BLUE : muted; g.lineWidth = isEq ? 2 : 1; g.setLineDash(isEq || edge ? [] : [4, 3]);
+        g.beginPath(); g.moveTo(xl, y); g.lineTo(xr, y); g.stroke(); g.setLineDash([]);
+        g.fillStyle = isEq ? ink : muted; g.font = (isEq ? "700 " : "500 ") + "11px " + css("--mono");
+        g.fillText((isEq ? "0.5 EQ" : String(r)) + "  " + price(p), xl + 4, y - 2);
+      });
+      g.font = "600 11px " + css("--mono"); g.textAlign = "right"; g.fillStyle = css("--red");
+      g.fillText("PREMIUM", xr - 6, Math.min(yOf(hi) + 16, yOf(eq) - 3));
+      g.fillStyle = css("--green"); g.fillText("DISCOUNT", xr - 6, yOf(lo) - 3);
+      g.textAlign = "left"; g.textBaseline = "middle";
+      g.strokeStyle = BLUE; g.lineWidth = 1; g.setLineDash([3, 3]); g.beginPath(); g.moveTo(xa, yOf(d.a.p)); g.lineTo(xb, yOf(d.b.p)); g.stroke(); g.setLineDash([]);
     }
     function draw() {
       queued = false;
@@ -271,6 +328,17 @@
       for (var k = st.drawings.length - 1; k >= 0; k--) {
         var d = st.drawings[k];
         if (d.type === "hline") { if (Math.abs(p.y - yOf(d.a.p)) < 9) return k; continue; }
+        if (d.type === "long" || d.type === "short") {
+          var lx = xT(d.a.t), rx = Math.max(xT(d.b.t), lx + 12), ty = Math.min(yOf(d.s.p), yOf(d.g.p)), by = Math.max(yOf(d.s.p), yOf(d.g.p));
+          if (p.x >= lx - 6 && p.x <= rx + 6 && p.y >= ty - 6 && p.y <= by + 6) return k;
+          continue;
+        }
+        if (d.type === "fib") {
+          var fl = Math.min(xT(d.a.t), xT(d.b.t));
+          if (segDist(p, xT(d.a.t), yOf(d.a.p), xT(d.b.t), yOf(d.b.p)) < 9) return k;
+          if (p.x >= fl - 6 && FIB.some(function (r) { return Math.abs(p.y - yOf(fibPrice(d, r))) < 6; })) return k;
+          continue;
+        }
         var x1 = xT(d.a.t), y1 = yOf(d.a.p), x2 = xT(d.b.t), y2 = yOf(d.b.p);
         if (d.type === "line") { if (segDist(p, x1, y1, x2, y2) < 9) return k; }
         else if (p.x >= Math.min(x1, x2) - 6 && p.x <= Math.max(x1, x2) + 6 && p.y >= Math.min(y1, y2) - 6 && p.y <= Math.max(y1, y2) + 6) return k;
@@ -280,6 +348,20 @@
     /* The grab points of a drawing. Dragging one calls its set() with the new {t, p}. */
     function handles(d) {
       if (d.type === "hline") return [{ x: plotW / 2, y: yOf(d.a.p), set: function (q) { d.a.p = q.p; } }];
+      if (d.type === "long" || d.type === "short") {
+        var u = d.type === "long" ? 1 : -1, tk = st.fmt.tick, xl = xT(d.a.t);
+        return [
+          // entry: moves the entry price and the left edge, staying between stop and target
+          { x: xl, y: yOf(d.a.p), set: function (q) {
+              var lo = u > 0 ? d.s.p + tk : d.g.p + tk, hi = u > 0 ? d.g.p - tk : d.s.p - tk;
+              var w = iAt(d.b.t) - iAt(d.a.t);
+              d.a = { t: q.t, p: clamp(q.p, lo, hi) }; d.b = { t: tAt(iAt(q.t) + w), p: d.a.p };
+            } },
+          { x: xl, y: yOf(d.g.p), set: function (q) { d.g.p = u > 0 ? Math.max(q.p, d.a.p + tk) : Math.min(q.p, d.a.p - tk); } },
+          { x: xl, y: yOf(d.s.p), set: function (q) { d.s.p = u > 0 ? Math.min(q.p, d.a.p - tk) : Math.max(q.p, d.a.p + tk); } },
+          { x: xT(d.b.t), y: yOf(d.a.p), set: function (q) { d.b = { t: Math.max(q.t, tAt(iAt(d.a.t) + 2)), p: d.a.p }; } }
+        ];
+      }
       var out = [{ x: xT(d.a.t), y: yOf(d.a.p), set: function (q) { d.a = q; } },
                  { x: xT(d.b.t), y: yOf(d.b.p), set: function (q) { d.b = q; } }];
       if (d.type === "zone") out.push(
@@ -324,6 +406,13 @@
         } else { st.sel = -1; drag = { mode: "pan", x: p.x, y: p.y, right: st.right, y0: st.y0, y1: st.y1 }; }
         if (opts.onSelect) opts.onSelect(st.sel >= 0);
       }
+      else if (st.tool === "long" || st.tool === "short") {
+        var q0 = point(p), u0 = st.tool === "long" ? 1 : -1;
+        var risk0 = Math.max(snap((st.y1 - st.y0) * 0.06), st.fmt.tick * 4);
+        st.drawings.push({ type: st.tool, a: q0, b: { t: tAt(iOf(p.x) + Math.max(8, Math.round(120 / st.barW))), p: q0.p },
+                           s: { p: snap(q0.p - u0 * risk0) }, g: { p: snap(q0.p + u0 * 2 * risk0) } });
+        st.sel = st.drawings.length - 1; setTool("cursor"); if (opts.onSelect) opts.onSelect(true);
+      }
       else if (st.tool === "hline") { st.drawings.push({ type: "hline", a: point(p) }); st.sel = st.drawings.length - 1; setTool("cursor"); if (opts.onSelect) opts.onSelect(true); }
       else if (st.tool === "erase") { var k = hit(p); if (k >= 0) { st.drawings.splice(k, 1); st.sel = -1; } }
       else { drag = { mode: "draw", x: p.x, y: p.y }; st.draft = { type: st.tool, a: point(p), b: point(p) }; }
@@ -354,7 +443,7 @@
         else if (drag.mode === "handle") drag.h.set(point(p));
         else if (drag.mode === "moveDraw" && st.drawings[st.sel]) {
           var dsel = st.drawings[st.sel], di = iOf(p.x) - drag.i, dpr = pOf(p.y) - drag.p;
-          ["a", "b"].forEach(function (key) {
+          ["a", "b", "s", "g"].forEach(function (key) {
             if (drag.orig[key]) dsel[key] = { t: drag.orig[key].t != null ? tAt(iAt(drag.orig[key].t) + di) : undefined, p: snap(drag.orig[key].p + dpr) };
           });
         }
@@ -436,6 +525,7 @@
       undo: function () { st.drawings.pop(); st.sel = -1; if (opts.onSelect) opts.onSelect(false); redraw(); },
       clearDrawings: function () { st.drawings = []; st.draft = null; st.sel = -1; if (opts.onSelect) opts.onSelect(false); redraw(); },
       removeSelected: removeSelected,
+      selected: function () { var d = st.drawings[st.sel]; return d ? JSON.parse(JSON.stringify(d)) : null; },
       drawings: function () { return st.drawings.slice(); },
       resetView: function () { fit(); redraw(); },
       view: function () { return { barWidth: st.barW, right: st.right, autoPrice: st.autoY, low: st.y0, high: st.y1 }; },

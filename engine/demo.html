@@ -61,6 +61,24 @@ select, input[type=number] { font: 500 .92rem var(--mono); padding: .4rem .5rem;
 .field small { grid-column: 1 / -1; text-align: right; font: .78rem var(--mono); color: var(--muted); margin-top: -.25rem; min-height: 1rem; }
 .ticket .seg { display: flex; margin-top: .55rem; } .ticket .seg button { flex: 1; }
 .rr { margin-top: .5rem; padding: .4rem .5rem; border-radius: 6px; background: var(--paper-2); font: 600 .84rem var(--mono); display: flex; justify-content: space-between; }
+/* account + prop panels: one fact per row, plain-English labels, numbers right-aligned */
+.ap-hero { display: flex; justify-content: space-between; align-items: flex-end; gap: .5rem; padding-bottom: .55rem; }
+.ap-hero span { display: block; font-size: .8rem; color: var(--muted); }
+.ap-hero b { display: block; font: 600 1.45rem/1.15 var(--mono); }
+.ap-hero .ap-eq { text-align: right; } .ap-hero .ap-eq b { font-size: 1.05rem; }
+.ap-rows > div { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; padding: .42rem 0; border-top: 1px solid var(--rule); }
+.ap-rows span { font-size: .92rem; color: var(--body-ink); }
+.ap-rows span small { display: block; font-size: .74rem; color: var(--muted); line-height: 1.25; }
+.ap-rows b { font: 600 .95rem var(--mono); white-space: nowrap; }
+.ap-rows .ap-sub { padding-top: .6rem; font: 600 .7rem var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); border-top: 1px solid var(--rule); }
+.ap-status { display: inline-block; font: 600 .82rem var(--sans); padding: .2rem .6rem; border-radius: 999px; background: var(--paper-2); color: var(--ink); }
+.ap-status.ok { background: var(--green); color: #fff; } .ap-status.bad { background: var(--red); color: #fff; } .ap-status.warn { background: var(--hi); color: var(--on-hi); }
+.ap-meter { padding: .55rem 0; border-top: 1px solid var(--rule); }
+.ap-meter .top { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; font-size: .92rem; }
+.ap-meter .top b { font: 600 .95rem var(--mono); white-space: nowrap; }
+.ap-meter .ap-track { height: 9px; background: var(--paper-2); border-radius: 5px; overflow: hidden; margin: .35rem 0 .25rem; }
+.ap-meter .ap-fill { height: 100%; border-radius: 5px; transition: width .25s; }
+.ap-meter small { display: block; font-size: .78rem; color: var(--muted); }
 dl.kv { display: grid; grid-template-columns: auto auto; gap: .12rem .8rem; font: .86rem var(--mono); }
 dl.kv dt { color: var(--muted); } dl.kv dd { text-align: right; font-weight: 500; }
 dl.kv .big { font-size: 1.05rem; font-weight: 600; }
@@ -99,8 +117,12 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
           <button type="button" data-tool="hline" aria-pressed="false" title="Click a price to mark a level">Level</button>
           <button type="button" data-tool="zone" aria-pressed="false" title="Drag a box over an area">Zone</button>
           <button type="button" data-tool="measure" aria-pressed="false" title="Drag to measure points, % and candles">Measure</button>
+          <button type="button" data-tool="long" aria-pressed="false" title="Click where you would buy">Long position</button>
+          <button type="button" data-tool="short" aria-pressed="false" title="Click where you would sell">Short position</button>
+          <button type="button" data-tool="fib" aria-pressed="false" title="Drag from the start of a move to the end">Fib / EQ</button>
           <button type="button" data-tool="erase" aria-pressed="false" title="Click a drawing to delete it">Eraser</button>
           <span class="gap"></span>
+          <button type="button" id="tradeTool" hidden title="Send this long or short setup to the order panel as a real order">Place this trade</button>
           <button type="button" id="delBtn" disabled title="Delete the selected drawing (Delete key)">Delete selected</button>
           <button type="button" id="undoBtn">Undo</button>
           <button type="button" id="clearBtn">Clear drawings</button>
@@ -151,16 +173,16 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
         <div class="rr"><span>Risk : reward</span><span id="rr">–</span></div>
         <p id="msg" role="status" aria-live="polite"></p>
       </div>
-      <div class="panel"><h2>Account</h2><dl class="kv" id="acct"></dl></div>
-      <div class="panel" id="propPanel"><h2>Prop rules</h2><dl class="kv" id="prop"></dl></div>
+      <div class="panel"><h2>Account</h2><div id="acct"></div></div>
+      <div class="panel" id="propPanel"><h2>Prop rules</h2><div id="prop"></div></div>
       <div class="panel"><h2>What just happened</h2><div id="feed"></div></div>
     </div>
   </div>
 </div>
 
-<script src="/engine/instruments.js?v=5"></script>
-<script src="/engine/replay.js?v=5"></script>
-<script src="/engine/chart.js?v=5"></script>
+<script src="/engine/instruments.js?v=6"></script>
+<script src="/engine/replay.js?v=6"></script>
+<script src="/engine/chart.js?v=6"></script>
 <script>
 (function () {
   var E = window.BXEngine, $ = function (id) { return document.getElementById(id); };
@@ -177,6 +199,23 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
   }
   function px(x) { var d = E.instruments.decimals(S.instrument.tickSize); return x.toLocaleString("en-GB", { minimumFractionDigits: d, maximumFractionDigits: d }); }
   function cls(x) { return x > 0 ? "up" : x < 0 ? "dn" : ""; }
+  function row(label, hint, value, c) {
+    return '<div><span>' + label + (hint ? '<small>' + hint + '</small>' : '') + '</span><b class="' + (c || "") + '">' + value + '</b></div>';
+  }
+  function meter(label, value, frac, colour, note) {
+    var w = Math.max(0, Math.min(1, frac || 0)) * 100;
+    return '<div class="ap-meter"><div class="top"><span>' + label + '</span><b>' + value + '</b></div>' +
+           '<div class="ap-track" role="img" aria-label="' + label + ': ' + Math.round(w) + '%"><div class="ap-fill" style="width:' + w.toFixed(1) + '%;background:' + colour + '"></div></div>' +
+           (note ? '<small>' + note + '</small>' : '') + '</div>';
+  }
+  function room(f) { return f > 0.5 ? "var(--green)" : f > 0.25 ? "var(--hi)" : "var(--red)"; }
+  function costsText(f, cur) {
+    var parts = [];
+    if (f.commission) parts.push("commission " + cash(f.commission, cur));
+    if (f.spread) parts.push("spread " + cash(f.spread, cur));
+    if (f.financing) parts.push("overnight " + cash(f.financing, cur));
+    return parts.join(", ") || "commission, spread and overnight fees";
+  }
   function kv(el, rows) { el.innerHTML = rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd class='" + (r[2] || "") + "'>" + r[1] + "</dd>"; }).join(""); }
   function say(t) { $("msg").textContent = t || ""; }
   function tfName(sec) { return sec % 86400 === 0 ? sec / 86400 + "d" : sec % 3600 === 0 ? sec / 3600 + "h" : sec / 60 + "m"; }
@@ -186,7 +225,23 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
   /* ---------- chart + tools ---------- */
   var toolBtns = Array.prototype.slice.call(document.querySelectorAll(".tools [data-tool]"));
   function showTool(name) { toolBtns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.tool === name)); }); }
-  var chart = window.BXChart.create($("cv"), { onTool: showTool, onSelect: function (on) { $("delBtn").disabled = !on; } });
+  var chart = window.BXChart.create($("cv"), { onTool: showTool, onSelect: function (on) {
+    $("delBtn").disabled = !on;
+    var d = on && chart.selected();
+    $("tradeTool").hidden = !(d && (d.type === "long" || d.type === "short"));
+  } });
+  /* Turn a position-tool drawing into an order: market if price is at the entry, otherwise a limit or stop. */
+  $("tradeTool").onclick = function () {
+    var d = chart.selected(); if (!S || !d || (d.type !== "long" && d.type !== "short")) return;
+    var I = S.instrument, q = S.quote(), side = d.type === "long" ? "buy" : "sell", here = side === "buy" ? q.ask : q.bid, type;
+    if (Math.abs(d.a.p - here) < I.tickSize / 2) type = "market";
+    else if (side === "buy") type = d.a.p < here ? "limit" : "stop";
+    else type = d.a.p > here ? "limit" : "stop";
+    var r = S.placeOrder({ side: side, type: type, size: parseFloat($("size").value), price: type === "market" ? null : d.a.p, sl: d.s.p, tp: d.g.p });
+    say(r.ok ? "" : r.error);
+    if (r.ok) { chart.removeSelected(); setTab(type === "market" ? "pos" : "ord"); }
+    render();
+  };
   $("delBtn").onclick = function () { chart.removeSelected(); };
   toolBtns.forEach(function (b) { b.onclick = function () { chart.setTool(b.dataset.tool); showTool(b.dataset.tool); }; });
   $("undoBtn").onclick = chart.undo; $("clearBtn").onclick = chart.clearDrawings; $("resetBtn").onclick = chart.resetView;
@@ -216,7 +271,7 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
     });
     var same = market().timeframes.filter(function (t) { return baseOf(t) === base; });
     $("hint").textContent = "This replay runs on " + base + " data. " + (same.length > 1 ? "Switch between " + same.join(", ") + " and you keep your place; " : "") +
-      "the greyed timeframes open a new chart. Space = play, arrow keys = step. Drag the chart to move it, scroll to zoom, drag the price scale to stretch it. Click a drawing to select it, then drag it or its round grab points to adjust it.";
+      "the greyed timeframes open a new chart. Space = play, arrow keys = step. Drag the chart to move it, scroll to zoom, drag the price scale to stretch it. Click a drawing to select it, then drag it or its round grab points to adjust it. A selected long or short position can be sent straight to the order panel.";
   }
   function setTf(t) {
     if (S && baseOf(t) === base) { tf = t; fillSkip(); showTf(); render("regroup"); }
@@ -243,7 +298,7 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
       $("sizeLbl").textContent = "Size (" + I.sizeUnit + ")";
       $("slLbl").textContent = "Stop loss (" + I.pointName + "s)"; $("tpLbl").textContent = "Take profit (" + I.pointName + "s)";
       chart.setFormat({ decimals: E.instruments.decimals(I.tickSize), tick: I.tickSize, pointSize: I.pointSize, pointName: I.pointName });
-      showTool("cursor"); chart.setTool("cursor");
+      showTool("cursor"); chart.setTool("cursor"); moneyFmt();
       fillSkip(); showTf(); render("reset");
     }).catch(function (e) { say("Could not load the chart: " + e.message); });
   }
@@ -302,7 +357,11 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
     $("sellBtn").firstChild.textContent = otype === "market" ? "Sell" : "Sell " + otype;
     $("buyBtn").firstChild.textContent = otype === "market" ? "Buy" : "Buy " + otype;
   }
-  ["size", "sl", "tp"].forEach(function (id) { $(id).oninput = ticket; });
+  ["size", "sl", "tp"].forEach(function (id) { $(id).oninput = function () { ticket(); moneyFmt(); }; });
+  function moneyFmt() {
+    if (!S) return;
+    chart.setFormat({ money: function (points) { var v = S.pointsToMoney(points, parseFloat($("size").value) || 0); return (v > 0 ? "+" : "") + cash(v, S.currency); } });
+  }
   function trade(side) {
     if (!S) return;
     var I = S.instrument, q = S.quote(), dir = side === "buy" ? 1 : -1, price = otype === "market" ? null : parseFloat($("oprice").value);
@@ -379,22 +438,37 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
     var a = S.account(), p = S.position(), cur = a.currency, q = S.quote(), I = S.instrument;
     $("bid").textContent = px(q.bid); $("ask").textContent = px(q.ask);
     $("clock").textContent = clockFmt.format(new Date((S.time + baseSec) * 1000));
-    kv($("acct"), [
-      ["Balance", cash(a.balance, cur), "big"], ["Equity", cash(a.equity, cur)], ["Open profit", cash(a.unrealized, cur), cls(a.unrealized)],
-      ["Closed profit", cash(a.realized, cur), cls(a.realized)],
-      ["Margin in use", cash(a.usedMargin, cur)], ["Free margin", cash(a.freeMargin, cur)],
-      ["Margin level", a.marginLevel == null ? "–" : Math.round(a.marginLevel) + "%"],
-      ["Costs so far", cash(a.fees.commission + a.fees.spread + a.fees.financing, cur)]
-    ]);
+    var costs = a.fees.commission + a.fees.spread + a.fees.financing, isFut = I.type === "future";
+    $("acct").innerHTML =
+      '<div class="ap-hero"><div><span>Balance</span><b>' + cash(a.balance, cur) + '</b></div>' +
+      '<div class="ap-eq"><span>Equity</span><b class="' + cls(a.equity - a.balance) + '">' + cash(a.equity, cur) + '</b></div></div>' +
+      '<div class="ap-rows">' +
+        row("Open trade", "profit right now if you closed", cash(a.unrealized, cur), cls(a.unrealized)) +
+        row("Closed trades", "total from trades you've finished", cash(a.realized, cur), cls(a.realized)) +
+        row("Costs paid", costsText(a.fees, cur), cash(-costs, cur), costs > 0 ? "dn" : "") +
+        (isFut ? "" :
+          '<div class="ap-sub">Margin</div>' +
+          row("In use", "held by the broker for open trades", cash(a.usedMargin, cur)) +
+          row("Free", "available for new trades", cash(a.freeMargin, cur), a.freeMargin < 0 ? "dn" : "") +
+          row("Margin level", "stop-out at " + S.stopOutLevel + "%", a.marginLevel == null ? "–" : Math.round(a.marginLevel) + "%", a.marginLevel != null && a.marginLevel < 150 ? "dn" : "")) +
+      '</div>';
     var r = S.propStatus();
     $("propPanel").style.display = r ? "" : "none";
-    if (r) kv($("prop"), [
-      ["Status", r.status + (r.dayLocked ? " (locked today)" : ""), "big " + (r.status === "passed" ? "up" : r.status === "failed" ? "dn" : "")],
-      ["Profit so far", cash(r.profit, cur), cls(r.profit)], ["Still needed", r.toTarget == null ? "–" : cash(r.toTarget, cur)],
-      ["Fail if equity hits", r.drawdownFloor == null ? "–" : cash(r.drawdownFloor, cur)], ["Room before that", r.drawdownRoom == null ? "–" : cash(r.drawdownRoom, cur), r.drawdownRoom != null && r.drawdownRoom < 500 ? "dn" : ""],
-      ["Today's loss limit", r.dailyLossRoom == null ? "–" : cash(r.dailyLossRoom, cur) + " left"],
-      ["Max size", r.maxSize == null ? "–" : r.maxSize + " " + I.sizeUnit], ["Days traded", r.tradingDays + (r.minTradingDays ? " of " + r.minTradingDays : "")]
-    ]);
+    if (r) {
+      var st = r.status === "passed" ? ["Passed", "ok"] : r.status === "failed" ? ["Failed: " + (r.reason === "dailyLoss" ? "daily loss limit" : "max drawdown"), "bad"] : r.dayLocked ? ["Locked for today", "warn"] : ["Active", ""];
+      var html = '<div class="ap-hero"><div><span class="ap-status ' + st[1] + '">' + st[0] + '</span></div><div class="ap-eq"><span>Profit so far</span><b class="' + cls(r.profit) + '">' + cash(r.profit, cur) + '</b></div></div>';
+      if (r.profitTarget != null) html += meter("Profit target", cash(Math.max(0, r.profit), cur) + " of " + cash(r.profitTarget, cur),
+        r.profit / r.profitTarget, "var(--green)", r.toTarget > 0 ? cash(r.toTarget, cur) + " to go" : "Target reached" + (r.minTradingDays && r.tradingDays < r.minTradingDays ? ", keep trading to reach the minimum days" : ""));
+      if (r.drawdownLimit != null) html += meter("Max drawdown", cash(Math.max(0, r.drawdownRoom), cur) + " left",
+        r.drawdownRoom / r.drawdownLimit, room(r.drawdownRoom / r.drawdownLimit),
+        "Fails if equity drops to " + cash(r.drawdownFloor, cur) + (r.drawdownType === "trailingEOD" ? " (moves up with your end-of-day balance)" : r.drawdownType === "trailing" ? " (moves up with your best equity)" : ""));
+      if (r.dailyLossLimit != null) html += meter("Daily loss limit", cash(Math.max(0, r.dailyLossRoom), cur) + " left today",
+        r.dailyLossRoom / r.dailyLossLimit, room(r.dailyLossRoom / r.dailyLossLimit), "Resets at the start of each trading day");
+      html += '<div class="ap-rows">' +
+        (r.maxSize != null ? row("Biggest position allowed", "", r.maxSize + " " + I.sizeUnit) : "") +
+        row("Days traded", r.minTradingDays ? "need at least " + r.minTradingDays : "", String(r.tradingDays)) + '</div>';
+      $("prop").innerHTML = html;
+    }
     var lock = S.locked();
     $("buyBtn").disabled = $("sellBtn").disabled = !!lock;
     $("stepBtn").disabled = $("playBtn").disabled = S.isDone(); $("backBtn").disabled = !S.canStepBack();

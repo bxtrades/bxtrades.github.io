@@ -300,6 +300,7 @@
       drawdownType: this.ddAmt != null ? this.ddType : null,
       drawdownFloor: f != null ? money(f) : null, drawdownRoom: f != null ? money(acc.equity - f) : null,
       dailyLossFloor: g != null ? money(g) : null, dailyLossRoom: g != null ? money(acc.equity - g) : null,
+      drawdownLimit: this.ddAmt != null ? money(this.ddAmt) : null, dailyLossLimit: g != null ? money(this.dayStart - g) : null,
       maxSize: this.maxSize, tradingDays: this.dayCount, minTradingDays: this.minDays
     };
   };
