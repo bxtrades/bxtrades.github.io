@@ -19,31 +19,27 @@
 <script data-goatcounter="https://bxtrades.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#f3efe6">
+<script>try{var t=localStorage.getItem("bxt-theme");if(t)document.documentElement.setAttribute("data-theme",t);}catch(e){}</script>
 <style>
 :root{
-  --bg:#EEF2F6; --surface:#FFFFFF; --ink:#13233A; --muted:#5B6B80; --line:#D5DEE8;
-  --up:#138A6B; --down:#C23B3B; --mark:#E2A21B; --curtain:rgba(226,162,27,.16);
-  --up-soft:rgba(19,138,107,.12); --down-soft:rgba(194,59,59,.12); --sess:rgba(91,107,128,.08); --draw:#5B4BDB;
-  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
-  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  /* Notebook look, same colours as style.css: paper, ink, highlighter, red/green pen */
+  --bg:#f3efe6; --surface:#fbf9f4; --soft:#ebe5d8; --ink:#1d1c1a; --muted:#6a645a; --line:#cfc7b6;
+  --up:#1f7a4d; --down:#b5392b; --mark:#b5741c; --hi:#f6d64a; --curtain:rgba(246,214,74,.30);
+  --up-soft:rgba(31,122,77,.10); --down-soft:rgba(181,57,43,.10); --sess:rgba(106,100,90,.08); --draw:#2f5fb3;
+  --display:"Source Serif 4", Georgia, serif;
+  --body:"IBM Plex Sans", system-ui, sans-serif;
+  --mono:"IBM Plex Mono", ui-monospace, monospace;
   color-scheme: light;
   box-sizing:border-box;
   padding-top:env(safe-area-inset-top,0px);
   padding-bottom:env(safe-area-inset-bottom,0px);
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0F1B2B; --surface:#172638; --ink:#E6EDF5; --muted:#93A3B8; --line:#26394F;
-    --up:#2DBE94; --down:#F0625F; --mark:#F5C14B; --curtain:rgba(245,193,75,.13);
-    --up-soft:rgba(45,190,148,.14); --down-soft:rgba(240,98,95,.14); --sess:rgba(147,163,184,.09); --draw:#9D8FFF;
-    color-scheme: dark;
-  }
-}
 :root[data-theme="dark"]{
-  --bg:#0F1B2B; --surface:#172638; --ink:#E6EDF5; --muted:#93A3B8; --line:#26394F;
-  --up:#2DBE94; --down:#F0625F; --mark:#F5C14B; --curtain:rgba(245,193,75,.13);
-  --up-soft:rgba(45,190,148,.14); --down-soft:rgba(240,98,95,.14); --sess:rgba(147,163,184,.09); --draw:#9D8FFF;
+  --bg:#161719; --surface:#1c1d20; --soft:#1f2023; --ink:#ece6d8; --muted:#9d978a; --line:#34332f;
+  --up:#4fbf8a; --down:#e2675a; --mark:#e3c23a; --hi:#e3c23a; --curtain:rgba(227,194,58,.16);
+  --up-soft:rgba(79,191,138,.12); --down-soft:rgba(226,103,90,.12); --sess:rgba(157,151,138,.09); --draw:#8fb0ff;
   color-scheme: dark;
 }
 *,*::before,*::after{box-sizing:inherit}
@@ -196,17 +192,110 @@ canvas.trading{touch-action:none}
   .stats{grid-template-columns:repeat(2,1fr)}
   .pick{font-size:1.15rem;padding:.9rem}
 }
+
+/* ===== Notebook theme (matches the rest of bxtrades.com) ===== */
+body{font-size:16px;line-height:1.55}
+main{padding-top:1.5rem}
+.hl{background:linear-gradient(transparent 55%,var(--hi) 55%,var(--hi) 92%,transparent 92%);padding:0 .1em}
+:root[data-theme="dark"] .hl{background:linear-gradient(transparent 55%,rgba(227,194,58,.45) 55%,rgba(227,194,58,.45) 92%,transparent 92%)}
+.kicker{font-family:var(--mono);font-size:.8rem;color:var(--muted);margin:0 0 .5rem}
+h1{font-weight:600;letter-spacing:-.02em;line-height:1.05}
+.sub{font-family:var(--mono);font-size:.85rem}
+.board,.lb,.panel,.result,details,.trade{border-radius:0;border:1px solid var(--ink);background:var(--surface)}
+.board{box-shadow:4px 4px 0 var(--ink)}
+.result{border-left-width:6px}
+.weekly{border-left:6px solid var(--mark)}
+.modes,.modes button{border-radius:0}
+.modes{border:1.5px solid var(--ink);padding:3px}
+.snd{border-radius:0;border:1.5px solid var(--ink);background:transparent}
+.snd:hover{background:var(--ink);color:var(--bg)}
+.question{font-weight:600}
+.pick{font-family:var(--body);font-weight:700;font-size:1.2rem;border-radius:0;border-width:1.5px;box-shadow:3px 3px 0 currentColor;transition:transform .1s,box-shadow .1s}
+.pick:hover:not(:disabled){transform:translate(1px,1px);box-shadow:2px 2px 0 currentColor}
+.pick:active:not(:disabled){transform:translate(3px,3px);box-shadow:0 0 0 currentColor}
+.pick:disabled{box-shadow:none}
+.btn{font-weight:600;border-radius:0;border:1.5px solid var(--ink);box-shadow:3px 3px 0 var(--ink);transition:transform .1s,box-shadow .1s}
+.btn:hover:not(:disabled){transform:translate(1px,1px);box-shadow:2px 2px 0 var(--ink)}
+.btn:active:not(:disabled){transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+.btn.ghost{background:transparent;color:var(--ink)}
+:root[data-theme="dark"] .btn:not(.ghost){color:var(--bg)}
+.tools button,.replay button,.tf-pick select,.rp-speed select,.prac select,.trade input,.lb-name input,textarea.share{border-radius:0}
+.tools button[aria-pressed="true"]{color:#fff}
+.stats{gap:0;border:1px solid var(--ink);background:var(--surface)}
+.stat{border:0;border-right:1px solid var(--line);border-radius:0;background:transparent}
+.stat:last-child{border-right:0}
+.stat b{font-family:var(--mono);font-weight:600;font-size:1.55rem}
+.stat span{font-size:.8rem}
+.lb-rank,.lb-num,.rp-pos,.bd-val,.countdown,.trade input,#tfLabel{font-family:var(--mono)}
+.lb-rank,.lb-num{font-weight:600}
+.lb-list li.me{border-radius:0;background:linear-gradient(transparent 12%,var(--curtain) 12%,var(--curtain) 88%,transparent 88%)}
+.lb-name.ask{border-radius:0;border:1.5px solid var(--ink);background:var(--curtain)}
+.crowd{border-radius:0}
+.crowd-bar,.wk-bar,.bd-bar{border-radius:0}
+.wk-bar span{background:var(--hi)}
+.badges li{border-radius:0}
+.badges li.got{background:var(--curtain);border-color:var(--ink)}
+.toast{border-radius:0;box-shadow:3px 3px 0 var(--hi)}
+.toggle input{accent-color:var(--ink)}
+summary{font-family:var(--display);font-weight:600;font-size:1.1rem}
+button:focus-visible,input:focus-visible,summary:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #c9a400;outline-offset:2px}
+.back-link{display:inline-block;margin:0 0 1rem;font-size:.9rem;color:var(--muted)}
+.back-link:hover{color:var(--ink)}
+@media (max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}.stat:nth-child(2){border-right:0}.stat:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+
+/* Shared top bar + footer (same as the other tool pages) */
+.topbar{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:2px solid var(--ink)}
+.topbar .bar{max-width:1200px;margin:0 auto;padding:.9rem 18px;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.topbar .logo{font-family:var(--display);font-weight:700;font-size:1.25rem;text-decoration:none;color:var(--ink);white-space:nowrap}
+.topbar .logo span{font-weight:400;font-style:italic;color:var(--muted)}
+.topbar .links{display:flex;gap:1.4rem;margin-left:auto}
+.topbar .links a{font-size:.92rem;text-decoration:none;color:var(--muted)}
+.topbar .links a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:4px}
+.nav-deal{font:600 .82rem var(--body);text-decoration:none;color:#1d1c1a;background:var(--hi);border:1.5px solid var(--ink);padding:.35rem .7rem;white-space:nowrap}
+.nav-discord{font:600 .82rem var(--body);text-decoration:none;background:var(--ink);color:var(--bg);border:1.5px solid var(--ink);padding:.35rem .7rem;white-space:nowrap;display:inline-flex;align-items:center;gap:.4rem}
+.nav-discord:hover{background:var(--bg);color:var(--ink)}
+.theme-btn{background:none;border:1.5px solid var(--ink);color:var(--ink);width:2rem;height:2rem;display:inline-grid;place-items:center;cursor:pointer;flex:none}
+.theme-btn:hover{background:var(--ink);color:var(--bg)}
+.menu-btn{display:none;background:none;border:1px solid var(--ink);color:var(--ink);font:600 .85rem var(--body);padding:.35rem .7rem;cursor:pointer}
+@media (max-width:760px){
+  .topbar .bar{flex-wrap:wrap}
+  .menu-btn{display:block;order:3}
+  .nav-discord{margin-left:auto}
+  .topbar .links{display:none;order:4;width:100%;flex-direction:column;gap:0;margin:.5rem 0 0}
+  .topbar .links a{padding:.8rem 0;border-top:1px solid var(--line);color:var(--ink)}
+  .menu-open .topbar .links{display:flex}
+}
+@media (max-width:480px){.topbar .logo span,.nav-discord{display:none}.nav-deal{margin-left:auto;font-size:.75rem;padding:.3rem .5rem}}
+.site-footer{max-width:1080px;margin:2.5rem auto 0;padding:2rem 18px 2.5rem;border-top:2px solid var(--ink);font-size:.95rem}
+.site-footer .footer-links{display:flex;flex-wrap:wrap;gap:.6rem 1.6rem;margin-bottom:1.2rem}
+.site-footer .footer-links a{color:var(--ink);font-weight:600;text-underline-offset:4px}
+.site-footer p{color:var(--muted);font-size:.85rem;max-width:760px;margin:0 0 .8rem}
+.site-footer strong,.site-footer .contact a{color:var(--ink)}
 </style>
 </head>
 <body>
+<div class="topbar">
+  <header class="bar">
+    <a href="/" class="logo">BXTrades <span>by Boris</span></a>
+    <nav class="links" aria-label="Main">
+      <a href="/#about">About</a>
+      <a href="/videos">Videos</a>
+      <a href="/backtests">Backtests</a>
+      <a href="/tools">Tools</a>
+      <a href="/community">Community</a>
+    </nav>
+    <a class="nav-discord" href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener" data-goatcounter-click="nav-discord-clash" data-goatcounter-title="Top bar: Discord"><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 4h16v12H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Discord</span></a>
+    <a class="nav-deal" href="/#deal">40% off evals</a>
+    <button class="theme-btn" type="button" aria-label="Switch dark mode" title="Dark / light mode" onclick="(function(){var r=document.documentElement,d=r.getAttribute('data-theme')==='dark'?'light':'dark';r.setAttribute('data-theme',d);try{localStorage.setItem('bxt-theme',d)}catch(e){}document.querySelectorAll('meta[name=theme-color]').forEach(function(m){m.content=d==='dark'?'#161719':'#f3efe6'});window.dispatchEvent(new Event('themechange'))})()"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/></svg></button>
+    <button class="menu-btn" aria-label="Open menu" onclick="document.body.classList.toggle('menu-open')">Menu</button>
+  </header>
+</div>
 <main>
-  <nav class="site-bar" aria-label="BXTrades">
-    <a href="/">← BXTrades</a>
-    <a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener">Join the Discord</a>
-  </nav>
+  <a class="back-link" href="/tools">← Back to BXTrades tools</a>
   <header>
     <div>
-      <h1>Candle Clash</h1>
+      <p class="kicker">Free daily game · by Boris</p>
+      <h1>Candle <span class="hl">Clash</span></h1>
       <p class="sub" id="sub">Chart #1</p>
     </div>
     <div class="hdr-right">
@@ -385,6 +474,22 @@ canvas.trading{touch-action:none}
   <p class="note">Charts use historical NQ futures prices. This is a training game, not trading advice.</p>
 </main>
 
+<footer class="site-footer">
+  <div class="footer-links">
+    <a href="https://www.tiktok.com/@bxtrades_" target="_blank" rel="noopener">TikTok</a>
+    <a href="https://discord.gg/6UCdDEGptX" target="_blank" rel="noopener">Discord</a>
+    <a href="/tools">All tools</a>
+    <a href="/replay">Replay simulator</a>
+    <a href="/sessions">Session clock</a>
+    <a href="/glossary">Glossary</a>
+    <a href="/#deal">TradersScale 40% off</a>
+    <a href="/privacy">Privacy</a>
+  </div>
+  <p><strong>Not a broker.</strong> BXTrades is my personal education page. I'm not a broker or investment firm, I never manage anyone's money, and I'll never DM you asking you to invest.</p>
+  <p class="contact">Brand deals, collabs or questions: <a href="mailto:bxtrades1@gmail.com">bxtrades1@gmail.com</a></p>
+  <p>© 2026 BXTrades</p>
+</footer>
+
 <script src="/clash-config.js"></script>
 <script>
 (function(){
@@ -481,14 +586,14 @@ canvas.trading{touch-action:none}
     var css = getComputedStyle(document.documentElement);
     var col = function(v){ return css.getPropertyValue(v).trim(); };
     var C = { up:col("--up"), down:col("--down"), ink:col("--ink"), muted:col("--muted"), line:col("--line"), mark:col("--mark"), curtain:col("--curtain"), surface:col("--surface"), sess:col("--sess"), draw:col("--draw") };
-    var bodyFont = css.getPropertyValue("--body");
+    var bodyFont = css.getPropertyValue("--mono");
 
     var rect = wrap.getBoundingClientRect(), W = rect.width, H = rect.height, dpr = window.devicePixelRatio || 1;
     cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
 
-    var axisW = W < 420 ? 62 : 74, padT = 14, padB = 24, padL = 4;
+    var axisW = W < 420 ? 72 : 82, padT = 14, padB = 24, padL = 4;
     var plotW = W - axisW - padL, plotH = H - padT - padB;
     var shown = VIS + revealed;
     var entry = chart[VIS-1].c;
@@ -1309,6 +1414,7 @@ canvas.trading{touch-action:none}
   if (window.ResizeObserver) new ResizeObserver(draw).observe(wrap); else window.addEventListener("resize", draw);
   if (window.matchMedia){ var mq = window.matchMedia("(prefers-color-scheme: dark)"); if (mq.addEventListener) mq.addEventListener("change", draw); }
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  window.addEventListener("themechange", function(){ setTimeout(draw, 30); });
 
   // ---------- shared leaderboard (Supabase) ----------
   // Scores live in a free Supabase database so anyone can play without an account.
