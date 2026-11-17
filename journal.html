@@ -184,6 +184,30 @@ table.mini td,table.mini th{padding:6px 8px}
 tr.pick td{background:var(--soft)}
 .logtools{display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:6px}
 .logtools input{max-width:280px}
+.drop{border:2px dashed var(--line); border-radius:10px; padding:12px; text-align:center; font-size:.9rem; color:var(--muted); background:var(--bg)}
+.drop.over{border-color:var(--accent); color:var(--ink)}
+.drop .btn{margin-top:6px}
+.thumbs{display:flex; gap:8px; flex-wrap:wrap; margin-top:8px}
+.thumbs:empty{display:none}
+.thumb{position:relative; width:84px; height:62px; border-radius:6px; overflow:hidden; border:1px solid var(--line); background:var(--soft); padding:0; cursor:zoom-in}
+.thumb img{width:100%; height:100%; object-fit:cover; display:block}
+.thumb .x{position:absolute; top:2px; right:2px; width:24px; height:24px; border-radius:50%; border:0; background:rgba(0,0,0,.65); color:#fff; font:700 14px/24px sans-serif; cursor:pointer; padding:0}
+td .thumbs{margin-top:6px} td .thumb{width:64px; height:46px}
+.lightbox{position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:60; display:flex; align-items:center; justify-content:center; padding:48px 12px 12px}
+.lightbox[hidden]{display:none}
+.lightbox img{max-width:100%; max-height:100%; border-radius:6px; background:#fff}
+.lightbox button{position:absolute; border:0; background:rgba(255,255,255,.15); color:#fff; font:700 1.1rem sans-serif; border-radius:8px; min-width:44px; min-height:44px; cursor:pointer}
+.lightbox .close{top:8px; right:8px} .lightbox .prev{left:8px; top:50%} .lightbox .next{right:8px; top:50%}
+.lightbox .cap{position:absolute; top:14px; left:14px; color:#fff; font-size:.9rem}
+.selbar{display:flex; gap:10px; align-items:center; flex-wrap:wrap; padding:8px 10px; margin-bottom:8px; border-radius:8px; background:var(--soft); font-weight:600; font-size:.92rem}
+.selbar[hidden]{display:none}
+.selbar .btn{min-height:38px}
+.btn.danger{background:var(--loss); border-color:var(--loss); color:#fff}
+td.pickcell,th.pickcell{width:34px; padding-right:0}
+td.pickcell input,th.pickcell input{width:20px; height:20px; accent-color:var(--accent); cursor:pointer}
+.rowbtn{font:inherit; font-size:.82rem; font-weight:600; background:var(--soft); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:5px 9px; cursor:pointer}
+.rowbtn.rm{color:var(--loss)}
+tr.chosen td{background:var(--soft)}
 .linkbtn{font:inherit; font-size:.85rem; background:none; border:0; color:var(--accent); cursor:pointer; padding:0; text-decoration:underline}
 </style>
 <link rel="stylesheet" href="tools.css">
@@ -297,6 +321,15 @@ tr.pick td{background:var(--soft)}
           <div class="checks" id="checks"></div>
         </fieldset>
         <label class="f full">Notes<textarea id="notes" placeholder="What did you see? What would you do differently?"></textarea></label>
+        <div class="f full">
+          <span style="font-size:.88rem;font-weight:600">Screenshots <span class="hint" style="display:inline;margin:0;font-weight:400">(optional, up to 6)</span></span>
+          <div class="drop" id="drop">
+            Paste a screenshot (Ctrl+V / ⌘V), drop images here, or
+            <div><button class="btn ghost small" type="button" id="pickImg">Choose images</button></div>
+            <input type="file" id="imgFile" accept="image/*" multiple hidden>
+          </div>
+          <div class="thumbs" id="formThumbs"></div>
+        </div>
         <label class="f full">Chart screenshot link <span class="hint" style="display:inline;margin:0;font-weight:400">(optional)</span>
           <input type="text" id="link" inputmode="url" autocomplete="off" placeholder="Paste a TradingView snapshot link">
         </label>
@@ -319,6 +352,7 @@ tr.pick td{background:var(--soft)}
   <section class="panel" style="margin-top:18px; border-top:1px solid var(--line)" aria-label="Trade log">
     <h2>Trade log</h2>
     <div class="logtools" id="logtools" hidden><input type="text" id="find" placeholder="Search notes, setup or market" aria-label="Search your trades"><span class="muted" id="count" style="font-size:.88rem"></span></div>
+    <div class="selbar" id="selbar" hidden><span id="selCount"></span><button class="btn danger small" type="button" id="delSel">Delete selected</button><button class="btn ghost small" type="button" id="clearSel">Cancel</button></div>
     <div id="log"></div>
     <div class="backup">
       <button class="btn ghost small" id="exportJson">Download backup</button>
@@ -329,6 +363,13 @@ tr.pick td{background:var(--soft)}
     <p class="warnbox">Your trades are saved in this browser on this device only. Download a backup now and then so you don’t lose them if you clear your browser or switch devices.</p>
   </section>
 
+  <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Screenshot">
+    <span class="cap" id="lbCap"></span>
+    <img id="lbImg" alt="Trade screenshot">
+    <button class="close" type="button" id="lbClose" aria-label="Close">✕</button>
+    <button class="prev" type="button" id="lbPrev" aria-label="Previous screenshot">‹</button>
+    <button class="next" type="button" id="lbNext" aria-label="Next screenshot">›</button>
+  </div>
   <div class="toast" id="toast" role="status" hidden><span id="toastText"></span><button type="button" id="toastUndo">Undo</button></div>
   <section class="tool-notes">
     <p class="small-note">Made by bxtrades. A journal for learning and review, not financial advice.</p>
@@ -383,6 +424,55 @@ tr.pick td{background:var(--soft)}
   try{ trades = JSON.parse(localStorage.getItem(KEY) || "[]"); if(!Array.isArray(trades)) trades = []; }catch(e){ trades = []; }
   function save(){ try{ localStorage.setItem(KEY, JSON.stringify(trades)); }catch(e){} }
   function $(id){ return document.getElementById(id); }
+
+  /* Screenshots live in IndexedDB (the browser's bigger storage), keyed by id. Each trade keeps a list of ids.
+     localStorage only holds a few MB, which a handful of screenshots would fill. */
+  var IMG = (function(){
+    var dbp = null;
+    function db(){
+      if(!dbp) dbp = new Promise(function(res, rej){
+        if(!window.indexedDB) return rej(new Error("no IndexedDB"));
+        var r = indexedDB.open("bxt-journal", 1);
+        r.onupgradeneeded = function(){ r.result.createObjectStore("images"); };
+        r.onsuccess = function(){ res(r.result); }; r.onerror = function(){ rej(r.error); };
+      });
+      return dbp;
+    }
+    function run(mode, fn){
+      return db().then(function(d){ return new Promise(function(res, rej){
+        var t = d.transaction("images", mode), req = fn(t.objectStore("images"));
+        t.oncomplete = function(){ res(req ? req.result : undefined); }; t.onerror = t.onabort = function(){ rej(t.error); };
+      }); });
+    }
+    var urls = {};
+    return {
+      put: function(id, blob){ return run("readwrite", function(st){ st.put(blob, id); }); },
+      get: function(id){ return run("readonly", function(st){ return st.get(id); }); },
+      del: function(ids){ ids = [].concat(ids || []); ids.forEach(function(id){ if(urls[id]){ URL.revokeObjectURL(urls[id]); delete urls[id]; } });
+        return ids.length ? run("readwrite", function(st){ ids.forEach(function(id){ st.delete(id); }); }) : Promise.resolve(); },
+      keys: function(){ return run("readonly", function(st){ return st.getAllKeys(); }); },
+      url: function(id){
+        if(urls[id]) return Promise.resolve(urls[id]);
+        return this.get(id).then(function(b){ if(!b) return null; urls[id] = URL.createObjectURL(b); return urls[id]; });
+      }
+    };
+  })();
+  // Shrink big screenshots before saving: longest side 1600px, JPEG. A chart screenshot ends up around 150 to 300 KB.
+  function shrink(file){
+    return new Promise(function(res, rej){
+      var u = URL.createObjectURL(file), im = new Image();
+      im.onload = function(){
+        var k = Math.min(1, 1600 / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement("canvas");
+        c.width = Math.max(1, Math.round(im.naturalWidth * k)); c.height = Math.max(1, Math.round(im.naturalHeight * k));
+        var g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(im, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(u);
+        c.toBlob(function(b){ b ? res(b) : rej(new Error("Could not read that image")); }, "image/jpeg", 0.85);
+      };
+      im.onerror = function(){ URL.revokeObjectURL(u); rej(new Error("That file isn’t an image this browser can open")); };
+      im.src = u;
+    });
+  }
+  function newId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
   function esc(t){ return String(t).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
   function fmtR(x){ return (x>0?"+":x<0?"−":"") + Math.abs(Math.round(x*100)/100) + "R"; }
   function pct(a,b){ return b ? Math.round(a/b*100) + "%" : "–"; }
@@ -454,6 +544,50 @@ tr.pick td{background:var(--soft)}
     Array.prototype.forEach.call(boxes,function(c){ c.checked=!all; });
   });
   function cleanLink(v){ v=String(v||"").trim(); if(!v) return ""; if(!/^https?:\/\//i.test(v)) v="https://"+v; try{ var u=new URL(v); return /^https?:$/.test(u.protocol) ? u.href : ""; }catch(e){ return ""; } }
+  /* Images in the form: { id, blob (new only), url, old (already saved) } */
+  var pending = [], dropped = [];
+  var MAXIMG = 6;
+  function showFormThumbs(){
+    $("formThumbs").innerHTML = pending.map(function(p, i){
+      return '<span class="thumb" role="button" tabindex="0" data-i="'+i+'" aria-label="View screenshot '+(i+1)+'"><img src="'+p.url+'" alt=""><button type="button" class="x" data-x="'+i+'" aria-label="Remove screenshot">×</button></span>';
+    }).join("");
+  }
+  function addFiles(files){
+    files = Array.prototype.filter.call(files || [], function(f){ return /^image\//.test(f.type); });
+    if(!files.length) return;
+    var room = MAXIMG - pending.length;
+    if(room <= 0){ flash("You can add up to "+MAXIMG+" screenshots to a trade.", true); return; }
+    if(files.length > room) flash("Only the first "+room+" were added (up to "+MAXIMG+" per trade).", true);
+    files.slice(0, room).forEach(function(f){
+      shrink(f).then(function(b){
+        if(pending.length >= MAXIMG) return;
+        pending.push({ id: newId(), blob: b, url: URL.createObjectURL(b) }); showFormThumbs();
+      }).catch(function(e){ flash(e.message, true); });
+    });
+  }
+  function flash(t, bad){ $("msg").style.color = bad ? "var(--loss)" : "var(--gain)"; $("msg").textContent = t; clearTimeout(flash.t); flash.t = setTimeout(function(){ $("msg").textContent=""; }, 4000); }
+  $("pickImg").addEventListener("click", function(){ $("imgFile").click(); });
+  $("imgFile").addEventListener("change", function(){ addFiles(this.files); this.value = ""; });
+  ["dragenter","dragover"].forEach(function(ev){ $("drop").addEventListener(ev, function(e){ e.preventDefault(); $("drop").classList.add("over"); }); });
+  ["dragleave","drop"].forEach(function(ev){ $("drop").addEventListener(ev, function(e){ e.preventDefault(); $("drop").classList.remove("over"); }); });
+  $("drop").addEventListener("drop", function(e){ addFiles(e.dataTransfer && e.dataTransfer.files); });
+  document.addEventListener("paste", function(e){
+    if(!$("lightbox").hidden) return;
+    var files = Array.prototype.map.call((e.clipboardData && e.clipboardData.items) || [], function(it){ return it.kind === "file" ? it.getAsFile() : null; }).filter(Boolean);
+    if(files.some(function(f){ return /^image\//.test(f.type); })){ e.preventDefault(); addFiles(files); }
+  });
+  $("formThumbs").addEventListener("click", function(e){
+    var x = e.target.closest("[data-x]");
+    if(x){ var p = pending.splice(+x.dataset.x, 1)[0]; if(p){ if(p.old) dropped.push(p.id); else URL.revokeObjectURL(p.url); } showFormThumbs(); return; }
+    var t = e.target.closest(".thumb"); if(t) openBox(pending.map(function(p){ return p.url; }), +t.dataset.i, "Screenshot");
+  });
+  function clearPending(){ pending.forEach(function(p){ if(!p.old) URL.revokeObjectURL(p.url); }); pending = []; dropped = []; showFormThumbs(); }
+  // Save the new images, delete the ones removed while editing, and return the final id list
+  function commitImages(){
+    var fresh = pending.filter(function(p){ return !p.old; }), ids = pending.map(function(p){ return p.id; }), gone = dropped.slice();
+    return Promise.all(fresh.map(function(p){ return IMG.put(p.id, p.blob); })).then(function(){ return IMG.del(gone); }).then(function(){ return ids; });
+  }
+
   var beforeEdit = null;
   function resetForm(){
     if(beforeEdit){   // put the form back how it was before you opened a trade to edit
@@ -465,7 +599,7 @@ tr.pick td{background:var(--soft)}
     $("r").value=""; $("usd").value=""; $("notes").value=""; $("link").value=""; aligned=""; setPressed($("aligned"),"x");
     ["cEntry","cStop","cExit"].forEach(function(id){ $(id).value=""; }); $("cOut").textContent="";
     document.querySelectorAll("#checks input").forEach(function(c){ c.checked=false; });
-    showChips(); toggleUsd();
+    clearPending(); showChips(); toggleUsd();
   }
   $("cancelEdit").addEventListener("click",function(){ applyCfg(); resetForm(); $("msg").textContent=""; });
   function setPressed(el,v){ Array.prototype.forEach.call(el.querySelectorAll("button"),function(b){ b.setAttribute("aria-pressed", String(b.dataset.v===v)); }); }
@@ -476,7 +610,9 @@ tr.pick td{background:var(--soft)}
   $("dir").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; dir=b.dataset.v; setPressed($("dir"),dir); calcR(); });
   $("filter").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; filter=b.dataset.v; setPressed($("filter"),filter); render(); });
 
+  var saving = false;
   $("add").addEventListener("click",function(){
+    if(saving) return;
     var rv = parseR($("r").value);
     if(rv === null){ $("msg").style.color="var(--loss)"; $("msg").textContent="Tap a result button or type the result in R."; $("r").focus(); return; }
     var steps = Array.prototype.map.call(document.querySelectorAll("#checks input"),function(c){ return c.checked; });
@@ -484,13 +620,23 @@ tr.pick td{background:var(--soft)}
                    steps: steps, notes: $("notes").value.trim(), setup: $("setup").value.trim(), link: cleanLink($("link").value) };
     if(!editId){ try{ localStorage.setItem(LKEY, JSON.stringify({ dir: dir, inst: fields.inst, mode: fields.mode, setup: fields.setup })); }catch(e){} }
     $("tip").hidden = true;
+    if(pending.length || dropped.length){
+      saving = true; $("add").disabled = true;
+      commitImages().then(function(ids){ fields.imgs = ids; finish(); }, function(){
+        fields.imgs = pending.filter(function(p){ return p.old; }).map(function(p){ return p.id; });
+        flash("The trade was saved, but this browser wouldn’t store the screenshots.", true); finish(true);
+      }).then(function(){ saving = false; $("add").disabled = false; });
+      return;
+    }
+    fields.imgs = [];
+    finish();
+    function finish(quiet){
     if(editId){
       // Editing keeps the checklist and question the trade was first logged with
       var old = trades.filter(function(t){ return t.id===editId; })[0];
       if(old){ for(var k in fields) old[k] = fields[k]; }
       save(); applyCfg(); resetForm();
-      $("msg").style.color="var(--gain)"; $("msg").textContent="Trade updated.";
-      setTimeout(function(){ $("msg").textContent=""; }, 2500);
+      if(!quiet){ $("msg").style.color="var(--gain)"; $("msg").textContent="Trade updated."; setTimeout(function(){ $("msg").textContent=""; }, 2500); }
       render(); return;
     }
     fields.id = Date.now().toString(36)+Math.random().toString(36).slice(2,6); fields.q = cfg.question; fields.stepNames = STEPS.slice();
@@ -509,9 +655,9 @@ tr.pick td{background:var(--soft)}
       }catch(e){}
     }
     resetForm();
-    $("msg").style.color="var(--gain)"; $("msg").textContent = sentToTracker ? "Trade saved, and added to your eval tracker." : "Trade saved. Ready for the next one.";
-    setTimeout(function(){ $("msg").textContent=""; }, 2500);
+    if(!quiet){ $("msg").style.color="var(--gain)"; $("msg").textContent = sentToTracker ? "Trade saved, and added to your eval tracker." : "Trade saved. Ready for the next one."; setTimeout(function(){ $("msg").textContent=""; }, 2500); }
     render();
+    }
   });
   // Load a saved trade back into the form
   function startEdit(id){
@@ -528,6 +674,12 @@ tr.pick td{background:var(--soft)}
     $("checks").innerHTML = names.length ? names.map(function(n,i){
       return '<label><input type="checkbox" data-i="'+i+'"'+((t.steps||[])[i]?' checked':'')+'><span class="n">'+(i+1)+'</span>'+esc(n)+'</label>';
     }).join("") : '<p class="hint" style="margin:0">This trade was saved without a checklist.</p>';
+    clearPending();
+    (t.imgs || []).forEach(function(id){
+      var slot = { id: id, url: "", old: true }; pending.push(slot);
+      IMG.url(id).then(function(u){ if(u){ slot.url = u; showFormThumbs(); } else { pending = pending.filter(function(x){ return x !== slot; }); showFormThumbs(); } }, function(){});
+    });
+    showFormThumbs();
     toggleUsd(); render();
     document.querySelector('section[aria-label="Add a trade"]').scrollIntoView({ behavior:"smooth", block:"start" });
   }
@@ -617,35 +769,92 @@ tr.pick td{background:var(--soft)}
     var rows = needle ? all.filter(function(t){ return [t.notes,t.setup,t.inst,t.dir,t.date].join(" ").toLowerCase().indexOf(needle)>=0; }) : all;
     $("logtools").hidden = all.length < 6 && !needle;
     $("count").textContent = needle ? rows.length+" of "+all.length+" trades" : all.length+" trades";
-    if(!all.length){ $("log").innerHTML = '<p class="empty">Your trades will be listed here.</p>'; return; }
-    if(!rows.length){ $("log").innerHTML = '<p class="empty">No trades match “'+esc(find.trim())+'”.</p>'; return; }
+    if(!all.length){ $("log").innerHTML = '<p class="empty">Your trades will be listed here.</p>'; picked = {}; showSel(); return; }
+    if(!rows.length){ $("log").innerHTML = '<p class="empty">No trades match “'+esc(find.trim())+'”.</p>'; showSel(); return; }
     var modeName = {backtest:"Backtest", paper:"Paper", live:"Live / eval"};
-    $("log").innerHTML = '<div class="tablewrap"><table><thead><tr><th>Date</th><th>Trade</th><th>Type</th><th>Checklist</th><th>Yes / no</th><th class="r">Result</th><th></th></tr></thead><tbody>'+
+    var allPicked = rows.length && rows.every(function(t){ return picked[t.id]; });
+    $("log").innerHTML = '<div class="tablewrap"><table><thead><tr><th class="pickcell"><input type="checkbox" id="pickAll" aria-label="Select all trades shown"'+(allPicked?' checked':'')+'></th><th>Date</th><th>Trade</th><th>Type</th><th>Checklist</th><th>Yes / no</th><th class="r">Result</th><th></th></tr></thead><tbody>'+
       rows.map(function(t){
         var ticked = (t.steps||[]).filter(Boolean).length, link = cleanLink(t.link);
-        return '<tr'+(t.id===editId?' class="pick"':'')+'><td>'+esc(t.date)+'</td><td>'+esc(t.inst)+' '+esc(t.dir)+(t.setup?' · '+esc(t.setup):'')+
-          (t.notes?'<span class="note">'+esc(t.notes)+'</span>':'')+(link?'<span class="note"><a href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">View chart</a></span>':'')+'</td><td>'+(modeName[t.mode]||esc(t.mode))+'</td>'+
+        var ims = (t.imgs||[]).map(function(id, i){ return '<button type="button" class="thumb" data-trade="'+esc(t.id)+'" data-n="'+i+'" aria-label="Open screenshot '+(i+1)+'"><img data-img="'+esc(id)+'" alt=""></button>'; }).join("");
+        var cl = [t.id===editId?'pick':'', picked[t.id]?'chosen':''].join(' ').trim();
+        return '<tr'+(cl?' class="'+cl+'"':'')+'><td class="pickcell"><input type="checkbox" data-pick="'+esc(t.id)+'" aria-label="Select this trade"'+(picked[t.id]?' checked':'')+'></td><td>'+esc(t.date)+'</td><td>'+esc(t.inst)+' '+esc(t.dir)+(t.setup?' · '+esc(t.setup):'')+
+          (t.notes?'<span class="note">'+esc(t.notes)+'</span>':'')+(link?'<span class="note"><a href="'+esc(link)+'" target="_blank" rel="noopener noreferrer">View chart</a></span>':'')+(ims?'<div class="thumbs">'+ims+'</div>':'')+'</td><td>'+(modeName[t.mode]||esc(t.mode))+'</td>'+
           '<td>'+((t.steps||[]).length ? ticked+' of '+t.steps.length : '–')+'</td><td>'+(t.aligned==="yes"?"Yes":t.aligned==="no"?"No":"–")+'</td>'+
-          '<td class="r '+(t.r>0?'pos':t.r<0?'neg':'')+'">'+fmtR(t.r)+'</td><td style="white-space:nowrap"><button class="del edit" data-id="'+esc(t.id)+'">Edit</button> <button class="del rm" data-id="'+esc(t.id)+'">Delete</button></td></tr>';
+          '<td class="r '+(t.r>0?'pos':t.r<0?'neg':'')+'">'+fmtR(t.r)+'</td><td style="white-space:nowrap"><button type="button" class="rowbtn edit" data-id="'+esc(t.id)+'">Edit</button> <button type="button" class="rowbtn rm" data-id="'+esc(t.id)+'">Delete</button></td></tr>';
       }).join("")+'</tbody></table></div>';
+    showSel();
+    Array.prototype.forEach.call($("log").querySelectorAll("img[data-img]"), function(im){
+      IMG.url(im.dataset.img).then(function(u){ if(u) im.src = u; else im.parentNode.remove(); }, function(){});
+    });
   }
   $("find").addEventListener("input",function(){ find=this.value; render(); });
 
-  // Delete straight away, with a few seconds to change your mind
-  var undoTimer = null, undoTrade = null;
+  // Delete straight away, with a few seconds to change your mind. Screenshots are removed once Undo has gone.
+  var undoTimer = null, undoTrades = [], picked = {};
+  function finalise(){ var ids = []; undoTrades.forEach(function(t){ ids = ids.concat(t.imgs || []); }); undoTrades = []; IMG.del(ids).catch(function(){}); }
+  function removeTrades(ids){
+    if(!ids.length) return;
+    finalise(); clearTimeout(undoTimer);
+    var set = {}; ids.forEach(function(id){ set[id] = 1; delete picked[id]; });
+    undoTrades = trades.filter(function(t){ return set[t.id]; });
+    if(editId && set[editId]){ applyCfg(); resetForm(); }
+    trades = trades.filter(function(t){ return !set[t.id]; }); save(); render();
+    $("toastText").textContent = undoTrades.length === 1 ? "Trade deleted." : undoTrades.length + " trades deleted.";
+    $("toast").hidden = false;
+    undoTimer = setTimeout(function(){ $("toast").hidden = true; finalise(); }, 8000);
+  }
   $("toastUndo").addEventListener("click",function(){
-    if(undoTrade){ trades.push(undoTrade); undoTrade=null; save(); render(); }
-    $("toast").hidden = true; clearTimeout(undoTimer);
+    clearTimeout(undoTimer);
+    if(undoTrades.length){ trades = trades.concat(undoTrades); undoTrades = []; save(); render(); }
+    $("toast").hidden = true;
+  });
+  window.addEventListener("pagehide", finalise);
+  function showSel(){
+    var n = Object.keys(picked).length;
+    $("selbar").hidden = !n;
+    $("selCount").textContent = n === 1 ? "1 trade selected" : n + " trades selected";
+  }
+  $("delSel").addEventListener("click", function(){ removeTrades(Object.keys(picked)); });
+  $("clearSel").addEventListener("click", function(){ picked = {}; render(); });
+  $("log").addEventListener("change", function(e){
+    var c = e.target;
+    if(c.id === "pickAll"){
+      Array.prototype.forEach.call($("log").querySelectorAll("[data-pick]"), function(x){ if(c.checked) picked[x.dataset.pick] = 1; else delete picked[x.dataset.pick]; });
+      render(); return;
+    }
+    if(c.dataset.pick){ if(c.checked) picked[c.dataset.pick] = 1; else delete picked[c.dataset.pick]; render(); }
   });
   $("log").addEventListener("click",function(e){
-    var b=e.target.closest(".del"); if(!b) return;
+    var th = e.target.closest(".thumb[data-trade]");
+    if(th){
+      var t = trades.filter(function(x){ return x.id === th.dataset.trade; })[0]; if(!t) return;
+      Promise.all((t.imgs || []).map(function(id){ return IMG.url(id).catch(function(){ return null; }); })).then(function(list){
+        openBox(list.filter(Boolean), +th.dataset.n, t.inst + " " + t.dir + " · " + t.date);
+      });
+      return;
+    }
+    var b=e.target.closest(".rowbtn"); if(!b) return;
     if(b.classList.contains("edit")){ startEdit(b.dataset.id); return; }
-    undoTrade = trades.filter(function(t){ return t.id===b.dataset.id; })[0] || null;
-    if(!undoTrade) return;
-    if(editId===undoTrade.id){ applyCfg(); resetForm(); }
-    trades = trades.filter(function(t){ return t.id!==b.dataset.id; }); save(); render();
-    $("toastText").textContent = "Trade deleted."; $("toast").hidden = false;
-    clearTimeout(undoTimer); undoTimer = setTimeout(function(){ $("toast").hidden = true; undoTrade = null; }, 7000);
+    removeTrades([b.dataset.id]);
+  });
+
+  // Full-size screenshot viewer
+  var box = { list: [], i: 0, cap: "" };
+  function openBox(list, i, cap){ if(!list.length) return; box = { list: list, i: Math.max(0, Math.min(i, list.length - 1)), cap: cap }; showBox(); $("lightbox").hidden = false; $("lbClose").focus(); }
+  function showBox(){
+    $("lbImg").src = box.list[box.i];
+    $("lbCap").textContent = box.cap + (box.list.length > 1 ? "  (" + (box.i + 1) + " of " + box.list.length + ")" : "");
+    $("lbPrev").hidden = $("lbNext").hidden = box.list.length < 2;
+  }
+  function step(n){ box.i = (box.i + n + box.list.length) % box.list.length; showBox(); }
+  $("lbClose").addEventListener("click", function(){ $("lightbox").hidden = true; });
+  $("lbPrev").addEventListener("click", function(){ step(-1); });
+  $("lbNext").addEventListener("click", function(){ step(1); });
+  $("lightbox").addEventListener("click", function(e){ if(e.target.id === "lightbox") $("lightbox").hidden = true; });
+  document.addEventListener("keydown", function(e){
+    if($("lightbox").hidden) return;
+    if(e.key === "Escape") $("lightbox").hidden = true; else if(e.key === "ArrowLeft") step(-1); else if(e.key === "ArrowRight") step(1);
   });
 
   function download(name, text, type){
@@ -654,14 +863,21 @@ tr.pick td{background:var(--soft)}
     setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
   }
   var stamp = function(){ return new Date().toISOString().slice(0,10); };
-  $("exportJson").addEventListener("click",function(){ download("bxtrades-journal-backup-"+stamp()+".json", JSON.stringify(trades,null,2), "application/json"); });
+  function blobToData(b){ return new Promise(function(res){ var r = new FileReader(); r.onload = function(){ res(r.result); }; r.onerror = function(){ res(null); }; r.readAsDataURL(b); }); }
+  $("exportJson").addEventListener("click",function(){
+    var ids = []; trades.forEach(function(t){ ids = ids.concat(t.imgs || []); });
+    Promise.all(ids.map(function(id){ return IMG.get(id).then(function(b){ return b ? blobToData(b) : null; }, function(){ return null; }); })).then(function(data){
+      var images = {}; ids.forEach(function(id, i){ if(data[i]) images[id] = data[i]; });
+      download("bxtrades-journal-backup-"+stamp()+".json", JSON.stringify({ app:"bxtrades-journal", version:2, trades:trades, images:images }), "application/json");
+    });
+  });
   $("exportCsv").addEventListener("click",function(){
-    var head=["date","instrument","direction","type","setup","result_R","question","answer","steps_ticked","steps_total","steps_missed","notes","chart_link"];
+    var head=["date","instrument","direction","type","setup","result_R","question","answer","steps_ticked","steps_total","steps_missed","notes","chart_link","screenshots"];
     var q=function(v){ v=String(v==null?"":v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
     var lines=[head.map(q).join(",")].concat(sorted(trades).map(function(t){
       var st=t.steps||[], names=t.stepNames||[];
       var missed=st.map(function(v,i){ return v ? null : (names[i] || ("Step "+(i+1))); }).filter(Boolean).join("; ");
-      return [t.date,t.inst,t.dir,t.mode,t.setup||"",t.r,t.q||"",t.aligned,st.filter(Boolean).length,st.length,missed,t.notes,t.link||""].map(q).join(",");
+      return [t.date,t.inst,t.dir,t.mode,t.setup||"",t.r,t.q||"",t.aligned,st.filter(Boolean).length,st.length,missed,t.notes,t.link||"",(t.imgs||[]).length].map(q).join(",");
     }));
     download("bxtrades-journal-"+stamp()+".csv", lines.join("\n"), "text/csv");
   });
@@ -670,10 +886,14 @@ tr.pick td{background:var(--soft)}
     var f=this.files[0]; if(!f) return; var rd=new FileReader();
     rd.onload=function(){
       try{
-        var data=JSON.parse(rd.result); if(!Array.isArray(data)) throw 0;
+        var raw=JSON.parse(rd.result), data = Array.isArray(raw) ? raw : raw && Array.isArray(raw.trades) ? raw.trades : null; if(!data) throw 0;
+        var images = (raw && raw.images) || {};
         var ids={}; trades.forEach(function(t){ids[t.id]=1;});
-        var added=0; data.forEach(function(t){ if(t && t.id && typeof t.r==="number" && !ids[t.id]){ trades.push(t); added++; } });
-        save(); render(); alert(added+" trade"+(added===1?"":"s")+" restored.");
+        var added=[]; data.forEach(function(t){ if(t && t.id && typeof t.r==="number" && !ids[t.id]){ trades.push(t); added.push(t); } });
+        save(); render();
+        var jobs = [];
+        added.forEach(function(t){ (t.imgs||[]).forEach(function(id){ if(typeof images[id]==="string") jobs.push(fetch(images[id]).then(function(r){ return r.blob(); }).then(function(b){ return IMG.put(id, b); })); }); });
+        Promise.all(jobs).then(function(){ render(); alert(added.length+" trade"+(added.length===1?"":"s")+" restored."); }, function(){ render(); alert(added.length+" trade"+(added.length===1?"":"s")+" restored, but some screenshots couldn’t be.");});
       }catch(e){ alert("That file isn’t a bxtrades journal backup. Choose the .json file you downloaded with “Download backup”."); }
       $("importFile").value="";
     };
@@ -681,6 +901,14 @@ tr.pick td{background:var(--soft)}
   });
 
   render();
+  // Remove screenshots no trade uses any more (e.g. the tab closed before Undo ran out)
+  setTimeout(function(){
+    IMG.keys().then(function(keys){
+      var used = {}; trades.forEach(function(t){ (t.imgs || []).forEach(function(id){ used[id] = 1; }); });
+      var spare = (keys || []).filter(function(k){ return !used[k]; });
+      if(spare.length) IMG.del(spare);
+    }).catch(function(){});
+  }, 1500);
 })();
 </script>
 <script>if("serviceWorker" in navigator)window.addEventListener("load",function(){navigator.serviceWorker.register("/sw.js").catch(function(){});});</script>
