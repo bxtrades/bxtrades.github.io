@@ -397,8 +397,7 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
       return { files: files, hist: {} };
     }).catch(function (e) { delete cache[id]; throw e; }));
   }
-  /* Every full candle of this size we can build from any file, sorted by time. A bucket only counts
-     when one file has all of it, so there are no half-built candles. */
+  /* Every candle of this size we can build from any file, sorted by time. */
   function history(all, sec) {
     if (all.hist[sec]) return all.hist[sec];
     var by = {};
@@ -410,11 +409,21 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
         x.candles.forEach(function (c) { var b = Math.floor(c.t / sec) * sec; cnt[b] = (cnt[b] || 0) + 1; });
         E.aggregate(x.candles, sec).forEach(function (c) {
           var b = Math.floor(c.t / sec) * sec;
-          if (cnt[b] === need) by[b] = { t: b, o: c.o, h: c.h, l: c.l, c: c.c, v: c.v };   // bigger files win
+          // a candle counts if this file has at least 3/4 of it (the daily break leaves a small hole); bigger files win
+          if (cnt[b] >= Math.max(1, Math.ceil(need * 0.75))) by[b] = { t: b, o: c.o, h: c.h, l: c.l, c: c.c, v: c.v };
         });
       });
     });
     return (all.hist[sec] = Object.keys(by).map(Number).sort(function (a, b) { return a - b; }).map(function (b) { return by[b]; }));
+  }
+  /* True when nothing is missing between two candles, apart from normal market closes:
+     the daily one-hour break and the weekend. */
+  function joined(t0, t1, sec) {
+    var gap = t1 - t0 - sec;
+    if (gap <= 0) return true;
+    if (gap <= 3600) return true;
+    var d0 = new Date(t0 * 1000).getUTCDay(), d1 = new Date(t1 * 1000).getUTCDay();
+    return d0 === 5 && (d1 === 0 || d1 === 1) && gap <= 54 * 3600;
   }
   var all = null, sesStart = 0;
   function newChart() {
@@ -444,7 +453,11 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
     var cut = Math.floor(sesStart / tfSec) * tfSec, past = history(all, tfSec), k = past.length;
     while (k > 0 && past[k - 1].t >= cut) k--;
     var now = E.aggregate(S.visible(), tfSec).map(function (c) { var b = Math.floor(c.t / tfSec) * tfSec; return { t: b, o: c.o, h: c.h, l: c.l, c: c.c, v: c.v }; });
-    return past.slice(Math.max(0, k - 400), k).concat(now);
+    /* Only keep history that runs straight into the replay. A hole in the data would squash hours
+       together and make price look like it jumped, so stop at the first one. */
+    var from = k, next = now.length ? now[0].t : cut;
+    while (from > 0 && from > k - 400 && joined(past[from - 1].t, next, tfSec)) { next = past[from - 1].t; from--; }
+    return past.slice(from, k).concat(now);
   }
 
   /* ---------- replay controls ---------- */
