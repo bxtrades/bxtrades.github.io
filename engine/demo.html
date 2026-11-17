@@ -41,18 +41,33 @@ select, input[type=number] { font: 500 .92rem var(--mono); padding: .4rem .5rem;
 .ph .ph-r { margin-left: auto; }
 .panel + .panel { margin-top: 1rem; }
 .colhead { font: 600 .72rem var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 .4rem .2rem; }
-.chartbox { position: relative; }
-#cv { width: 100%; height: 560px; display: block; border-radius: 6px; user-select: none; -webkit-user-select: none; }
-@media (max-width: 999px) { #cv { height: 420px; } }
-.tools { display: flex; flex-wrap: wrap; gap: .3rem; margin-bottom: .45rem; }
-.tools button { font: 600 .8rem var(--sans); padding: .3rem .6rem; min-height: 34px; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); color: var(--ink); cursor: pointer; }
-.tools button:disabled { opacity: .4; cursor: not-allowed; }
-.tools button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-.tools { gap: .5rem; }
-.tg { display: flex; flex-wrap: wrap; gap: .3rem; align-items: center; padding: .3rem .4rem; border: 1px solid var(--rule); border-radius: 8px; background: var(--card); }
+/* Chart area: a vertical tool strip down the left, like TradingView and FX Replay */
+.chartwrap { display: flex; gap: 0; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; background: var(--card); }
+.side { flex: none; width: 46px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0; background: var(--paper-2); border-right: 1px solid var(--rule); }
+.side hr { width: 26px; border: 0; border-top: 1px solid var(--rule); margin: 4px 0; }
+.side button { position: relative; width: 38px; height: 36px; flex: none; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: var(--ink); cursor: pointer; padding: 0; }
+.side button:hover { background: var(--card); }
+.side button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.side button:disabled { opacity: .35; cursor: not-allowed; background: transparent; }
+.side svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.side svg .up { fill: var(--green); stroke: none; } .side svg .dn { fill: var(--red); stroke: none; }
+/* name of each tool pops out to the right on hover or keyboard focus */
+.side button::after { content: attr(data-tip); position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%); white-space: nowrap;
+  background: var(--ink); color: var(--paper); font: 600 .78rem var(--sans); padding: .3rem .55rem; border-radius: 5px; pointer-events: none; opacity: 0; transition: opacity .12s; z-index: 30; }
+.side button:hover::after, .side button:focus-visible::after { opacity: 1; }
+.chartbox { position: relative; flex: 1 1 auto; min-width: 0; }
+#cv { width: 100%; height: 560px; display: block; user-select: none; -webkit-user-select: none; }
+.overlay { position: absolute; top: 8px; left: 8px; display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; max-width: calc(100% - 100px); pointer-events: none; }
+.overlay > * { pointer-events: auto; }
+.toolhelp { font: 600 .8rem var(--sans); background: var(--ink); color: var(--paper); padding: .3rem .6rem; border-radius: 6px; }
+.toolhelp:empty { display: none; }
+.go { font: 600 .85rem var(--sans); padding: .4rem .75rem; min-height: 36px; border: 0; border-radius: 6px; background: var(--green); color: #fff; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
+@media (max-width: 999px) {
+  #cv { height: 420px; }
+  .side { overflow-y: auto; max-height: 420px; scrollbar-width: none; }
+  .side button::after { display: none; }      /* no hover on phones */
+}
 .tg-l { font: 600 .68rem var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 .15rem 0 .1rem; }
-.tools button.go { background: var(--green); color: #fff; border-color: var(--green); }
-/* the replay bar: sits under the chart like a video player's controls, so it never hides a candle */
 .rb { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; justify-content: center; margin: .5rem auto 0; width: fit-content; max-width: 100%;
       background: var(--card); border: 1px solid var(--ink); border-radius: 10px; padding: .35rem .6rem; }
 .rb button { width: 40px; height: 38px; border: 1px solid var(--rule); border-radius: 7px; background: var(--paper); color: var(--ink); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; }
@@ -124,30 +139,31 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
     <div>
       <div class="panel">
         <div class="ph"><h2>Chart</h2><p>Draw, zoom and step through the candles</p></div>
-        <div class="tools" role="toolbar" aria-label="Chart tools">
-          <div class="tg" role="group" aria-labelledby="tg1"><span class="tg-l" id="tg1">Draw</span>
-            <button type="button" data-tool="cursor" aria-pressed="true" title="Drag to move the chart, or select a drawing">Move</button>
-            <button type="button" data-tool="line" aria-pressed="false" title="Drag from one point to another">Trend line</button>
-            <button type="button" data-tool="hline" aria-pressed="false" title="Click a price to mark a level">Level</button>
-            <button type="button" data-tool="zone" aria-pressed="false" title="Drag a box over an area">Zone</button>
-            <button type="button" data-tool="fib" aria-pressed="false" title="Drag from the start of a move to the end">Fib / EQ</button>
-            <button type="button" data-tool="measure" aria-pressed="false" title="Drag to measure points, % and candles">Measure</button>
+        <div class="chartwrap">
+          <div class="side" role="toolbar" aria-orientation="vertical" aria-label="Chart tools">
+            <button type="button" data-tool="cursor" aria-pressed="true" data-tip="Move / select" aria-label="Move / select"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3l12 8-5.5 1.5L10 18z"/></svg></button>
+            <button type="button" data-tool="line" aria-pressed="false" data-tip="Trend line" aria-label="Trend line"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19L19 5"/><circle cx="5" cy="19" r="1.8"/><circle cx="19" cy="5" r="1.8"/></svg></button>
+            <button type="button" data-tool="hline" aria-pressed="false" data-tip="Horizontal level" aria-label="Horizontal level"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18"/><circle cx="12" cy="12" r="1.8"/></svg></button>
+            <button type="button" data-tool="zone" aria-pressed="false" data-tip="Zone (box)" aria-label="Zone (box)"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="7" width="16" height="10" rx="1"/></svg></button>
+            <button type="button" data-tool="fib" aria-pressed="false" data-tip="Fib / equilibrium" aria-label="Fib / equilibrium"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M4 9h16M4 15h16M4 19h16"/><path d="M4 12h16" stroke-width="2.6"/></svg></button>
+            <button type="button" data-tool="measure" aria-pressed="false" data-tip="Measure" aria-label="Measure"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17L17 3l4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/></svg></button>
+            <hr>
+            <button type="button" data-tool="long" aria-pressed="false" data-tip="Long position" aria-label="Long position"><svg viewBox="0 0 24 24" aria-hidden="true"><rect class="up" x="4" y="3" width="16" height="10" rx="1"/><rect class="dn" x="4" y="14" width="16" height="6" rx="1"/></svg></button>
+            <button type="button" data-tool="short" aria-pressed="false" data-tip="Short position" aria-label="Short position"><svg viewBox="0 0 24 24" aria-hidden="true"><rect class="dn" x="4" y="4" width="16" height="6" rx="1"/><rect class="up" x="4" y="11" width="16" height="10" rx="1"/></svg></button>
+            <hr>
+            <button type="button" data-tool="erase" aria-pressed="false" data-tip="Eraser" aria-label="Eraser"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4l6 6-9 9H6l-3-3z"/><path d="M10 19h11M9 9l6 6"/></svg></button>
+            <button type="button" id="delBtn" disabled data-tip="Delete selected drawing" aria-label="Delete selected drawing"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg></button>
+            <button type="button" id="undoBtn" data-tip="Undo last drawing" aria-label="Undo last drawing"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg></button>
+            <button type="button" id="clearBtn" data-tip="Clear all drawings" aria-label="Clear all drawings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M6 7l1 13h10l1-13"/><path d="M10 11l4 4M14 11l-4 4"/></svg></button>
+            <hr>
+            <button type="button" id="resetBtn" data-tip="Reset view" aria-label="Reset view"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
           </div>
-          <div class="tg" role="group" aria-labelledby="tg2"><span class="tg-l" id="tg2">Plan a trade</span>
-            <button type="button" data-tool="long" aria-pressed="false" title="Click where you would buy">Long position</button>
-            <button type="button" data-tool="short" aria-pressed="false" title="Click where you would sell">Short position</button>
-            <button type="button" id="tradeTool" class="go" hidden title="Send this long or short setup to the order panel as a real order">Place this trade</button>
-          </div>
-          <div class="tg" role="group" aria-labelledby="tg3"><span class="tg-l" id="tg3">Edit</span>
-            <button type="button" data-tool="erase" aria-pressed="false" title="Click a drawing to delete it">Eraser</button>
-            <button type="button" id="delBtn" disabled title="Delete the selected drawing (Delete key)">Delete selected</button>
-            <button type="button" id="undoBtn">Undo</button>
-            <button type="button" id="clearBtn">Clear all</button>
-            <button type="button" id="resetBtn" title="Fit the chart back to the screen">Reset view</button>
+          <div class="chartbox">
+            <canvas id="cv" role="img" aria-label="Candlestick chart of the replay"></canvas>
+            <div class="overlay"><span class="toolhelp" id="toolhelp" role="status" aria-live="polite"></span>
+              <button type="button" id="tradeTool" class="go" hidden title="Send this long or short setup to the order panel as a real order">Place this trade</button></div>
           </div>
         </div>
-        <div class="chartbox">
-          <canvas id="cv" role="img" aria-label="Candlestick chart of the replay"></canvas>
           <div class="rb" role="group" aria-label="Replay controls">
             <span class="tg-l">Replay</span>
             <button type="button" id="backBtn" aria-label="Rewind one step" title="Rewind (left arrow)"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
@@ -158,7 +174,6 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
             <select id="goto" aria-label="Go to"><option value="">Go to…</option><option value="event">Next fill or exit</option><option value="day">Next trading day</option><option value="end">End of chart</option></select>
             <span class="clock" id="clock"></span>
           </div>
-        </div>
         <p class="hint" id="hint"></p>
       </div>
 
@@ -199,9 +214,9 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
   </div>
 </div>
 
-<script src="/engine/instruments.js?v=7"></script>
-<script src="/engine/replay.js?v=7"></script>
-<script src="/engine/chart.js?v=7"></script>
+<script src="/engine/instruments.js?v=8"></script>
+<script src="/engine/replay.js?v=8"></script>
+<script src="/engine/chart.js?v=8"></script>
 <script>
 (function () {
   var E = window.BXEngine, $ = function (id) { return document.getElementById(id); };
@@ -242,8 +257,14 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
   function baseOf(t) { return market().builtFrom[t] || t; }
 
   /* ---------- chart + tools ---------- */
-  var toolBtns = Array.prototype.slice.call(document.querySelectorAll(".tools [data-tool]"));
-  function showTool(name) { toolBtns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.tool === name)); }); }
+  var toolBtns = Array.prototype.slice.call(document.querySelectorAll(".side [data-tool]"));
+  var HELP = { line: "Trend line: drag from one point to another", hline: "Level: click a price", zone: "Zone: drag a box over an area",
+               fib: "Fib / EQ: drag from the start of the move to the end", measure: "Measure: drag between two points",
+               long: "Long position: click where you would buy", short: "Short position: click where you would sell", erase: "Eraser: click a drawing to delete it" };
+  function showTool(name) {
+    toolBtns.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.tool === name)); });
+    $("toolhelp").textContent = HELP[name] ? HELP[name] + "  ·  Esc to cancel" : "";
+  }
   var chart = window.BXChart.create($("cv"), { onTool: showTool, onSelect: function (on) {
     $("delBtn").disabled = !on;
     var d = on && chart.selected();
@@ -290,7 +311,7 @@ table.t th:first-child, table.t td:first-child { text-align: left; }
     });
     var same = market().timeframes.filter(function (t) { return baseOf(t) === base; });
     $("hint").textContent = "This replay runs on " + base + " data. " + (same.length > 1 ? "Switch between " + same.join(", ") + " and you keep your place; " : "") +
-      "the greyed timeframes open a new chart. Space = play, arrow keys = step. Drag the chart to move it, scroll to zoom, drag the price scale to stretch it. Click a drawing to select it, then drag it or its round grab points to adjust it. A selected long or short position can be sent straight to the order panel.";
+      "the greyed timeframes open a new chart. Space = play, arrow keys = step. Drag the chart to move it, scroll to zoom, drag the price scale to stretch it. Drawing tools are down the left of the chart. Click a drawing to select it, then drag it or its round grab points to adjust it. A selected long or short position can be sent straight to the order panel.";
   }
   function setTf(t) {
     if (S && baseOf(t) === base) { tf = t; fillSkip(); showTf(); render("regroup"); }
